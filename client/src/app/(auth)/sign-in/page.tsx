@@ -457,7 +457,7 @@ function LoginInner() {
 
                   {!invite && (
                     <div className="flex justify-end mb-6">
-                      <Link href="#" className="text-[12px] font-bold text-gray-400 no-underline hover:text-gray-600 transition-colors">
+                      <Link href="/forgot-password" title="Forgot password?" className="text-[12px] font-bold text-gray-400 no-underline hover:text-gray-600 transition-colors">
                         Forgot password?
                       </Link>
                     </div>

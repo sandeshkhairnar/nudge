@@ -36,7 +36,9 @@ export async function updateSession(request: NextRequest) {
     pathname === "/" ||
     pathname.startsWith("/sign-in") ||
     pathname.startsWith("/get-started") ||
-    pathname.startsWith("/auth");
+    pathname.startsWith("/auth") ||
+    pathname.startsWith("/forgot-password") ||
+    pathname.startsWith("/reset-password");
 
   const isSpaceRoute = pathname.startsWith("/space");
 

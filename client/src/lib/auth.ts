@@ -142,3 +142,29 @@ export async function updateProfile(updates: {
   if (error) return { error: error.message };
   return { success: true };
 }
+
+// ─────────────────────────────────────────────────────────────────
+// RESET PASSWORD FOR EMAIL
+// ─────────────────────────────────────────────────────────────────
+export async function resetPasswordForEmail(email: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/reset-password`,
+  });
+
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
+// ─────────────────────────────────────────────────────────────────
+// UPDATE PASSWORD
+// ─────────────────────────────────────────────────────────────────
+export async function updatePassword(password: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({
+    password: password,
+  });
+
+  if (error) return { error: error.message };
+  return { success: true };
+}
