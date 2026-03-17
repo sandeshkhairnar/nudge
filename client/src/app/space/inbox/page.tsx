@@ -13,21 +13,11 @@ import { useNotifications, type Notification } from "@/hooks/useNotifications";
 import { useInvitations, type Invitation } from "@/hooks/useInvitations";
 import { ToastContainer, ToastProps } from "@/components/global/toast";
 import { useNotificationSound } from "@/hooks/useNotificationSound";
+import GlobalAvatar from "@/components/global/Avatar";
 
 type NotifType = "mention" | "message" | "task" | "system";
 type FilterTab = "all" | "mentions" | "messages" | "unread" | "invites";
 
-function colorFromString(s: string) {
-  const palette = ["#36C5F0", "#2EB67D", "#ECB22E", "#E01E5A", "#A259FF", "#FF6B6B"];
-  let h = 0;
-  for (let i = 0; i < s.length; i++) h = s.charCodeAt(i) + ((h << 5) - h);
-  return palette[Math.abs(h) % palette.length];
-}
-
-function initials(name: string | null | undefined) {
-  if (!name) return "?";
-  return name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
-}
 
 function relativeTime(iso: string) {
   const diff = Date.now() - new Date(iso).getTime();
@@ -48,19 +38,11 @@ const TYPE_CONFIG: Record<NotifType, { icon: React.ReactNode; accent: string; la
   system: { icon: <Bell size={10} strokeWidth={2.5} />, accent: "#A259FF", label: "System" },
 };
 
-function Avatar({ name, userId, size = 36 }: { name: string | null | undefined; userId: string; size?: number }) {
-  return (
-    <div
-      className="rounded-full flex items-center justify-center font-black text-white flex-shrink-0 select-none"
-      style={{
-        width: size, height: size,
-        background: `linear-gradient(135deg, ${colorFromString(userId)}, ${colorFromString(userId + "x")})`,
-        fontSize: size * 0.34, letterSpacing: "-0.5px",
-      }}
-    >
-      {initials(name)}
-    </div>
-  );
+function colorFromString(s: string) {
+  const palette = ["#36C5F0", "#2EB67D", "#ECB22E", "#E01E5A", "#A259FF", "#FF6B6B"];
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = s.charCodeAt(i) + ((h << 5) - h);
+  return palette[Math.abs(h) % palette.length];
 }
 
 // ─── Invitation Tile ──────────────────────────────────────────────────────────
@@ -120,7 +102,12 @@ function InvitationTile({
         {/* Inviter row */}
         <div className="flex items-start gap-3">
           <div className="relative flex-shrink-0">
-            <Avatar name={inviterName} userId={inviterId} size={38} />
+            <GlobalAvatar 
+              url={invitation.profiles?.avatar_url} 
+              name={inviterName} 
+              size={38} 
+              fallbackColor={colorFromString(inviterId)} 
+            />
             <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center" style={{ background: projectColor }}>
               <UserPlus size={8} className="text-white" strokeWidth={2.5} />
             </div>
@@ -243,7 +230,12 @@ function NotificationTile({
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0 pt-0.5">
             {notif.sender
-              ? <Avatar name={notif.sender.full_name} userId={notif.sender.id} size={36} />
+              ? <GlobalAvatar 
+                  url={notif.sender.avatar_url} 
+                  name={notif.sender.full_name} 
+                  size={36} 
+                  fallbackColor={colorFromString(notif.sender.id)} 
+                />
               : <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: `${cfg.accent}12` }}><span style={{ color: cfg.accent }}>{cfg.icon}</span></div>}
           </div>
           <div className="flex-1 min-w-0">

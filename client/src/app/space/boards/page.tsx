@@ -50,6 +50,7 @@ export default function BoardsPage() {
           assignee: t.assignee?.full_name || t.assignee?.email || "Unassigned",
           assignee_id: t.assignee_id,
           assigneeColor: colorFromString(t.assignee_id || "unassigned"),
+          avatar_url: t.assignee?.avatar_url,
           tags: [], 
           stalled: t.stalled_days > 3,
           dueDate: t.due_date,

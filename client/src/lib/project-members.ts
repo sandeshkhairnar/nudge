@@ -16,60 +16,79 @@ import { sendInviteEmail } from "@/lib/mailer";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
-export async function inviteProjectMember(
-  projectId: string,
+export async function inviteMember(
+  workspaceId: string,
   email: string,
+  projectId: string | null = null,
   role: "admin" | "member" | "viewer" = "member"
 ) {
   const supabase = await createClient();
   const user = await getCurrentUser();
   if (!user) return { error: "Not authenticated" };
 
-  const { data: project } = await supabase
-    .from("projects")
-    .select("id, workspace_id, name")
-    .eq("id", projectId)
-    .single();
-
-  if (!project) return { error: "Project not found" };
-
   const { data: workspace } = await supabase
     .from("workspaces")
     .select("owner_id, name")
-    .eq("id", project.workspace_id)
+    .eq("id", workspaceId)
     .single();
+
+  if (!workspace) return { error: "Workspace not found" };
 
   const isOwner = workspace?.owner_id === user.id;
 
-  const { data: callerMembership } = await supabase
-    .from("project_members")
+  const { data: wsMembership } = await supabase
+    .from("workspace_members")
     .select("role")
-    .eq("project_id", projectId)
+    .eq("workspace_id", workspaceId)
     .eq("user_id", user.id)
     .maybeSingle();
 
-  const isAdmin = callerMembership?.role === "admin";
+  const isWsAdmin = wsMembership?.role === "admin";
+  let canInvite = isOwner || isWsAdmin;
+  let projectName: string | null = null;
 
-  if (!isOwner && !isAdmin) return { error: "Only owners and admins can invite members" };
+  if (projectId) {
+    const { data: project } = await supabase
+      .from("projects")
+      .select("id, name")
+      .eq("id", projectId)
+      .eq("workspace_id", workspaceId)
+      .single();
+
+    if (!project) return { error: "Project not found in this workspace" };
+    projectName = project.name;
+
+    if (!canInvite) {
+      const { data: pm } = await supabase
+        .from("project_members")
+        .select("role")
+        .eq("project_id", projectId)
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (pm?.role === "admin") canInvite = true;
+    }
+  }
+
+  if (!canInvite) return { error: "Only owners and admins can invite members" };
 
   const normalizedEmail = email.toLowerCase().trim();
 
   const { data: existing } = await supabase
     .from("invitations")
     .select("id")
-    .eq("project_id", projectId)
+    .eq("workspace_id", workspaceId)
+    .eq("project_id", projectId || null)
     .eq("invitee_email", normalizedEmail)
     .eq("status", "pending")
     .maybeSingle();
 
   if (existing) return { error: "An invitation is already pending for this email" };
 
-  // Look up the invitee by email — must NOT be the current user
   const { data: invitee } = await supabase
     .from("profiles")
     .select("id")
     .eq("email", normalizedEmail)
-    .neq("id", user.id)   // ← prevent inviting yourself
+    .neq("id", user.id)
     .maybeSingle();
 
   const { data: inviterProfile } = await supabase
@@ -81,11 +100,11 @@ export async function inviteProjectMember(
   const { data: invitation, error: invErr } = await supabase
     .from("invitations")
     .insert({
-      workspace_id: project.workspace_id,
-      project_id: projectId,
+      workspace_id: workspaceId,
+      project_id: projectId || null,
       inviter_id: user.id,
       invitee_email: normalizedEmail,
-      invitee_id: invitee?.id ?? null,   // null if they don't have an account yet
+      invitee_id: invitee?.id ?? null,
       role,
     })
     .select("id")
@@ -94,7 +113,6 @@ export async function inviteProjectMember(
   if (invErr) return { error: invErr.message };
 
   const hasAccount = !!invitee?.id;
-
   const inviteUrl = hasAccount
     ? `${APP_URL}/space/inbox?invite=${invitation.id}`
     : `${APP_URL}/get-started?invite=${invitation.id}&email=${encodeURIComponent(normalizedEmail)}`;
@@ -104,7 +122,7 @@ export async function inviteProjectMember(
       to: normalizedEmail,
       inviterName: inviterProfile?.full_name ?? "A teammate",
       workspaceName: workspace?.name ?? "your workspace",
-      projectName: project.name,
+      projectName,
       role,
       inviteUrl,
       hasAccount,
@@ -114,6 +132,22 @@ export async function inviteProjectMember(
   }
 
   return { invitationId: invitation.id, sent: true, hasAccount };
+}
+
+export async function inviteProjectMember(
+  projectId: string,
+  email: string,
+  role: "admin" | "member" | "viewer" = "member"
+) {
+  const supabase = await createClient();
+  const { data: project } = await supabase
+    .from("projects")
+    .select("workspace_id")
+    .eq("id", projectId)
+    .single();
+
+  if (!project) return { error: "Project not found" };
+  return inviteMember(project.workspace_id, email, projectId, role);
 }
 
 export async function acceptInvitation(invitationId: string) {
@@ -323,6 +357,101 @@ export async function getProjectMembers(projectId: string) {
   }));
 
   return { members };
+}
+
+export async function getWorkspaceInvitations(workspaceId: string) {
+  const supabase = await createClient();
+  const user = await getCurrentUser();
+  if (!user) return { invitations: [] };
+
+  // Use admin client to ensure we can see invitations even if RLS is restrictive
+  // But we must verify the user is an admin or owner of the workspace
+  const { data: wsMembership } = await supabase
+    .from("workspace_members")
+    .select("role")
+    .eq("workspace_id", workspaceId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  const isAdmin = wsMembership?.role === "admin";
+  
+  const { data: workspace } = await supabase
+    .from("workspaces")
+    .select("owner_id")
+    .eq("id", workspaceId)
+    .single();
+    
+  const isOwner = workspace?.owner_id === user.id;
+
+  if (!isAdmin && !isOwner) {
+    // Non-admins can only see invitations they sent
+    const { data: invs, error } = await supabase
+      .from("invitations")
+      .select(`
+        *,
+        inviter:profiles!invitations_inviter_id_fkey(full_name, email),
+        projects:projects(name)
+      `)
+      .eq("workspace_id", workspaceId)
+      .eq("inviter_id", user.id)
+      .eq("status", "pending");
+
+    if (error) return { error: error.message, invitations: [] };
+    return { invitations: invs || [] };
+  }
+
+  // Admins see everything in the workspace
+  const admin = getAdminClient();
+  const { data: invs, error } = await admin
+    .from("invitations")
+    .select(`
+      *,
+      inviter:profiles!invitations_inviter_id_fkey(full_name, email),
+      projects:projects(name)
+    `)
+    .eq("workspace_id", workspaceId)
+    .eq("status", "pending");
+
+  if (error) return { error: error.message, invitations: [] };
+  return { invitations: invs || [] };
+}
+
+export async function revokeInvitation(invitationId: string) {
+  const supabase = await createClient();
+  const user = await getCurrentUser();
+  if (!user) return { error: "Not authenticated" };
+
+  const { data: invitation } = await supabase
+    .from("invitations")
+    .select("workspace_id, inviter_id")
+    .eq("id", invitationId)
+    .single();
+
+  if (!invitation) return { error: "Invitation not found" };
+
+  const { data: wsMembership } = await supabase
+    .from("workspace_members")
+    .select("role")
+    .eq("workspace_id", invitation.workspace_id)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  const isAdmin = wsMembership?.role === "admin";
+  const isInviter = invitation.inviter_id === user.id;
+
+  if (!isAdmin && !isInviter) {
+    return { error: "Permission denied" };
+  }
+
+  const { error } = await supabase
+    .from("invitations")
+    .update({ status: "revoked" })
+    .eq("id", invitationId);
+
+  if (error) return { error: error.message };
+  
+  revalidatePath("/space/team");
+  return { success: true };
 }
 
 export async function removeProjectMember(projectId: string, userId: string) {

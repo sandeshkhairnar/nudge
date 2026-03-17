@@ -16,6 +16,7 @@ import {
   Book, Mail, CheckCircle2, Settings as SettingsIcon, Github
 } from "lucide-react";
 import { TaskBoard, Task as BoardTask } from "@/components/workspace/TaskBoard";
+import GlobalAvatar from "@/components/global/Avatar";
 
 type Tab = "chat" | "tasks" | "team" | "resources" | "settings";
 type TaskStatus = "todo" | "in_progress" | "review" | "done";
@@ -58,10 +59,6 @@ function colorFromString(s: string) {
   for (let i = 0; i < s.length; i++) h = s.charCodeAt(i) + ((h << 5) - h);
   return palette[Math.abs(h) % palette.length];
 }
-function initials(name: string | null | undefined) {
-  if (!name) return "?";
-  return name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
-}
 function formatBytes(b: number) {
   if (b < 1024) return b + " B";
   if (b < 1048576) return (b / 1024).toFixed(1) + " KB";
@@ -79,22 +76,6 @@ function formatDate(iso: string) {
   return d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
 }
 
-function Avatar({ name, userId, size = 28, online }: {
-  name: string | null | undefined; userId: string; size?: number; online?: boolean;
-}) {
-  return (
-    <div className="relative flex-shrink-0" style={{ width: size, height: size }}>
-      <div className="w-full h-full rounded-full flex items-center justify-center font-black text-white select-none"
-        style={{ background: colorFromString(userId), fontSize: size * 0.36 }}>
-        {initials(name)}
-      </div>
-      {online !== undefined && (
-        <span className={`absolute -bottom-px -right-px rounded-full border-2 border-white ${online ? "bg-emerald-400" : "bg-gray-300"}`}
-          style={{ width: size * 0.34, height: size * 0.34 }} />
-      )}
-    </div>
-  );
-}
 
 function DateDivider({ label }: { label: string }) {
   return (
@@ -260,9 +241,13 @@ export default function SpacePage() {
     const pch = supabase.channel(`presence:${activeChannel.id}`, { config: { presence: { key: currentUser.id } } });
     pch.on("presence", { event: "sync" }, () => {
       const state = pch.presenceState();
-      setOnlineUsers(Object.entries(state).map(([id, p]) => ({ id, full_name: (p[0] as any)?.full_name ?? null, avatar_url: null })));
+      setOnlineUsers(Object.entries(state).map(([id, p]) => ({ 
+        id, 
+        full_name: (p[0] as any)?.full_name ?? null, 
+        avatar_url: (p[0] as any)?.avatar_url ?? null 
+      })));
     }).subscribe(async (s) => {
-      if (s === "SUBSCRIBED") await pch.track({ full_name: currentUser.full_name });
+      if (s === "SUBSCRIBED") await pch.track({ full_name: currentUser.full_name, avatar_url: currentUser.avatar_url });
     });
     return () => { supabase.removeChannel(pch); };
   }, [activeChannel?.id, currentUser?.id]);
@@ -505,7 +490,7 @@ export default function SpacePage() {
 
           <div style={{ width: 40, flexShrink: 0, paddingTop: 2 }}>
             {!sameSender
-              ? <Avatar name={name} userId={m.user_id} size={32} />
+              ? <GlobalAvatar url={m.profiles?.avatar_url} name={name} size={32} fallbackColor={colorFromString(m.user_id)} />
               : hoveredMsgId === m.id
                 ? <span className="text-[10px] text-gray-300 block text-right pr-1 leading-loose select-none"
                   style={{ paddingTop: 5 }}>{new Date(m.created_at).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false })}</span>
@@ -708,8 +693,9 @@ export default function SpacePage() {
             {onlineUsers.length === 0
               ? <p className="text-[10px] text-gray-300">No one online</p>
               : onlineUsers.slice(0, 8).map((u) => (
-                <div key={u.id} title={u.full_name ?? "User"}>
-                  <Avatar name={u.full_name} userId={u.id} size={22} online={true} />
+                <div key={u.id} title={u.full_name ?? "User"} className="relative">
+                  <GlobalAvatar url={u.avatar_url} name={u.full_name} size={22} fallbackColor={colorFromString(u.id)} />
+                  <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-white bg-emerald-400" />
                 </div>
               ))
             }
@@ -760,7 +746,11 @@ export default function SpacePage() {
             <div className="flex -space-x-1.5">
               {team.slice(0, 3).map((m, i) => {
                 const p = m.profiles; if (!p) return null;
-                return <div key={i} className="ring-2 ring-white rounded-full"><Avatar name={p.full_name} userId={p.id} size={24} /></div>;
+                return (
+                  <div key={i} className="ring-2 ring-white rounded-full">
+                    <GlobalAvatar url={p.avatar_url} name={p.full_name} size={24} fallbackColor={colorFromString(p.id)} />
+                  </div>
+                );
               })}
             </div>
             <span className="text-[11px] text-gray-400 hidden sm:block">{team.length}</span>
@@ -836,7 +826,10 @@ export default function SpacePage() {
                     <div className="flex flex-wrap gap-2">
                       {onlineUsers.map((u) => (
                         <div key={u.id} className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-100 rounded-full">
-                          <Avatar name={u.full_name} userId={u.id} size={20} online={true} />
+                          <div className="relative">
+                            <GlobalAvatar url={u.avatar_url} name={u.full_name} size={20} fallbackColor={colorFromString(u.id)} />
+                            <span className="absolute -bottom-0.5 -right-0.5 w-1.5 h-1.5 rounded-full border border-white bg-emerald-400" />
+                          </div>
                           <span className="text-[12px] font-semibold text-emerald-700">{u.full_name ?? "User"}</span>
                         </div>
                       ))}
@@ -851,7 +844,10 @@ export default function SpacePage() {
                     return (
                       <motion.div key={i} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
                         className="flex items-center gap-3 p-4 bg-white rounded-xl border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all">
-                        <Avatar name={p.full_name} userId={p.id} size={38} online={isOnline} />
+                        <div className="relative">
+                          <GlobalAvatar url={p.avatar_url} name={p.full_name} size={38} fallbackColor={colorFromString(p.id)} />
+                          {isOnline && <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white bg-emerald-400" />}
+                        </div>
                         <div className="min-w-0">
                           <p className="text-[13px] font-bold text-gray-900 truncate">{p.full_name ?? "Unknown"}</p>
                           <p className="text-[11px] text-gray-400 truncate">{p.email}</p>
@@ -1154,10 +1150,12 @@ export default function SpacePage() {
                         >
                           {selectedMember ? (
                             <>
-                              <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black text-white flex-shrink-0"
-                                style={{ background: colorFromString(selectedMember.profiles?.id ?? "") }}>
-                                {initials(selectedMember.profiles?.full_name)}
-                              </div>
+                              <GlobalAvatar 
+                                url={selectedMember.profiles?.avatar_url} 
+                                name={selectedMember.profiles?.full_name || selectedMember.profiles?.email} 
+                                size={24} 
+                                fallbackColor={colorFromString(selectedMember.profiles?.id ?? "")} 
+                              />
                               <span className="text-gray-900 flex-1 truncate">{selectedMember.profiles?.full_name ?? selectedMember.profiles?.email}</span>
                               <button onClick={(e) => { e.stopPropagation(); setNewTaskAssigneeId(null); }}
                                 className="text-gray-300 hover:text-gray-500 border-0 bg-transparent cursor-pointer p-0">
@@ -1212,10 +1210,12 @@ export default function SpacePage() {
                                         className="w-full px-3 py-2.5 flex items-center gap-2.5 hover:bg-gray-50 cursor-pointer border-0 bg-transparent text-left transition-colors"
                                         style={{ background: isSelected ? "#F0FDF4" : undefined }}
                                       >
-                                        <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black text-white flex-shrink-0"
-                                          style={{ background: colorFromString(p.id) }}>
-                                          {initials(p.full_name)}
-                                        </div>
+                                        <GlobalAvatar 
+                                          url={p.avatar_url} 
+                                          name={p.full_name || p.email} 
+                                          size={24} 
+                                          fallbackColor={colorFromString(p.id)} 
+                                        />
                                         <div className="flex-1 min-w-0">
                                           <p className="text-[13px] font-semibold text-gray-800 truncate" style={{ fontFamily: "'Sora',sans-serif" }}>
                                             {p.full_name ?? "Unknown"}

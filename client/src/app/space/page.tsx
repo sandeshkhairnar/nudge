@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useInView } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { useWorkspaceStore } from "@/store/workspace-store";
+import Avatar from "@/components/global/Avatar";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 
@@ -16,13 +17,13 @@ interface DashTask {
   created_at: string;
   project_name: string | null; project_color: string | null;
   assignee_name: string | null; assignee_id: string | null;
+  assignee_avatar_url: string | null;
 }
-interface TeamMember { id: string; full_name: string | null; task_count: number; done_count: number; }
+interface TeamMember { id: string; full_name: string | null; avatar_url: string | null; task_count: number; done_count: number; }
 interface Stats { total: number; done: number; inProgress: number; stalled: number; projects: number; members: number; }
 
 const PALETTE = ["#36C5F0", "#2EB67D", "#ECB22E", "#E01E5A", "#A259FF", "#FF6B6B"];
 function strColor(s: string) { let h = 0; for (let i = 0; i < s.length; i++) h = s.charCodeAt(i) + ((h << 5) - h); return PALETTE[Math.abs(h) % PALETTE.length]; }
-function ini(n: string | null | undefined) { if (!n) return "?"; return n.split(" ").map(x => x[0]).join("").slice(0, 2).toUpperCase(); }
 
 const STATUS_META = {
   todo: { label: "To Do", bg: "#F5F5F2", fg: "#6B7280" },
@@ -161,7 +162,7 @@ export default function DashboardPage() {
 
       const { data: raw } = await supabase
         .from("tasks")
-        .select("id,title,status,stalled_days,due_date,project_id,created_at,assignee:profiles!tasks_assignee_id_fkey(id,full_name),project:projects!tasks_project_id_fkey(name,color)")
+        .select("id,title,status,stalled_days,due_date,project_id,created_at,assignee:profiles!tasks_assignee_id_fkey(id,full_name,avatar_url),project:projects!tasks_project_id_fkey(name,color)")
         .in("project_id", pids)
         .order("created_at", { ascending: false });
 
@@ -171,6 +172,7 @@ export default function DashboardPage() {
         created_at: t.created_at,
         project_name: t.project?.name ?? null, project_color: t.project?.color ?? null,
         assignee_name: t.assignee?.full_name ?? null, assignee_id: t.assignee?.id ?? null,
+        assignee_avatar_url: t.assignee?.avatar_url ?? null,
       }));
 
       const tByP: Record<string, number> = {};
@@ -182,13 +184,13 @@ export default function DashboardPage() {
 
       const { data: mem } = await supabase
         .from("project_members")
-        .select("user_id, profiles!project_members_user_id_fkey(id,full_name)")
+        .select("user_id, profiles!project_members_user_id_fkey(id,full_name,avatar_url)")
         .in("project_id", pids);
 
       const mmap: Record<string, TeamMember> = {};
       ((mem ?? []) as any[]).forEach(m => {
         const p = m.profiles; if (!p || mmap[p.id]) return;
-        mmap[p.id] = { id: p.id, full_name: p.full_name, task_count: 0, done_count: 0 };
+        mmap[p.id] = { id: p.id, full_name: p.full_name, avatar_url: p.avatar_url, task_count: 0, done_count: 0 };
       });
       shaped.forEach(t => {
         if (t.assignee_id && mmap[t.assignee_id]) {
@@ -325,9 +327,9 @@ export default function DashboardPage() {
       {/* ── ROW 3: Velocity (8) | NudgeAI (4) ── */}
       <div className="grid grid-cols-12 gap-4 items-stretch">
 
-        {/* Velocity — 8 cols */}
-        <Reveal delay={0.04} className="col-span-16 lg:col-span-8 flex">
-          <Card className="flex flex-col flex-1 min-h-[400px]">
+        {/* Velocity — 8 cols desktop, full width mobile */}
+        <Reveal delay={0.04} className="col-span-12 lg:col-span-8 flex">
+          <Card className="flex flex-col flex-1 min-h-[360px] sm:min-h-[400px]">
             <CardHeader title="Task velocity" sub="Sprint distribution"
               right={
                 <div className="flex items-center gap-3">
@@ -361,8 +363,9 @@ export default function DashboardPage() {
           </Card>
         </Reveal>
 
-        <Reveal delay={0.08} className="col-span-8 lg:col-span-4 flex">
-          <Card dark className="flex flex-col flex-1 min-h-[400px] min-h-0 overflow-hidden">
+        {/* Nudge AI — 4 cols desktop, full width mobile */}
+        <Reveal delay={0.08} className="col-span-12 lg:col-span-4 flex">
+          <Card dark className="flex flex-col flex-1 min-h-[360px] sm:min-h-[400px] min-h-0 overflow-hidden">
             <div className="absolute inset-0 pointer-events-none rounded-2xl overflow-hidden"
               style={{ backgroundImage: "radial-gradient(rgba(255,255,255,0.03) 1px,transparent 1px)", backgroundSize: "18px 18px" }} />
 
@@ -463,9 +466,9 @@ export default function DashboardPage() {
       {/* ── ROW 4: Tasks table (8) | Projects + Team sidebar (4) — items-stretch ── */}
       <div className="grid grid-cols-12 gap-4" style={{ alignItems: "stretch" }}>
 
-        {/* Tasks — 8 cols */}
+        {/* Tasks — 8 cols desktop, full width mobile */}
         <Reveal delay={0.04} className="col-span-12 lg:col-span-8">
-          <Card>
+          <Card className="min-h-[400px]">
             <CardHeader title="Tasks"
               right={
                 <div className="flex bg-[#F5F5F2] rounded-lg p-0.5 gap-px">
@@ -532,8 +535,12 @@ export default function DashboardPage() {
                           <td className="px-4 py-2.5">
                             {task.assignee_id ? (
                               <div className="flex items-center gap-1.5">
-                                <div className="w-5 h-5 rounded-full flex items-center justify-center text-[7px] font-black text-white flex-shrink-0"
-                                  style={{ background: strColor(task.assignee_id) }}>{ini(task.assignee_name)}</div>
+                                <Avatar 
+                                  url={task.assignee_avatar_url} 
+                                  name={task.assignee_name || "Unknown"} 
+                                  size={24} 
+                                  fallbackColor={strColor(task.assignee_id)} 
+                                />
                                 <span className="text-[10.5px] text-[#6B7280] truncate max-w-[55px]">{task.assignee_name}</span>
                               </div>
                             ) : <span className="text-[10.5px] text-[#D1D5DB]">—</span>}
@@ -563,9 +570,9 @@ export default function DashboardPage() {
           </Card>
         </Reveal>
 
-        {/* Nudge feed */}
+        {/* Nudge feed — 4 cols desktop, full width mobile */}
         <Reveal delay={0.04} className="col-span-12 lg:col-span-4">
-          <div className="rounded-2xl overflow-hidden relative" style={{ background: "#0D0D0D", boxShadow: "0 4px 20px rgba(0,0,0,0.14)" }}>
+          <div className="h-full rounded-2xl overflow-hidden relative" style={{ background: "#0D0D0D", boxShadow: "0 4px 20px rgba(0,0,0,0.14)" }}>
             <div className="absolute inset-0 pointer-events-none"
               style={{ backgroundImage: "radial-gradient(rgba(255,255,255,0.04) 1px,transparent 1px)", backgroundSize: "18px 18px" }} />
             <div className="relative px-5 pt-5 pb-0">
@@ -610,8 +617,8 @@ export default function DashboardPage() {
       {/* ── ROW 5: Nudge feed (7) | NudgeAI (5) — same height, dark cards ── */}
       <div className="grid grid-cols-12 gap-4 items-stretch">
 
-        {/* Donut */}
-        <Reveal delay={0.08} className="col-span-12 lg:col-span-4">
+        {/* Donut — 4 cols desktop, 6 cols tablet, full width mobile */}
+        <Reveal delay={0.08} className="col-span-12 md:col-span-6 lg:col-span-4">
           <Card>
             <CardHeader title="Status breakdown" sub="Task distribution" />
             <div className="flex-1 px-4 pb-2 pt-2 min-h-0 flex flex-col">
@@ -640,8 +647,8 @@ export default function DashboardPage() {
           </Card>
         </Reveal>
 
-        {/* Project health */}
-        <Reveal delay={0.04} className="col-span-12 lg:col-span-4">
+        {/* Project health — 4 cols desktop, 6 cols tablet, full width mobile */}
+        <Reveal delay={0.04} className="col-span-12 md:col-span-6 lg:col-span-4">
           <Card>
             <CardHeader
               title="Project health"
@@ -683,7 +690,7 @@ export default function DashboardPage() {
           </Card>
         </Reveal>
 
-        {/* Team activity */}
+        {/* Team activity — 4 cols desktop, full width mobile/tablet */}
         <Reveal delay={0.04} className="col-span-12 lg:col-span-4">
           <Card>
             <CardHeader
@@ -700,12 +707,12 @@ export default function DashboardPage() {
 
                       return (
                         <div key={m.id} className="flex items-center gap-2.5">
-                          <div
-                            className="w-6 h-6 rounded-full flex items-center justify-center text-[8px] font-black text-white"
-                            style={{ background: strColor(m.id) }}
-                          >
-                            {ini(m.full_name)}
-                          </div>
+                          <Avatar 
+                            url={m.avatar_url} 
+                            name={m.full_name || "Unknown"} 
+                            size={24} 
+                            fallbackColor={strColor(m.id)} 
+                          />
 
                           <div className="flex-1 min-w-0">
                             <div className="flex justify-between items-center mb-1">

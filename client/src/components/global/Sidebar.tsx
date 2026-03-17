@@ -10,6 +10,7 @@ import { getUserWorkspaces } from "@/lib/workspace";
 import { WorkspaceSwitcher } from "@/components/space/workspace-switcher";
 import { useNotificationStore } from "@/store/notification-store";
 import { useProjectsStore } from "@/store/projects-store";
+import Avatar from "@/components/global/Avatar";
 
 function NudgeLogo({ collapsed }: { collapsed: boolean }) {
   const id = "sidebar-pills";
@@ -523,12 +524,12 @@ export default function Sidebar() {
 
         <div className="mt-3">
           <div className="flex items-center gap-3">
-            <div
-              className="w-8 h-8 rounded-full flex items-center justify-center text-[12px] font-extrabold text-white flex-shrink-0"
-              style={{ background: "linear-gradient(135deg,#4FA3F5,#34D58F)" }}
-            >
-              {getInitials(profile?.full_name ?? null)}
-            </div>
+            <Avatar 
+              url={profile?.avatar_url} 
+              name={profile?.full_name} 
+              size={32} 
+              fallbackColor="#36C5F0" 
+            />
 
             {!(collapsed && !isMobile) && profile && (
               <div className="flex-1 flex items-center justify-between overflow-hidden">

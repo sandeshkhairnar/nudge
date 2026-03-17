@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { Plus, Search, Calendar, User, Zap, X, Layout, List, ChevronDown, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { updateTask, createTask } from "@/lib/tasks";
+import Avatar from "@/components/global/Avatar";
 
 /* ═══════════════════════════
    TYPES
@@ -26,6 +27,7 @@ export interface Task {
   tags: string[];
   status: Status;
   stalled?: boolean;
+  avatar_url?: string | null;
 }
 
 interface Column {
@@ -55,16 +57,6 @@ function colorFromString(s: string) {
   return palette[Math.abs(h) % palette.length];
 }
 
-function Av({ i, c, sz = 24 }: { i: string; c: string; sz?: number }) {
-  return (
-    <div
-      className="rounded-full flex items-center justify-center font-black text-white flex-shrink-0"
-      style={{ width: sz, height: sz, background: c, fontSize: sz * 0.38 }}
-    >
-      {i.slice(0, 2).toUpperCase()}
-    </div>
-  );
-}
 
 /* ═══════════════════════════
    BOARD COMPONENT
@@ -275,7 +267,12 @@ export function TaskBoard({
                       )}
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
-                          <Av i={t.assignee} c={t.assigneeColor} sz={22} />
+                          <Avatar 
+                            url={t.avatar_url} 
+                            name={t.assignee} 
+                            size={24} 
+                            fallbackColor={t.assigneeColor} 
+                          />
                           <span className="text-[12px] font-semibold text-gray-600">{t.assignee}</span>
                         </div>
                       </td>
@@ -421,7 +418,12 @@ export function TaskBoard({
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2">Assignee</p>
                     <div className="flex items-center gap-3">
-                      <Av i={openTask.assignee} c={openTask.assigneeColor} sz={28} />
+                      <Avatar 
+                        url={openTask.avatar_url} 
+                        name={openTask.assignee} 
+                        size={32} 
+                        fallbackColor={openTask.assigneeColor} 
+                      />
                       <span className="text-[14px] font-bold text-gray-700">{openTask.assignee}</span>
                     </div>
                   </div>
@@ -505,7 +507,12 @@ function TaskCardInternal({ task, columnColor, onOpen }: { task: Task; columnCol
           </span>
           {task.dueDate && <span className="text-[11px] text-[#C4C4BC] font-medium">{new Date(task.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>}
         </div>
-        <Av i={task.assignee} c={task.assigneeColor} sz={24} />
+        <Avatar 
+          url={task.avatar_url} 
+          name={task.assignee} 
+          size={24} 
+          fallbackColor={task.assigneeColor} 
+        />
       </div>
     </motion.div>
   );
