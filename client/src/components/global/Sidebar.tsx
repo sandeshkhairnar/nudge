@@ -134,12 +134,12 @@ const staticNavItems: Omit<NavItemType, "badge">[] = [
   { label: "Dashboard", href: "/space", icon: "home" },
   { label: "Boards", href: "/space/boards", icon: "board" },
   { label: "Inbox", href: "/space/inbox", icon: "inbox" },
-  { label: "My Nudges", href: "/nudges", icon: "nudges" },
-  { label: "Team", href: "/team", icon: "team" },
-  { label: "Analytics", href: "/analytics", icon: "analytics" },
+  { label: "My Nudges", href: "/space/nudges", icon: "nudges" },
+  { label: "Team", href: "/space/team", icon: "team" },
+  { label: "Analytics", href: "/space/analytics", icon: "analytics" },
 ];
 
-const bottomItems: NavItemType[] = [{ label: "Settings", href: "/settings", icon: "settings" }];
+const bottomItems: NavItemType[] = [{ label: "Settings", href: "/space/settings", icon: "settings" }];
 
 function NavItem({
   item,

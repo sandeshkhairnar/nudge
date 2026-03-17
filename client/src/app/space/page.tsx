@@ -13,6 +13,7 @@ interface Project { id: string; name: string; color: string; progress: number; t
 interface DashTask {
   id: string; title: string; status: "todo" | "in_progress" | "review" | "done";
   stalled_days: number; due_date: string | null; project_id: string;
+  created_at: string;
   project_name: string | null; project_color: string | null;
   assignee_name: string | null; assignee_id: string | null;
 }
@@ -160,13 +161,14 @@ export default function DashboardPage() {
 
       const { data: raw } = await supabase
         .from("tasks")
-        .select("id,title,status,stalled_days,due_date,project_id,assignee:profiles!tasks_assignee_id_fkey(id,full_name),project:projects!tasks_project_id_fkey(name,color)")
+        .select("id,title,status,stalled_days,due_date,project_id,created_at,assignee:profiles!tasks_assignee_id_fkey(id,full_name),project:projects!tasks_project_id_fkey(name,color)")
         .in("project_id", pids)
-        .order("stalled_days", { ascending: false });
+        .order("created_at", { ascending: false });
 
       const shaped: DashTask[] = ((raw ?? []) as any[]).map(t => ({
         id: t.id, title: t.title, status: t.status,
         stalled_days: t.stalled_days ?? 0, due_date: t.due_date, project_id: t.project_id,
+        created_at: t.created_at,
         project_name: t.project?.name ?? null, project_color: t.project?.color ?? null,
         assignee_name: t.assignee?.full_name ?? null, assignee_id: t.assignee?.id ?? null,
       }));
@@ -229,7 +231,7 @@ export default function DashboardPage() {
     grid: { borderColor: "#F0F0EB", strokeDashArray: 4, padding: { left: -4, right: 0, top: -6, bottom: 0 } },
     legend: { show: false }, tooltip: { theme: "light" }, fill: { opacity: 1 },
   };
-  const velSeries: ApexAxisChartSeries = [
+  const velSeries = [
     { name: "Done", data: weekly.map(w => w.done) },
     { name: "Active", data: weekly.map(w => w.inProgress) },
     { name: "Todo", data: weekly.map(w => w.todo) },
@@ -359,7 +361,6 @@ export default function DashboardPage() {
           </Card>
         </Reveal>
 
-        {/* NudgeAI — 4 cols */}
         <Reveal delay={0.08} className="col-span-8 lg:col-span-4 flex">
           <Card dark className="flex flex-col flex-1 min-h-[400px] min-h-0 overflow-hidden">
             <div className="absolute inset-0 pointer-events-none rounded-2xl overflow-hidden"
@@ -369,7 +370,6 @@ export default function DashboardPage() {
 
               {/* Header */}
               <div className="flex items-center gap-2.5 pb-3 border-b border-white/10 flex-shrink-0">
-                {/* Logo SVG as avatar */}
                 <div className="w-8 h-8 rounded-xl bg-[#0D0D0D] flex items-center justify-center flex-shrink-0 shadow-lg ring-1 ring-white/10">
                   <svg width="20" height="20" viewBox="0 0 48 48" fill="none">
                     <rect x="6" y="6" width="16" height="16" rx="8" fill="#36C5F0" />
@@ -384,7 +384,6 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* Chat Messages — scrollable, fills remaining height */}
               <div className="flex-1 overflow-y-auto py-3 space-y-3 min-h-0 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
 
                 {/* Bot Message */}
@@ -440,7 +439,6 @@ export default function DashboardPage() {
 
               </div>
 
-              {/* Input — pinned to bottom */}
               <div className="flex gap-2 pt-3 border-t border-white/10 flex-shrink-0">
                 <input
                   type="text"
@@ -544,8 +542,11 @@ export default function DashboardPage() {
                             <span className="text-[9.5px] font-bold px-2 py-1 rounded-full whitespace-nowrap" style={{ color: s.fg, background: s.bg }}>{s.label}</span>
                           </td>
                           <td className="px-4 py-2.5 text-[10.5px] font-semibold whitespace-nowrap"
-                            style={{ color: task.stalled_days >= 5 ? "#ECB22E" : "#B0B0A8" }}>
-                            {task.stalled_days === 0 ? "Now" : `${task.stalled_days}d`}
+                            style={{ color: (Math.floor((new Date().getTime() - new Date(task.created_at).getTime()) / (1000 * 60 * 60 * 24))) >= 5 ? "#ECB22E" : "#B0B0A8" }}>
+                            {(() => {
+                              const days = Math.floor((new Date().getTime() - new Date(task.created_at).getTime()) / (1000 * 60 * 60 * 24));
+                              return days === 0 ? "Now" : `${days}d`;
+                            })()}
                           </td>
                         </motion.tr>
                       );
@@ -734,51 +735,7 @@ export default function DashboardPage() {
             </div>
           </Card>
         </Reveal>
-
       </div>
     </div>
   );
 }
-
-
-
-// <Reveal delay={0.04} className="col-span-12 lg:col-span-7">
-//   <Card dark>
-//     {/* dot pattern */}
-//     <div className="absolute inset-0 pointer-events-none rounded-2xl overflow-hidden"
-//       style={{ backgroundImage: "radial-gradient(rgba(255,255,255,0.03) 1px,transparent 1px)", backgroundSize: "18px 18px" }} />
-//     <div className="relative flex flex-col h-full">
-//       <div className="flex items-center gap-2 px-5 py-4 border-b flex-shrink-0" style={{ borderColor: "rgba(255,255,255,0.07)" }}>
-//         <motion.div animate={{ scale: [1, 1.3, 1] }} transition={{ duration: 2, repeat: Infinity }}
-//           className="w-1.5 h-1.5 rounded-full bg-[#36C5F0]" />
-//         <h3 className="text-[13px] font-black text-white">Nudge feed</h3>
-//         <span className="ml-auto text-[9px] font-semibold px-2 py-0.5 rounded-full"
-//           style={{ background: "rgba(54,197,240,0.15)", color: "#36C5F0" }}>AI · {NUDGES.length}</span>
-//       </div>
-//       {/* 3 nudge cards in a row — no scrolling needed */}
-//       <div className="flex-1 grid grid-cols-3 gap-3 p-4">
-//         {NUDGES.map((n, i) => (
-//           <motion.div key={i}
-//             initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-//             transition={{ delay: 0.2 + i * 0.08, duration: 0.4 }}
-//             className="flex flex-col rounded-xl p-3"
-//             style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
-//             <div className="flex items-center gap-1.5 mb-1.5">
-//               <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: n.accent }} />
-//               <span className="text-[10.5px] font-bold truncate flex-1" style={{ color: n.accent }}>{n.task}</span>
-//               <span className="text-[9px] flex-shrink-0" style={{ color: "rgba(255,255,255,0.2)" }}>{n.time}</span>
-//             </div>
-//             <p className="text-[10px] leading-relaxed flex-1" style={{ color: "rgba(255,255,255,0.45)" }}>{n.msg}</p>
-//             <div className="flex gap-1.5 mt-3">
-//               <motion.button whileTap={{ scale: 0.96 }}
-//                 className="flex-1 py-1.5 rounded-lg text-[10px] font-black text-white border-0 cursor-pointer"
-//                 style={{ background: n.accent, fontFamily: "inherit" }}>Nudge</motion.button>
-//               <button className="px-2 rounded-lg text-[10px] border-0 cursor-pointer"
-//                 style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.3)", fontFamily: "inherit" }}>✕</button>
-//             </div>
-//           </motion.div>
-//         ))}
-//       </div>
-//     </div>
-//   </Card>
-// </Reveal>

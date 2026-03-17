@@ -17,6 +17,7 @@ export async function createTask(data: {
   status?: TaskStatus;
   assigneeId?: string;
   dueDate?: string;
+  priority?: string;
 }) {
   const supabase = await createClient();
   const user = await getCurrentUser();
@@ -31,6 +32,7 @@ export async function createTask(data: {
       status: data.status ?? "todo",
       assignee_id: data.assigneeId ?? null,
       due_date: data.dueDate ?? null,
+      priority: data.priority ?? "medium",
       created_by: user.id,
     })
     .select(`
@@ -72,6 +74,7 @@ export async function updateTask(
     status?: TaskStatus;
     assignee_id?: string | null;
     due_date?: string | null;
+    priority?: string;
   },
   projectId: string
 ) {

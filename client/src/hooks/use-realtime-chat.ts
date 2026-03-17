@@ -79,7 +79,7 @@ export function useRealtimeChat({
             setMessages((prev) => {
               // Deduplicate — optimistic insert may already exist
               const exists = prev.some((m) => m.id === data.id);
-              return exists ? prev : [...prev, data as ChatMessage];
+              return exists ? prev : [...prev, data as any as ChatMessage];
             });
           }
         }
@@ -175,7 +175,7 @@ export function useRealtimeChat({
 
       // Replace optimistic with real DB row
       setMessages((prev) =>
-        prev.map((m) => (m.id === optimisticId ? (data as ChatMessage) : m))
+        prev.map((m) => (m.id === optimisticId ? (data as any as ChatMessage) : m))
       );
     },
     [channelId, currentUserId, supabase]

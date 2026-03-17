@@ -7,15 +7,17 @@ import { createChannel } from "@/lib/channels";
 import { createTask, updateTask, deleteTask } from "@/lib/tasks";
 import { addResource, deleteResource } from "@/lib/resources";
 import { inviteProjectMember, getProjectMembers } from "@/lib/project-members";
+import { getProjectIntegrations, upsertGitHubIntegration, deleteIntegration, Integration } from "@/lib/integrations";
 import { useParams } from "next/navigation";
 import {
   MessageSquare, CheckSquare, Users, FolderOpen, Plus, X, Hash,
   Send, Loader2, AlertCircle, Link as LinkIcon, FileText, Sparkles,
   Paperclip, ImageIcon, Smile, Bold, Italic, Code, Menu,
-  Book, Mail, CheckCircle2,
+  Book, Mail, CheckCircle2, Settings as SettingsIcon, Github
 } from "lucide-react";
+import { TaskBoard, Task as BoardTask } from "@/components/workspace/TaskBoard";
 
-type Tab = "chat" | "tasks" | "team" | "resources";
+type Tab = "chat" | "tasks" | "team" | "resources" | "settings";
 type TaskStatus = "todo" | "in_progress" | "review" | "done";
 
 interface Channel { id: string; name: string; description: string | null; is_private: boolean; }
@@ -29,7 +31,9 @@ interface Message {
 interface Task {
   id: string; title: string; status: TaskStatus; assignee_id: string | null;
   stalled_days: number; due_date: string | null;
+  created_at: string;
   assignee?: { id: string; full_name: string | null; avatar_url: string | null } | null;
+  projects?: { id: string; name: string; color: string } | null;
 }
 interface TeamMember {
   id: string; role: string;
@@ -150,6 +154,8 @@ export default function SpacePage() {
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [newTaskAssigneeId, setNewTaskAssigneeId] = useState<string | null>(null);
   const [newTaskDueDate, setNewTaskDueDate] = useState("");
+  const [newTaskPriority, setNewTaskPriority] = useState<string>("medium");
+  const [newTaskStatus, setNewTaskStatus] = useState<string>("todo");
   const [newTaskAssigneeOpen, setNewTaskAssigneeOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<"admin" | "member" | "viewer">("member");
@@ -159,6 +165,10 @@ export default function SpacePage() {
   const [newResourceUrl, setNewResourceUrl] = useState("");
   const [newResourceCategory, setNewResourceCategory] = useState("Documentation");
   const [actionLoading, setActionLoading] = useState(false);
+
+  const [integrations, setIntegrations] = useState<Integration[]>([]);
+  const [repoInput, setRepoInput] = useState("");
+  const [intLoading, setIntLoading] = useState(false);
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
@@ -172,12 +182,16 @@ export default function SpacePage() {
       if (proj) setProject(proj);
       const { data: ch } = await supabase.from("channels").select("*").eq("project_id", projectId).order("created_at");
       if (ch?.length) { setChannels(ch); setActiveChannel(ch[0]); }
-      const { data: ts } = await supabase.from("tasks").select("*,assignee:profiles!tasks_assignee_id_fkey(id,full_name,avatar_url)").eq("project_id", projectId).order("created_at");
-      if (ts) setTasks(ts as Task[]);
+      const { data: ts } = await supabase.from("tasks").select("*,assignee:profiles!tasks_assignee_id_fkey(id,full_name,avatar_url),projects!tasks_project_id_fkey(id,name,color)").eq("project_id", projectId).order("created_at");
+      if (ts) setTasks(ts as any[]);
       const { members } = await getProjectMembers(projectId);
       if (members) setTeam(members as unknown as TeamMember[]);
       const { data: rs } = await supabase.from("resources").select("*").eq("project_id", projectId).order("category");
       if (rs) setResources(rs);
+      
+      const { integrations: intgs } = await getProjectIntegrations(projectId);
+      if (intgs) setIntegrations(intgs);
+
       const { error: markErr } = await supabase
         .from("notifications")
         .update({ read: true })
@@ -370,11 +384,15 @@ export default function SpacePage() {
       title: newTaskTitle,
       assigneeId: newTaskAssigneeId ?? undefined,
       dueDate: newTaskDueDate || undefined,
+      priority: newTaskPriority,
+      status: newTaskStatus as any,
     });
     if (result.task) setTasks((p) => [...p, result.task as Task]);
     setNewTaskTitle("");
     setNewTaskAssigneeId(null);
     setNewTaskDueDate("");
+    setNewTaskPriority("medium");
+    setNewTaskStatus("todo");
     setNewTaskAssigneeOpen(false);
     setShowNewTask(false);
     setActionLoading(false);
@@ -424,6 +442,29 @@ export default function SpacePage() {
     setResources((p) => p.filter((r) => r.id !== id));
   };
 
+  const handleConnectRepo = async () => {
+    if (!repoInput.trim() || !project) return;
+    setIntLoading(true);
+    const res = await upsertGitHubIntegration({
+      workspaceId: project.workspace_id,
+      projectId: project.id,
+      repoFullName: repoInput.trim(),
+    });
+    if (res.success) {
+      const { integrations: updated } = await getProjectIntegrations(projectId);
+      if (updated) setIntegrations(updated);
+      setRepoInput("");
+    }
+    setIntLoading(false);
+  };
+
+  const handleDeleteIntegration = async (id: string) => {
+    const res = await deleteIntegration(id, projectId);
+    if (res.success) {
+      setIntegrations((prev) => prev.filter((i) => i.id !== id));
+    }
+  };
+
   const groupedResources = resources.reduce<Record<string, Resource[]>>((acc, r) => {
     if (!acc[r.category]) acc[r.category] = []; acc[r.category].push(r); return acc;
   }, {});
@@ -438,6 +479,7 @@ export default function SpacePage() {
     { id: "tasks", label: "Tasks", icon: <CheckSquare size={14} /> },
     { id: "team", label: "Team", icon: <Users size={14} /> },
     { id: "resources", label: "Resources", icon: <FolderOpen size={14} /> },
+    { id: "settings", label: "Settings", icon: <SettingsIcon size={14} /> },
   ];
 
   const buildMessageGroups = () => {
@@ -558,6 +600,8 @@ export default function SpacePage() {
     setNewTaskTitle("");
     setNewTaskAssigneeId(null);
     setNewTaskDueDate("");
+    setNewTaskPriority("medium");
+    setNewTaskStatus("todo");
     setNewTaskAssigneeOpen(false);
     if (!inviteSent) {
       setShowInvite(false);
@@ -755,56 +799,30 @@ export default function SpacePage() {
             )}
 
             {tab === "tasks" && (
-              <div className="p-4 sm:p-5">
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-                  {[
-                    { label: "Total", val: taskCounts.total, color: "#0D0D0D" },
-                    { label: "In Progress", val: taskCounts.inProgress, color: "#36C5F0" },
-                    { label: "Review", val: taskCounts.review, color: "#D97706" },
-                    { label: "Done", val: taskCounts.done, color: "#059669" },
-                  ].map((s, i) => (
-                    <div key={i} className="bg-white border border-gray-100 rounded-xl px-4 py-3 text-center">
-                      <p className="text-[24px] font-black" style={{ color: s.color }}>{s.val}</p>
-                      <p className="text-[11px] text-gray-400 font-semibold">{s.label}</p>
-                    </div>
-                  ))}
-                </div>
-                <div className="space-y-2">
-                  {tasks.map((t, i) => {
-                    const s = STATUS_CONFIG[t.status];
-                    return (
-                      <motion.div key={t.id} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
-                        className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-3 bg-white rounded-xl border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all group">
-                        <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: s.fg }} />
-                        <p className="flex-1 text-[13px] font-semibold text-gray-800 truncate min-w-0">{t.title}</p>
-                        {t.stalled_days > 3 && (
-                          <span className="hidden sm:flex items-center gap-1 text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full flex-shrink-0">
-                            <AlertCircle size={10} />Stalled
-                          </span>
-                        )}
-                        <select value={t.status} onChange={(e) => handleTaskStatus(t.id, e.target.value as TaskStatus)}
-                          className="text-[11px] font-bold px-2 py-1 rounded-full flex-shrink-0 cursor-pointer outline-none border-0"
-                          style={{ background: s.bg, color: s.fg, fontFamily: "'Sora',sans-serif" }}>
-                          {Object.entries(STATUS_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-                        </select>
-                        {t.assignee && <Avatar name={t.assignee.full_name} userId={t.assignee.id} size={24} />}
-                        <span className="text-[11px] text-gray-300 hidden sm:block flex-shrink-0">
-                          {t.due_date ? new Date(t.due_date).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—"}
-                        </span>
-                        <button onClick={() => handleDeleteTask(t.id)}
-                          className="opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-gray-300 hover:text-red-400 border-0 bg-transparent">
-                          <X size={12} />
-                        </button>
-                      </motion.div>
-                    );
-                  })}
-                  {tasks.length === 0 && (
-                    <div className="text-center py-12 text-gray-300">
-                      <CheckSquare size={32} className="mx-auto mb-2 opacity-40" />
-                      <p className="text-[13px] font-semibold">No tasks yet.</p>
-                    </div>
-                  )}
-                </div>
+              <div className="p-6 h-full flex flex-col">
+                <TaskBoard 
+                  tasks={tasks.map(t => ({
+                    ...t,
+                    project: t.projects?.name || project?.name || "Project",
+                    project_id: projectId,
+                    projectColor: t.projects?.color || project?.color || "#36C5F0",
+                    assignee: t.assignee?.full_name || "Unassigned",
+                    assignee_id: t.assignee_id,
+                    assigneeColor: colorFromString(t.assignee_id || "unassigned"),
+                    tags: [],
+                    status: t.status as any,
+                    priority: (t as any).priority || "medium",
+                    stalled: t.status !== 'done' && (Math.floor((new Date().getTime() - new Date(t.created_at).getTime()) / (1000 * 60 * 60 * 24))) >= 3,
+                    dueDate: t.due_date
+                  })) as BoardTask[]}
+                  projects={project ? [project] : []}
+                  members={team}
+                  projectId={projectId}
+                  onRefresh={async () => {
+                    const { data: ts } = await supabase.from("tasks").select("*,assignee:profiles!tasks_assignee_id_fkey(id,full_name,avatar_url),projects!tasks_project_id_fkey(id,name,color)").eq("project_id", projectId).order("created_at");
+                    if (ts) setTasks(ts as any[]);
+                  }}
+                />
               </div>
             )}
 
@@ -894,6 +912,79 @@ export default function SpacePage() {
                       ))}
                     </motion.div>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {tab === "settings" && (
+              <div className="p-4 sm:p-5 max-w-2xl">
+                <div className="bg-white border border-gray-100 rounded-2xl p-6 mb-6">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-xl bg-gray-900 flex items-center justify-center text-white">
+                      <Github size={20} />
+                    </div>
+                    <div>
+                      <h3 className="text-[15px] font-black text-gray-900">GitHub Integration</h3>
+                      <p className="text-[12px] text-gray-400">Connect a repository to track activity and automate nudges.</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex gap-2">
+                      <input 
+                        value={repoInput}
+                        onChange={(e) => setRepoInput(e.target.value)}
+                        placeholder="org/repo (e.g. google/nudge)"
+                        className="flex-1 px-4 py-2.5 bg-[#F9F9F7] border border-gray-100 rounded-xl text-[13.5px] font-medium outline-none focus:border-gray-300 transition-all"
+                      />
+                      <button 
+                        onClick={handleConnectRepo}
+                        disabled={intLoading || !repoInput.trim()}
+                        className="px-6 py-2.5 bg-[#0D0D0D] text-white rounded-xl text-[13px] font-bold disabled:opacity-50 cursor-pointer border-0"
+                      >
+                        {intLoading ? <Loader2 size={14} className="animate-spin" /> : "Connect"}
+                      </button>
+                    </div>
+
+                    <div className="pt-2">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">Active Connections</p>
+                      {integrations.filter(i => i.provider === 'github').length === 0 ? (
+                        <p className="text-[12px] text-gray-300 italic">No repositories connected yet.</p>
+                      ) : (
+                        <div className="space-y-2">
+                          {integrations.filter(i => i.provider === 'github').map((intg) => (
+                            <div key={intg.id} className="flex items-center justify-between p-3 bg-[#F9F9F7] rounded-xl border border-gray-100 group">
+                              <div className="flex items-center gap-3">
+                                <Github size={14} className="text-gray-400" />
+                                <span className="text-[13px] font-semibold text-gray-700">{intg.repo_full_name}</span>
+                              </div>
+                              <button 
+                                onClick={() => handleDeleteIntegration(intg.id)}
+                                className="opacity-0 group-hover:opacity-100 p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all cursor-pointer border-0 bg-transparent"
+                              >
+                                <X size={14} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-amber-50 border border-amber-100 rounded-2xl p-5 flex gap-4">
+                  <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center text-amber-600 flex-shrink-0">
+                    <AlertCircle size={18} />
+                  </div>
+                  <div>
+                    <h4 className="text-[13px] font-bold text-amber-900 mb-1">Webhook Configuration</h4>
+                    <p className="text-[12px] text-amber-800 leading-relaxed mb-3">
+                      To receive updates, add this URL as a webhook in your GitHub repository settings:
+                    </p>
+                    <code className="block p-3 bg-white/50 border border-amber-200 rounded-xl text-[11px] font-mono text-amber-900 break-all">
+                      {typeof window !== 'undefined' ? window.location.origin.replace('3000', '8000') : ""}/webhooks/github
+                    </code>
+                  </div>
                 </div>
               </div>
             )}
@@ -1012,7 +1103,7 @@ export default function SpacePage() {
         )}
       </div>
 
-      {/* ═══ MODALS ═══ */}
+
       <AnimatePresence>
         {modalOpen && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -1146,13 +1237,37 @@ export default function SpacePage() {
                         </AnimatePresence>
                       </div>
 
-                      <input
-                        type="date"
-                        value={newTaskDueDate}
-                        onChange={(e) => setNewTaskDueDate(e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-200 rounded-xl text-[13px] font-medium text-gray-900 outline-none"
-                        style={{ fontFamily: "'Sora',sans-serif", colorScheme: "light" }}
-                      />
+                      <div className="grid grid-cols-3 gap-2">
+                        <div>
+                          <label className="text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1.5 block">Priority</label>
+                          <select value={newTaskPriority} onChange={(e) => setNewTaskPriority(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-200 rounded-xl text-[13px] font-medium outline-none bg-white">
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1.5 block">Status</label>
+                          <select value={newTaskStatus} onChange={(e) => setNewTaskStatus(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-200 rounded-xl text-[13px] font-medium outline-none bg-white">
+                            <option value="todo">To Do</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="review">Review</option>
+                            <option value="done">Done</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1.5 block">Due Date</label>
+                          <input
+                            type="date"
+                            value={newTaskDueDate}
+                            onChange={(e) => setNewTaskDueDate(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-200 rounded-xl text-[13px] font-medium text-gray-900 outline-none bg-white"
+                            style={{ fontFamily: "'Sora',sans-serif", colorScheme: "light" }}
+                          />
+                        </div>
+                      </div>
                     </div>
                     <div className="flex gap-2.5">
                       <button onClick={closeModal} className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl text-[13px] font-bold cursor-pointer border-0">Cancel</button>
@@ -1166,7 +1281,7 @@ export default function SpacePage() {
                 );
               })()}
 
-              {/* ── INVITE MODAL ── */}
+
               {showInvite && (
                 <>
                   {inviteSent ? (
