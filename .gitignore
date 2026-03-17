@@ -17,7 +17,7 @@ client/**/node_modules/
 
 # ignore nested repos
 client/**/.git
-
+nudge_engine/**/venv
 # dependencies
 node_modules/
 

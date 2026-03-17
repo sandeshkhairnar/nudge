@@ -1,0 +1,51 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Nudge Engine v4.0 — Python Dependencies
+# Install: pip install -r requirements.txt
+# Python >= 3.11 required
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+# ── Web framework ─────────────────────────────────────────────────────────────
+fastapi
+uvicorn[standard]
+gunicorn
+
+
+# ── Configuration ─────────────────────────────────────────────────────────────
+pydantic
+pydantic-settings
+
+
+# ── LangChain core ────────────────────────────────────────────────────────────
+langchain
+langchain-core
+langchain-community
+
+
+# ── LLM providers (all three included; unused ones are inert) ─────────────────
+langchain-anthropic
+langchain-google-genai
+langchain-openai
+
+
+# ── Database ──────────────────────────────────────────────────────────────────
+supabase
+realtime
+
+
+# ── Cache / rate limiting ─────────────────────────────────────────────────────
+redis[asyncio]
+
+
+# ── Scheduling ────────────────────────────────────────────────────────────────
+apscheduler
+
+
+# ── HTTP client ───────────────────────────────────────────────────────────────
+httpx
+
+
+# ── Testing ───────────────────────────────────────────────────────────────────
+pytest
+pytest-asyncio
+pytest-mock
