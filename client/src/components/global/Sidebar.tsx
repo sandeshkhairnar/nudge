@@ -527,6 +527,8 @@ export default function Sidebar() {
             <Avatar 
               url={profile?.avatar_url} 
               name={profile?.full_name} 
+              email={profile?.email}
+              role="You"
               size={32} 
               fallbackColor="#36C5F0" 
             />

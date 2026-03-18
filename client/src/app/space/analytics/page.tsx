@@ -38,13 +38,14 @@ interface ProjectVelocity {
   completions: number;
   velocity: number; // tasks/day
   progress: number;
-  members: { id: string; name: string; avatar?: string }[];
+  members: { id: string; name: string; avatar?: string; email?: string }[];
 }
 
 interface MemberMerit {
   id: string;
   name: string;
   avatar?: string;
+  email?: string;
   completions: number;
   meritScore: number; // 0-100 logic
   status: "Elite" | "Steady" | "Rising";
@@ -112,7 +113,7 @@ export default function AnalyticsPage() {
 
     const { data: workspaceMembers } = await supabase
       .from("workspace_members")
-      .select("profiles(id, full_name, avatar_url)")
+      .select("profiles(id, full_name, avatar_url, email)")
       .eq("workspace_id", workspace.id);
 
     if (!projects || projects.length === 0) {
@@ -123,7 +124,7 @@ export default function AnalyticsPage() {
     const projectIds = projects.map(p => p.id);
     const { data: tasks } = await supabase
       .from("tasks")
-      .select("*, assignee:profiles!tasks_assignee_id_fkey(id, full_name, avatar_url)")
+      .select("*, assignee:profiles!tasks_assignee_id_fkey(id, full_name, avatar_url, email)")
       .in("project_id", projectIds);
 
     if (tasks) {
@@ -143,7 +144,8 @@ export default function AnalyticsPage() {
             memberMap.set(t.assignee.id, {
               id: t.assignee.id,
               name: t.assignee.full_name,
-              avatar: t.assignee.avatar_url
+              avatar: t.assignee.avatar_url,
+              email: t.assignee.email
             });
           }
         });
@@ -182,6 +184,7 @@ export default function AnalyticsPage() {
           id: p.id,
           name: p.full_name,
           avatar: p.avatar_url,
+          email: p.email,
           completions,
           meritScore: score,
           status: (score > 85 ? "Elite" : score > 50 ? "Steady" : "Rising") as "Elite" | "Steady" | "Rising"
@@ -317,6 +320,8 @@ export default function AnalyticsPage() {
                   <Avatar 
                     url={m.avatar} 
                     name={m.name} 
+                    email={m.email}
+                    role={m.status}
                     size={64} 
                     className="rounded-[24px] border border-white/10 shadow-lg group-hover:border-[#36C5F0]/40 transition-all group-hover:scale-105 duration-500"
                   />
@@ -424,6 +429,7 @@ export default function AnalyticsPage() {
                           key={m.id} 
                           url={m.avatar} 
                           name={m.name} 
+                          email={m.email}
                           size={32} 
                           fallbackColor={p.color} 
                           className="border-2 border-white shadow-sm"

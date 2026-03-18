@@ -18,6 +18,8 @@ client/**/node_modules/
 # ignore nested repos
 client/**/.git
 nudge_engine/**/venv
+nudge_engine/**/__pycache__
+
 # dependencies
 node_modules/
 

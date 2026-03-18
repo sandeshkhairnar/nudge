@@ -1,10 +1,9 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { useWorkspaceStore } from "@/store/workspace-store";
-import { Sparkles, Bell, Clock, CheckCircle2, XCircle, AlertCircle, Loader2, RefreshCw } from "lucide-react";
+import { Sparkles, Bell, Clock, CheckCircle2, XCircle, AlertCircle, Loader2, RefreshCw, Zap, Settings2 } from "lucide-react";
 
 interface Nudge {
   id: string;
@@ -23,6 +22,62 @@ export default function NudgesPage() {
   const [nudges, setNudges] = useState<Nudge[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Settings state initialized from workspace
+  const [engineActive, setEngineActive] = useState((workspace as any)?.nudge_engine_active ?? true);
+  const [checkTime, setCheckTime] = useState((workspace as any)?.nudge_check_time ?? "09:00");
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      if (!workspace?.id) return;
+      const { data, error } = await supabase
+        .from("workspaces")
+        .select("nudge_engine_active, nudge_check_time")
+        .eq("id", workspace.id)
+        .single();
+        
+      if (data && !error) {
+        if (data.nudge_engine_active !== null) setEngineActive(data.nudge_engine_active);
+        if (data.nudge_check_time !== null) setCheckTime(data.nudge_check_time);
+      }
+    };
+    loadSettings();
+  }, [workspace?.id]);
+const handleToggleEngine = async () => {
+  if (!workspace?.id) return;
+  const newState = !engineActive;
+  setEngineActive(newState);
+  
+  const { data, error } = await supabase
+    .from("workspaces")
+    .update({ nudge_engine_active: newState })
+    .eq("id", workspace.id)
+    .select("nudge_engine_active") // forces 200 + returns updated row
+    .single();
+
+  if (error || !data) {
+    setEngineActive(!newState); // rollback on failure
+    console.error("Toggle failed:", error);
+  }
+};
+
+const handleTimeBlur = async () => {
+  if (!workspace?.id || !checkTime) return;
+
+  const { data, error } = await supabase
+    .from("workspaces")
+    .update({ nudge_check_time: checkTime })
+    .eq("id", workspace.id)
+    .select("nudge_check_time")
+    .single();
+
+  if (error || !data) {
+    console.error("Time save failed:", error);
+  }
+};
+
+  const handleTimeChange = (newTime: string) => {
+    setCheckTime(newTime);
+  };
   useEffect(() => {
     if (workspace?.id) {
       loadNudges();
@@ -41,6 +96,8 @@ export default function NudgesPage() {
       .order("created_at", { ascending: false });
 
     if (data) setNudges(data as any);
+    else setNudges([]);
+
     setLoading(false);
   };
 
@@ -83,6 +140,52 @@ export default function NudgesPage() {
           <RefreshCw size={14} />
           Refresh
         </button>
+      </div>
+
+      <div className="bg-white border text-gray-900 border-gray-100 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="flex items-center gap-4">
+          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors ${engineActive ? 'bg-emerald-50 text-emerald-500' : 'bg-gray-50 text-gray-400'}`}>
+            <Zap size={24} className={engineActive ? 'fill-emerald-500' : ''} />
+          </div>
+          <div>
+            <h3 className="text-[16px] font-black tracking-tight mb-0.5">Nudge Engine</h3>
+            <p className="text-[13px] text-gray-500 font-medium">
+              {engineActive ? "Active. Monitoring your workspace." : "Paused. No new nudges will be generated."}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-6 sm:gap-8">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-black tracking-wider uppercase text-gray-400">Daily Check Time</label>
+            <div className="relative">
+              <Clock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input 
+                type="time" 
+                value={checkTime}
+                onChange={(e) => handleTimeChange(e.target.value)}
+                onBlur={handleTimeBlur}
+                disabled={!engineActive}
+                className="pl-9 pr-3 py-2 bg-gray-50 border border-gray-100 rounded-lg text-[13px] font-bold text-gray-700 outline-none focus:border-[#36C5F0] transition-colors disabled:opacity-50"
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1.5 items-end">
+            <label className="text-[10px] font-black tracking-wider uppercase text-gray-400">Status</label>
+            <motion.div 
+              className={`w-11 h-6 flex items-center bg-gray-200 rounded-full p-1 cursor-pointer transition-colors ${engineActive ? 'bg-emerald-500' : ''}`}
+              onClick={handleToggleEngine}
+            >
+              <motion.div
+                className="bg-white w-4 h-4 rounded-full shadow-md"
+                layout
+                transition={{ type: "spring", stiffness: 700, damping: 30 }}
+                style={{ marginLeft: engineActive ? "auto" : "0px" }}
+              />
+            </motion.div>
+          </div>
+        </div>
       </div>
 
       <div className="space-y-4">

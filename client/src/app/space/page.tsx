@@ -7,6 +7,8 @@ import { useWorkspaceStore } from "@/store/workspace-store";
 import Avatar from "@/components/global/Avatar";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { Streamdown } from "streamdown";
+import { Zap } from "lucide-react";
 
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
@@ -18,8 +20,9 @@ interface DashTask {
   project_name: string | null; project_color: string | null;
   assignee_name: string | null; assignee_id: string | null;
   assignee_avatar_url: string | null;
+  assignee_email: string | null;
 }
-interface TeamMember { id: string; full_name: string | null; avatar_url: string | null; task_count: number; done_count: number; }
+interface TeamMember { id: string; full_name: string | null; avatar_url: string | null; email: string | null; task_count: number; done_count: number; }
 interface Stats { total: number; done: number; inProgress: number; stalled: number; projects: number; members: number; }
 
 const PALETTE = ["#36C5F0", "#2EB67D", "#ECB22E", "#E01E5A", "#A259FF", "#FF6B6B"];
@@ -32,11 +35,11 @@ const STATUS_META = {
   done: { label: "Done", bg: "#ECFDF5", fg: "#059669" },
 };
 
-function Reveal({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) {
+function Reveal({ children, delay = 0, className = "", style }: { children: React.ReactNode; delay?: number; className?: string; style?: React.CSSProperties }) {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-5% 0px" });
   return (
-    <motion.div ref={ref} className={className}
+    <motion.div ref={ref} className={className} style={style}
       initial={{ opacity: 0, y: 14 }} animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.5, delay, ease: [0.16, 1, 0.3, 1] }}>
       {children}
@@ -78,12 +81,7 @@ function MiniRing({ value, color, size = 38 }: { value: number; color: string; s
   );
 }
 
-const NUDGES = [
-  { task: "API rate limiting", msg: "6 days, no updates. Ping the assignee?", accent: "#ECB22E", time: "2m" },
-  { task: "Onboarding flow v2", msg: "No assignee, due in 3 days.", accent: "#E01E5A", time: "18m" },
-  { task: "Design System merge", msg: "3 unresolved PR review comments.", accent: "#36C5F0", time: "1h" },
-];
-
+// Removed mock NUDGES
 const I = {
   task: <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M9 11l3 3L22 4" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" /></svg>,
   check: <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2.2" /><path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>,
@@ -93,14 +91,16 @@ const I = {
 };
 
 /* shared card shell — fills its grid cell fully */
-function Card({ children, className = "", dark = false }: { children: React.ReactNode; className?: string; dark?: boolean }) {
+function Card({ children, className = "", dark = false, style }: { children: React.ReactNode; className?: string; dark?: boolean; style?: React.CSSProperties }) {
   return (
     <div
       className={`h-full flex flex-col rounded-2xl border overflow-hidden ${className}`}
-      style={dark
-        ? { background: "#0D0D0D", borderColor: "rgba(255,255,255,0.07)", boxShadow: "0 4px 20px rgba(0,0,0,0.18)" }
-        : { background: "#fff", borderColor: "#EBEBEB", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }
-      }>
+      style={{
+        ...(dark
+          ? { background: "#0D0D0D", borderColor: "rgba(255,255,255,0.07)", boxShadow: "0 4px 20px rgba(0,0,0,0.18)" }
+          : { background: "#fff", borderColor: "#EBEBEB", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }),
+        ...style,
+      }}>
       {children}
     </div>
   );
@@ -136,19 +136,82 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<Stats>({ total: 0, done: 0, inProgress: 0, stalled: 0, projects: 0, members: 0 });
   const [projects, setProjects] = useState<Project[]>([]);
   const [tasks, setTasks] = useState<DashTask[]>([]);
+  const [nudges, setNudges] = useState<any[]>([]);
   const [team, setTeam] = useState<TeamMember[]>([]);
   const [weekly, setWeekly] = useState<{ week: string; done: number; inProgress: number; todo: number }[]>([]);
   const [loading, setLoading] = useState(true);
-  const [me, setMe] = useState<{ id: string; full_name: string | null } | null>(null);
+  const [me, setMe] = useState<{ id: string; full_name: string | null; avatar_url: string | null; email: string | null } | null>(null);
+  const [engineActive, setEngineActive] = useState(false);
   const [tab, setTab] = useState<"all" | "mine" | "stalled">("all");
   const [aiInput, setAiInput] = useState("");
+  const [messages, setMessages] = useState<{ role: "user" | "ai"; content: string }[]>([
+    { role: "ai", content: "Hello! I'm your Nudge AI assistant. Ask me about tasks, projects, or team status — I can help!" }
+  ]);
+  const [isAiTyping, setIsAiTyping] = useState(false);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    const el = chatContainerRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isAiTyping]);
+
+  const handleAiSend = async () => {
+    if (!aiInput.trim() || isAiTyping || !workspace?.id) return;
+
+    const userMsg = aiInput;
+    setAiInput("");
+    setMessages(prev => [...prev, { role: "user", content: userMsg }]);
+    setMessages(prev => [...prev, { role: "ai", content: "" }]);
+    setIsAiTyping(true);
+
+    try {
+      const response = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workspace_id: workspace.id, content: userMsg }),
+      });
+
+      if (!response.body) throw new Error("No response body");
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let done = false;
+      let aiResponse = "";
+
+      while (!done) {
+        const { value, done: readerDone } = await reader.read();
+        done = readerDone;
+        const chunk = decoder.decode(value, { stream: true });
+        aiResponse += chunk;
+
+        setMessages(prev => {
+          const updated = [...prev];
+          updated[updated.length - 1] = { role: "ai", content: aiResponse };
+          return updated;
+        });
+      }
+    } catch (err) {
+      console.error("AI Error:", err);
+      setMessages(prev => {
+        const updated = [...prev];
+        updated[updated.length - 1] = { role: "ai", content: "Sorry, I encountered an error. Please try again." };
+        return updated;
+      });
+    } finally {
+      setIsAiTyping(false);
+    }
+  };
 
   useEffect(() => {
     if (!workspace?.id) return;
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      const { data: prof } = await supabase.from("profiles").select("id,full_name").eq("id", user.id).single();
+      const { data: prof } = await supabase.from("profiles").select("id,full_name,avatar_url,email").eq("id", user.id).single();
       if (prof) setMe(prof as any);
 
       const { data: pm } = await supabase
@@ -162,7 +225,7 @@ export default function DashboardPage() {
 
       const { data: raw } = await supabase
         .from("tasks")
-        .select("id,title,status,stalled_days,due_date,project_id,created_at,assignee:profiles!tasks_assignee_id_fkey(id,full_name,avatar_url),project:projects!tasks_project_id_fkey(name,color)")
+        .select("id,title,status,stalled_days,due_date,project_id,created_at,assignee:profiles!tasks_assignee_id_fkey(id,full_name,avatar_url,email),project:projects!tasks_project_id_fkey(name,color)")
         .in("project_id", pids)
         .order("created_at", { ascending: false });
 
@@ -173,6 +236,7 @@ export default function DashboardPage() {
         project_name: t.project?.name ?? null, project_color: t.project?.color ?? null,
         assignee_name: t.assignee?.full_name ?? null, assignee_id: t.assignee?.id ?? null,
         assignee_avatar_url: t.assignee?.avatar_url ?? null,
+        assignee_email: t.assignee?.email ?? null,
       }));
 
       const tByP: Record<string, number> = {};
@@ -184,13 +248,13 @@ export default function DashboardPage() {
 
       const { data: mem } = await supabase
         .from("project_members")
-        .select("user_id, profiles!project_members_user_id_fkey(id,full_name,avatar_url)")
+        .select("user_id, profiles!project_members_user_id_fkey(id,full_name,avatar_url,email)")
         .in("project_id", pids);
 
       const mmap: Record<string, TeamMember> = {};
       ((mem ?? []) as any[]).forEach(m => {
         const p = m.profiles; if (!p || mmap[p.id]) return;
-        mmap[p.id] = { id: p.id, full_name: p.full_name, avatar_url: p.avatar_url, task_count: 0, done_count: 0 };
+        mmap[p.id] = { id: p.id, full_name: p.full_name, avatar_url: p.avatar_url, email: p.email, task_count: 0, done_count: 0 };
       });
       shaped.forEach(t => {
         if (t.assignee_id && mmap[t.assignee_id]) {
@@ -209,7 +273,23 @@ export default function DashboardPage() {
         else wk[b].todo++;
       });
 
-      setProjects(hydrated); setTasks(shaped);
+      const { data: rawNudges } = await supabase
+        .from("nudges")
+        .select("*, tasks(title)")
+        .eq("workspace_id", workspace.id)
+        .eq("dismissed", false)
+        .order("created_at", { ascending: false })
+        .limit(3);
+
+      const { data: wsData } = await supabase
+        .from("workspaces")
+        .select("nudge_engine_active")
+        .eq("id", workspace.id)
+        .single();
+
+      if (wsData) setEngineActive(wsData.nudge_engine_active);
+
+      setProjects(hydrated); setTasks(shaped); setNudges(rawNudges ?? []);
       setTeam(Object.values(mmap).sort((a, b) => b.task_count - a.task_count).slice(0, 6));
       setWeekly(wk);
       setStats({ total: shaped.length, done: shaped.filter(t => t.status === "done").length, inProgress: shaped.filter(t => t.status === "in_progress").length, stalled: shaped.filter(t => t.stalled_days >= 3).length, projects: hydrated.length, members: Object.keys(mmap).length });
@@ -364,14 +444,14 @@ export default function DashboardPage() {
         </Reveal>
 
         {/* Nudge AI — 4 cols desktop, full width mobile */}
-        <Reveal delay={0.08} className="col-span-12 lg:col-span-4 flex">
-          <Card dark className="flex flex-col flex-1 min-h-[360px] sm:min-h-[400px] min-h-0 overflow-hidden">
+        <Reveal delay={0.08} className="col-span-12 lg:col-span-4" style={{ height: 500 }}>
+          <Card dark className="flex flex-col overflow-hidden" style={{ height: 500, maxHeight: 500 }}>
             <div className="absolute inset-0 pointer-events-none rounded-2xl overflow-hidden"
               style={{ backgroundImage: "radial-gradient(rgba(255,255,255,0.03) 1px,transparent 1px)", backgroundSize: "18px 18px" }} />
 
-            <div className="relative flex flex-col h-full p-4 min-h-0">
+            <div className="relative flex flex-col p-4" style={{ height: "100%", maxHeight: 500, overflow: "hidden" }}>
 
-              {/* Header */}
+              {/* Header with clear chat */}
               <div className="flex items-center gap-2.5 pb-3 border-b border-white/10 flex-shrink-0">
                 <div className="w-8 h-8 rounded-xl bg-[#0D0D0D] flex items-center justify-center flex-shrink-0 shadow-lg ring-1 ring-white/10">
                   <svg width="20" height="20" viewBox="0 0 48 48" fill="none">
@@ -381,77 +461,127 @@ export default function DashboardPage() {
                     <rect x="26" y="26" width="16" height="16" rx="8" fill="#2EB67D" />
                   </svg>
                 </div>
-                <div>
+                <div className="flex-1 min-w-0">
                   <h3 className="text-sm font-semibold text-white leading-tight">Nudge AI</h3>
                   <p className="text-[10px] text-green-400 leading-tight">● online</p>
                 </div>
+                {messages.length > 1 && (
+                  <button
+                    onClick={() => setMessages([{ role: "ai", content: "Hello! I'm your Nudge AI assistant. Ask me about tasks, projects, or team status — I can help!" }])}
+                    className="p-1.5 rounded-lg hover:bg-white/10 transition-colors group"
+                    title="Clear chat"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white/30 group-hover:text-white/60 transition-colors">
+                      <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z" />
+                    </svg>
+                  </button>
+                )}
               </div>
 
-              <div className="flex-1 overflow-y-auto py-3 space-y-3 min-h-0 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+              {/* Messages area */}
+              <div ref={chatContainerRef} style={{ flex: 1, minHeight: 0, overflowY: "auto" }} className="py-3 space-y-3 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+                {messages.map((m, i) => (
+                  <motion.div
+                    key={i}
+                    initial={i > 0 ? { opacity: 0, y: 8 } : false}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className={`flex items-start gap-2 ${m.role === "user" ? "justify-end" : ""}`}
+                  >
+                    {m.role === "ai" && (
+                      <div className="w-6 h-6 rounded-lg bg-[#0D0D0D] ring-1 ring-white/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <svg width="12" height="12" viewBox="0 0 48 48" fill="none">
+                          <rect x="6" y="6" width="16" height="16" rx="8" fill="#36C5F0" />
+                          <rect x="6" y="26" width="16" height="16" rx="4" fill="#36C5F0" opacity="0.4" />
+                          <rect x="26" y="6" width="16" height="16" rx="4" fill="#2EB67D" opacity="0.4" />
+                          <rect x="26" y="26" width="16" height="16" rx="8" fill="#2EB67D" />
+                        </svg>
+                      </div>
+                    )}
+                    <div className={`${m.role === "user"
+                      ? "bg-gradient-to-br from-[#36C5F0]/25 to-[#2EB67D]/15 border border-[#36C5F0]/20 text-white"
+                      : "bg-white/[0.07] text-white/85 border border-white/[0.06]"
+                      } rounded-xl p-2.5 max-w-[85%] shadow-sm`}>
+                      <div className="text-xs leading-relaxed">
+                        {m.role === "ai" ? <Streamdown>{m.content}</Streamdown> : m.content}
+                      </div>
+                    </div>
+                    {m.role === "user" && (
+                      <div className="flex-shrink-0 mt-0.5">
+                        <Avatar
+                          url={me?.avatar_url || null}
+                          name={me?.full_name || "You"}
+                          email={me?.email || ""}
+                          size={24}
+                          fallbackColor={me?.id ? strColor(me.id) : "#A259FF"}
+                        />
+                      </div>
+                    )}
+                  </motion.div>
+                ))}
 
-                {/* Bot Message */}
-                <div className="flex items-start gap-2">
-                  <div className="w-6 h-6 rounded-lg bg-[#0D0D0D] ring-1 ring-white/10 flex items-center justify-center flex-shrink-0">
-                    <svg width="12" height="12" viewBox="0 0 48 48" fill="none">
-                      <rect x="6" y="6" width="16" height="16" rx="8" fill="#36C5F0" />
-                      <rect x="6" y="26" width="16" height="16" rx="4" fill="#36C5F0" opacity="0.4" />
-                      <rect x="26" y="6" width="16" height="16" rx="4" fill="#2EB67D" opacity="0.4" />
-                      <rect x="26" y="26" width="16" height="16" rx="8" fill="#2EB67D" />
-                    </svg>
-                  </div>
-                  <div className="bg-white/10 rounded-lg rounded-tl-sm p-2.5 max-w-[82%]">
-                    <p className="text-xs text-white/80 leading-relaxed">Hello! How can I help you today?</p>
-                  </div>
-                </div>
+                {/* Suggestion chips — show only on initial state */}
+                {messages.length === 1 && !isAiTyping && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="flex flex-wrap gap-1.5 pt-1"
+                  >
+                    {[
+                      { label: "📊 Project status", prompt: "Give me an overview of all projects and their current status" },
+                      { label: "⚠️ Stalled tasks", prompt: "Show me all stalled tasks that need attention" },
+                      { label: "📋 My tasks", prompt: "What tasks are currently assigned to me?" },
+                      { label: "🏥 Health check", prompt: "Run a health check on all active projects" },
+                    ].map((chip) => (
+                      <button
+                        key={chip.label}
+                        onClick={() => { setAiInput(chip.prompt); setTimeout(() => { setAiInput(""); setMessages(prev => [...prev, { role: "user", content: chip.prompt }]); setMessages(prev => [...prev, { role: "ai", content: "" }]); setIsAiTyping(true); fetch('/api/ai/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ workspace_id: workspace?.id, content: chip.prompt }) }).then(async (res) => { if (!res.body) throw new Error("No body"); const reader = res.body.getReader(); const decoder = new TextDecoder(); let aiR = ""; let d = false; while (!d) { const { value, done: rd } = await reader.read(); d = rd; const chunk = decoder.decode(value, { stream: true }); aiR += chunk; setMessages(prev => { const u = [...prev]; u[u.length - 1] = { role: "ai", content: aiR }; return u; }); } }).catch(() => { setMessages(prev => { const u = [...prev]; u[u.length - 1] = { role: "ai", content: "Sorry, I encountered an error." }; return u; }); }).finally(() => setIsAiTyping(false)); }, 50); }}
+                        className="px-2.5 py-1.5 rounded-lg bg-white/[0.06] border border-white/[0.08] text-[10px] text-white/60 hover:text-white hover:bg-white/10 hover:border-white/15 transition-all duration-200 cursor-pointer"
+                      >
+                        {chip.label}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
 
-                {/* User Message */}
-                <div className="flex items-start gap-2 justify-end">
-                  <div className="bg-[#36C5F0]/20 border border-[#36C5F0]/20 rounded-lg rounded-tr-sm p-2.5 max-w-[82%]">
-                    <p className="text-xs text-white leading-relaxed">What tasks are due today?</p>
+                {/* Typing indicator */}
+                {isAiTyping && messages[messages.length - 1].content === "" && (
+                  <div className="flex items-start gap-2">
+                    <div className="w-6 h-6 rounded-lg bg-[#0D0D0D] ring-1 ring-white/10 flex items-center justify-center flex-shrink-0">
+                      <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1.5 }} className="w-2 h-2 rounded-full bg-[#36C5F0]" />
+                    </div>
+                    <div className="bg-white/[0.07] border border-white/[0.06] rounded-xl p-2.5">
+                      <div className="flex gap-1.5 items-center">
+                        <motion.div animate={{ scale: [1, 1.4, 1] }} transition={{ repeat: Infinity, duration: 1, delay: 0 }} className="w-1.5 h-1.5 rounded-full bg-[#36C5F0]/60" />
+                        <motion.div animate={{ scale: [1, 1.4, 1] }} transition={{ repeat: Infinity, duration: 1, delay: 0.2 }} className="w-1.5 h-1.5 rounded-full bg-[#36C5F0]/60" />
+                        <motion.div animate={{ scale: [1, 1.4, 1] }} transition={{ repeat: Infinity, duration: 1, delay: 0.4 }} className="w-1.5 h-1.5 rounded-full bg-[#36C5F0]/60" />
+                        <span className="text-[9px] text-white/25 ml-1">thinking...</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="w-6 h-6 rounded-lg bg-purple-500/80 flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0">U</div>
-                </div>
-
-                {/* Bot Response with task list */}
-                <div className="flex items-start gap-2">
-                  <div className="w-6 h-6 rounded-lg bg-[#0D0D0D] ring-1 ring-white/10 flex items-center justify-center flex-shrink-0">
-                    <svg width="12" height="12" viewBox="0 0 48 48" fill="none">
-                      <rect x="6" y="6" width="16" height="16" rx="8" fill="#36C5F0" />
-                      <rect x="6" y="26" width="16" height="16" rx="4" fill="#36C5F0" opacity="0.4" />
-                      <rect x="26" y="6" width="16" height="16" rx="4" fill="#2EB67D" opacity="0.4" />
-                      <rect x="26" y="26" width="16" height="16" rx="8" fill="#2EB67D" />
-                    </svg>
-                  </div>
-                  <div className="bg-white/10 rounded-lg rounded-tl-sm p-2.5 max-w-[82%]">
-                    <p className="text-xs text-white/80 leading-relaxed mb-2">
-                      You have <span className="text-white font-semibold">3 tasks</span> due today:
-                    </p>
-                    <ul className="space-y-1.5">
-                      {[["Finish report", "2:00 PM", "#36C5F0"], ["Team meeting", "3:00 PM", "#2EB67D"], ["Review PR", "5:00 PM", "#ECB22E"]].map(([task, time, color]) => (
-                        <li key={task} className="flex items-center justify-between gap-2 bg-white/5 rounded-md px-2 py-1">
-                          <span className="flex items-center gap-1.5 text-[11px] text-white/70">
-                            <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: color }} />
-                            {task}
-                          </span>
-                          <span className="text-[10px] text-white/40 flex-shrink-0 font-mono">{time}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-
+                )}
               </div>
 
+              {/* Input area */}
               <div className="flex gap-2 pt-3 border-t border-white/10 flex-shrink-0">
-                <input
-                  type="text"
-                  value={aiInput}
-                  onChange={e => setAiInput(e.target.value)}
-                  placeholder="Ask Nudge AI..."
-                  className="flex-1 bg-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder:text-white/30 outline-none focus:ring-1 focus:ring-[#36C5F0] transition-all"
-                />
-                <button className="bg-[#36C5F0] hover:bg-[#2ba9d4] w-8 h-8 rounded-lg flex items-center justify-center transition-colors flex-shrink-0">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2">
+                <div className="flex-1 relative">
+                  <input
+                    type="text"
+                    value={aiInput}
+                    onChange={e => setAiInput(e.target.value)}
+                    onKeyDown={e => e.key === "Enter" && !e.shiftKey && handleAiSend()}
+                    placeholder="Ask about tasks, projects, team..."
+                    disabled={isAiTyping}
+                    className="w-full bg-white/[0.07] border border-white/[0.08] rounded-xl px-3 py-2.5 text-xs text-white placeholder:text-white/25 outline-none focus:ring-1 focus:ring-[#36C5F0]/50 focus:border-[#36C5F0]/30 transition-all disabled:opacity-40"
+                  />
+                </div>
+                <button
+                  onClick={handleAiSend}
+                  disabled={isAiTyping || !aiInput.trim()}
+                  className="bg-gradient-to-br from-[#36C5F0] to-[#2EB67D] hover:from-[#2ba9d4] hover:to-[#28a06e] w-9 h-9 rounded-xl flex items-center justify-center transition-all flex-shrink-0 disabled:opacity-30 disabled:cursor-not-allowed shadow-lg shadow-[#36C5F0]/20"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2">
                     <line x1="22" y1="2" x2="11" y2="13" />
                     <polygon points="22 2 15 22 11 13 2 9 22 2" />
                   </svg>
@@ -535,11 +665,12 @@ export default function DashboardPage() {
                           <td className="px-4 py-2.5">
                             {task.assignee_id ? (
                               <div className="flex items-center gap-1.5">
-                                <Avatar 
-                                  url={task.assignee_avatar_url} 
-                                  name={task.assignee_name || "Unknown"} 
-                                  size={24} 
-                                  fallbackColor={strColor(task.assignee_id)} 
+                                <Avatar
+                                  url={task.assignee_avatar_url}
+                                  name={task.assignee_name || "Unknown"}
+                                  email={task.assignee_email}
+                                  size={24}
+                                  fallbackColor={strColor(task.assignee_id)}
                                 />
                                 <span className="text-[10.5px] text-[#6B7280] truncate max-w-[55px]">{task.assignee_name}</span>
                               </div>
@@ -577,38 +708,46 @@ export default function DashboardPage() {
               style={{ backgroundImage: "radial-gradient(rgba(255,255,255,0.04) 1px,transparent 1px)", backgroundSize: "18px 18px" }} />
             <div className="relative px-5 pt-5 pb-0">
               <div className="flex items-center gap-2 mb-4">
-                <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 2, repeat: Infinity }}
-                  className="w-2 h-2 rounded-full bg-[#36C5F0]" />
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${engineActive ? 'bg-emerald-50 text-emerald-500' : 'bg-gray-50 text-gray-400'}`}>
+                  <Zap size={12} className={engineActive ? 'fill-emerald-500' : ''} />
+                </div>
                 <h3 className="text-[14px] font-black text-white">Nudge feed</h3>
-                <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(54,197,240,0.15)", color: "#36C5F0" }}>AI</span>
               </div>
             </div>
             <div className="relative pb-4">
-              {NUDGES.map((n, i) => (
-                <motion.div key={i}
-                  initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 + i * 0.1, duration: 0.5 }}
-                  className="px-5 py-3.5"
-                  style={{ borderTop: i > 0 ? "1px solid rgba(255,255,255,0.06)" : "none" }}>
-                  <div className="flex justify-between items-start mb-1.5 gap-2">
-                    <span className="text-[12px] font-bold truncate" style={{ color: n.accent }}>{n.task}</span>
-                    <span className="text-[10px] flex-shrink-0" style={{ color: "rgba(255,255,255,0.25)" }}>{n.time}</span>
-                  </div>
-                  <p className="text-[11.5px] leading-relaxed mb-2.5" style={{ color: "rgba(255,255,255,0.5)" }}>{n.msg}</p>
-                  <div className="flex gap-2">
-                    <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-                      className="flex-1 py-1.5 rounded-lg text-[11px] font-black text-white border-0 cursor-pointer"
-                      style={{ background: n.accent, fontFamily: "'Sora',sans-serif" }}>
-                      Send nudge
-                    </motion.button>
-                    <motion.button whileHover={{ scale: 1.03 }}
-                      className="px-3 py-1.5 rounded-lg text-[11px] font-bold border-0 cursor-pointer"
-                      style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.35)", fontFamily: "'Sora',sans-serif" }}>
-                      Dismiss
-                    </motion.button>
-                  </div>
-                </motion.div>
-              ))}
+              {nudges.length === 0 ? (
+                <div className="px-5 py-8 text-center text-white/50 text-[11px]">No active nudges right now.</div>
+              ) : nudges.map((n, i) => {
+                const accent = n.severity === "high" ? "#E01E5A" : n.severity === "low" ? "#36C5F0" : "#ECB22E";
+                const mins = Math.floor((new Date().getTime() - new Date(n.created_at).getTime()) / 60000);
+                const timeStr = mins < 60 ? `${mins}m ago` : `${Math.floor(mins / 60)}h ago`;
+
+                return (
+                  <motion.div key={n.id}
+                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 + i * 0.1, duration: 0.5 }}
+                    className="px-5 py-3.5"
+                    style={{ borderTop: i > 0 ? "1px solid rgba(255,255,255,0.06)" : "none" }}>
+                    <div className="flex justify-between items-start mb-1.5 gap-2">
+                      <span className="text-[12px] font-bold truncate" style={{ color: accent }}>{n.tasks?.title || "Workspace Update"}</span>
+                      <span className="text-[10px] flex-shrink-0" style={{ color: "rgba(255,255,255,0.25)" }}>{timeStr}</span>
+                    </div>
+                    <p className="text-[11.5px] leading-relaxed mb-2.5" style={{ color: "rgba(255,255,255,0.5)" }}>{n.content}</p>
+                    <div className="flex gap-2">
+                      <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+                        className="flex-1 py-1.5 rounded-lg text-[11px] font-black text-white border-0 cursor-pointer"
+                        style={{ background: accent, fontFamily: "'Sora',sans-serif" }}>
+                        Send nudge
+                      </motion.button>
+                      <motion.button whileHover={{ scale: 1.03 }}
+                        className="px-3 py-1.5 rounded-lg text-[11px] font-bold border-0 cursor-pointer"
+                        style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.35)", fontFamily: "'Sora',sans-serif" }}>
+                        Dismiss
+                      </motion.button>
+                    </div>
+                  </motion.div>
+                )
+              })}
             </div>
           </div>
         </Reveal>
@@ -707,11 +846,12 @@ export default function DashboardPage() {
 
                       return (
                         <div key={m.id} className="flex items-center gap-2.5">
-                          <Avatar 
-                            url={m.avatar_url} 
-                            name={m.full_name || "Unknown"} 
-                            size={24} 
-                            fallbackColor={strColor(m.id)} 
+                          <Avatar
+                            url={m.avatar_url}
+                            name={m.full_name || "Unknown"}
+                            email={m.email}
+                            size={24}
+                            fallbackColor={strColor(m.id)}
                           />
 
                           <div className="flex-1 min-w-0">

@@ -16,6 +16,7 @@ export interface Notification {
     id: string;
     full_name: string | null;
     avatar_url: string | null;
+    email: string | null;
   } | null;
   project_name: string | null;
   channel_name: string | null;
@@ -46,7 +47,7 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
         project_id, channel_id, message_id,
         content, preview,
         sender:profiles!notifications_sender_id_fkey (
-          id, full_name, avatar_url
+          id, full_name, avatar_url, email
         ),
         project:projects ( name ),
         channel:channels ( name )
@@ -93,7 +94,7 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
                 project_id, channel_id, message_id,
                 content, preview,
                 sender:profiles!notifications_sender_id_fkey (
-                  id, full_name, avatar_url
+                  id, full_name, avatar_url, email
                 ),
                 project:projects ( name ),
                 channel:channels ( name )

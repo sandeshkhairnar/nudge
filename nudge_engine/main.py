@@ -3,12 +3,12 @@ main.py — Nudge Engine v4.0
 App factory: registers all routers, owns lifespan (scheduler + Supabase Realtime),
 configures CORS, and mounts the /health UI page.
 """
+from fastapi import FastAPI, Request
 
 from contextlib import asynccontextmanager
 from importlib.metadata import version as pkg_version
 from typing import AsyncGenerator
 
-from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 
@@ -17,10 +17,34 @@ from config import get_settings
 # ── Router imports ────────────────────────────────────────────────────────────
 
 from routers.health_router import router as health_router
+from routers.agent_router import router as agent_router
+from routers.nudge_router import router as nudge_router
+from routers.github_router import router as github_router
+from routers.analytics_router import router as analytics_router
 
 # ── Infrastructure imports ────────────────────────────────────────────────────
 
+from database.realtime import setup_realtime_subscriptions
+from scheduler import setup_scheduler, stop_scheduler
 
+# ── Lifespan ───────────────────────────────────────────────────────────────
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator:
+    """
+    Handle app startup and shutdown events.
+    """
+    # Startup
+    # 1. Init background jobs
+    setup_scheduler()
+    
+    # 2. Start Realtime listener
+    await setup_realtime_subscriptions()
+    
+    yield
+    
+    # Shutdown
+    stop_scheduler()
 
 # ── App factory ───────────────────────────────────────────────────────────────
 
@@ -36,6 +60,7 @@ def create_app() -> FastAPI:
         version="4.0.0",
         docs_url="/docs",
         redoc_url="/redoc",
+        lifespan=lifespan,
     )
 
     # ── CORS ──────────────────────────────────────────────────────────────────
@@ -56,6 +81,11 @@ def create_app() -> FastAPI:
     # /health is public (no ENGINE_SECRET required) — all others are protected
     # by the ENGINE_SECRET dependency inside each router.
     app.include_router(health_router)          # GET  /health
+    app.include_router(agent_router)           # POST /agent
+    app.include_router(nudge_router)           # GET  /nudges
+    app.include_router(github_router)          # POST /webhooks/github
+    app.include_router(analytics_router)       # GET  /analytics
+
 
 
     return app

@@ -218,6 +218,8 @@ export default function SettingsPage() {
                     <Avatar 
                       url={profile?.avatar_url} 
                       name={fullName} 
+                      email={email}
+                      role="You"
                       size={80} 
                       className="rounded-2xl" 
                     />
@@ -503,6 +505,8 @@ export default function SettingsPage() {
             <Avatar 
               url={profile?.avatar_url} 
               name={profile?.full_name} 
+              email={profile?.email}
+              role="You"
               size={32} 
               fallbackColor="#36C5F0" 
             />

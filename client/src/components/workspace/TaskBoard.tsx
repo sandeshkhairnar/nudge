@@ -28,6 +28,8 @@ export interface Task {
   status: Status;
   stalled?: boolean;
   avatar_url?: string | null;
+  email?: string | null;
+  role?: string | null;
 }
 
 interface Column {
@@ -270,6 +272,8 @@ export function TaskBoard({
                           <Avatar 
                             url={t.avatar_url} 
                             name={t.assignee} 
+                            email={t.email}
+                            role={t.role}
                             size={24} 
                             fallbackColor={t.assigneeColor} 
                           />
@@ -421,6 +425,8 @@ export function TaskBoard({
                       <Avatar 
                         url={openTask.avatar_url} 
                         name={openTask.assignee} 
+                        email={openTask.email}
+                        role={openTask.role}
                         size={32} 
                         fallbackColor={openTask.assigneeColor} 
                       />
@@ -510,6 +516,8 @@ function TaskCardInternal({ task, columnColor, onOpen }: { task: Task; columnCol
         <Avatar 
           url={task.avatar_url} 
           name={task.assignee} 
+          email={task.email}
+          role={task.role}
           size={24} 
           fallbackColor={task.assigneeColor} 
         />

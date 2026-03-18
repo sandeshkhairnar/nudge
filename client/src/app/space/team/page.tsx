@@ -242,6 +242,8 @@ export default function TeamPage() {
                           <Avatar 
                             url={m.profiles.avatar_url} 
                             name={m.profiles.full_name || m.profiles.email} 
+                            email={m.profiles.email}
+                            role={m.role}
                             size={40} 
                             className="border border-gray-100 shadow-sm"
                           />
@@ -293,6 +295,8 @@ export default function TeamPage() {
                       <Avatar 
                         url={m.profiles.avatar_url} 
                         name={m.profiles.full_name || m.profiles.email} 
+                        email={m.profiles.email}
+                        role={m.role}
                         size={44} 
                         className="border border-gray-100 shadow-sm"
                       />

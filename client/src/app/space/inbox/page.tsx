@@ -1,14 +1,15 @@
 "use client";
-
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   MessageSquare, Bell, Hash, ArrowRight, Check,
   CheckCheck, Loader2, Search, X,
   AtSign, AlertCircle, Clock, Archive,
   UserPlus, Building2, ExternalLink, ChevronRight,
+  Filter, Sparkles, Zap, Mic
 } from "lucide-react";
 import Link from "next/link";
+import { isToday, isYesterday, isTomorrow, format, parseISO } from "date-fns";
 import { useNotifications, type Notification } from "@/hooks/useNotifications";
 import { useInvitations, type Invitation } from "@/hooks/useInvitations";
 import { ToastContainer, ToastProps } from "@/components/global/toast";
@@ -18,6 +19,25 @@ import GlobalAvatar from "@/components/global/Avatar";
 type NotifType = "mention" | "message" | "task" | "system";
 type FilterTab = "all" | "mentions" | "messages" | "unread" | "invites";
 
+// ─── Helper: Date Grouping ───
+
+function getGroupLabel(date: Date): string {
+  if (isToday(date)) return "Today";
+  if (isYesterday(date)) return "Yesterday";
+  if (isTomorrow(date)) return "Tomorrow";
+  
+  return format(date, "d MMM");
+}
+
+function groupItemsByDate<T extends { created_at: string }>(items: T[]) {
+  const groups: Record<string, T[]> = {};
+  items.forEach((item) => {
+    const label = getGroupLabel(new Date(item.created_at));
+    if (!groups[label]) groups[label] = [];
+    groups[label].push(item);
+  });
+  return groups;
+}
 
 function relativeTime(iso: string) {
   const diff = Date.now() - new Date(iso).getTime();
@@ -36,7 +56,7 @@ const TYPE_CONFIG: Record<NotifType, { icon: React.ReactNode; accent: string; la
   message: { icon: <MessageSquare size={10} strokeWidth={2.5} />, accent: "#2EB67D", label: "Message" },
   task: { icon: <AlertCircle size={10} strokeWidth={2.5} />, accent: "#ECB22E", label: "Task" },
   system: { icon: <Bell size={10} strokeWidth={2.5} />, accent: "#A259FF", label: "System" },
-};
+} as const;
 
 function colorFromString(s: string) {
   const palette = ["#36C5F0", "#2EB67D", "#ECB22E", "#E01E5A", "#A259FF", "#FF6B6B"];
@@ -45,267 +65,89 @@ function colorFromString(s: string) {
   return palette[Math.abs(h) % palette.length];
 }
 
-// ─── Invitation Tile ──────────────────────────────────────────────────────────
+// ─── Unified Card Redesign (Reference Style) ───
 
-function InvitationTile({
-  invitation, currentUserId, onAccept, onDecline,
+function NotificationRow({
+  item, type, onMarkRead, onArchive, onAccept, onDecline, currentUserId, isFirst, isLast
 }: {
-  invitation: Invitation;
-  currentUserId: string;
-  onAccept: (id: string) => Promise<void>;
-  onDecline: (id: string) => Promise<void>;
+  item: any;
+  type: 'notification' | 'invitation';
+  onMarkRead?: (id: string) => void;
+  onArchive?: (id: string) => void;
+  onAccept?: (id: string) => Promise<any>;
+  onDecline?: (id: string) => Promise<any>;
+  currentUserId?: string;
+  isFirst?: boolean;
+  isLast?: boolean;
 }) {
-  const [accepting, setAccepting] = useState(false);
-  const [declining, setDeclining] = useState(false);
-  const [decided, setDecided] = useState<"accepted" | "declined" | null>(null);
-
-  // Server already filters invitations to only the current user's — always show buttons
-  const isInvitedUser = true;
-  const projectColor = invitation.projects?.color ?? "#36C5F0";
-  const inviterName = invitation.profiles?.full_name ?? invitation.profiles?.email ?? "Someone";
-  const inviterId = invitation.profiles?.id ?? "system";
-  const projectName = invitation.projects?.name ?? invitation.workspaces?.name ?? "a project";
-  const workspaceName = invitation.workspaces?.name;
-
-  const handleAccept = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setAccepting(true);
-    await onAccept(invitation.id);
-    setDecided("accepted");
-    setAccepting(false);
-  };
-
-  const handleDecline = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setDeclining(true);
-    await onDecline(invitation.id);
-    setDecided("declined");
-    setDeclining(false);
-  };
+  const isInvite = type === 'invitation';
+  const cfg = !isInvite ? TYPE_CONFIG[(item as Notification).type || "system"] : null;
+  const projectColor = isInvite ? (item as Invitation).projects?.color ?? "#36C5F0" : cfg?.accent;
+  
+  const title = isInvite 
+    ? (item as Invitation).projects?.name ?? (item as Invitation).workspaces?.name ?? "New Invitation"
+    : item.sender?.full_name ?? "System Notification";
+    
+  const preview = isInvite
+    ? `Invited you to join ${title}`
+    : item.preview;
 
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 6 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, x: -16, transition: { duration: 0.18 } }}
-      className=" overflow-hidden"
-      style={{
-        background: "#fff",
-        border: `1.5px solid ${projectColor}28`,
-        boxShadow: `0 2px 12px ${projectColor}14`,
-      }}
-    >
-      <div className="h-1 w-full" style={{ background: `linear-gradient(90deg, ${projectColor}, ${projectColor}66)` }} />
-
-      <div className="px-4 pt-3 pb-3">
-        {/* Inviter row */}
-        <div className="flex items-start gap-3">
-          <div className="relative flex-shrink-0">
-            <GlobalAvatar 
-              url={invitation.profiles?.avatar_url} 
-              name={inviterName} 
-              size={38} 
-              fallbackColor={colorFromString(inviterId)} 
-            />
-            <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center" style={{ background: projectColor }}>
-              <UserPlus size={8} className="text-white" strokeWidth={2.5} />
-            </div>
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-[12.5px] font-black text-gray-900 truncate">{inviterName}</p>
-              <div className="flex items-center gap-1.5 flex-shrink-0">
-                <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full" style={{ background: `${projectColor}18`, color: projectColor }}>invite</span>
-                <span className="text-[10px] text-gray-400 flex items-center gap-0.5"><Clock size={8} />{relativeTime(invitation.created_at)}</span>
-              </div>
-            </div>
-            <p className="text-[11.5px] text-gray-500 mt-0.5 truncate">
-              Invited you to join <span className="font-bold text-gray-700">{projectName}</span>
-            </p>
-          </div>
+    <div className={`
+      bg-white mx-2 md:mx-10 px-4 md:px-6 py-4 flex flex-col md:flex-row items-start md:items-center justify-between 
+      border-b border-[#F0F4F8] transition-colors hover:bg-[#F9FAFB]
+      ${isFirst ? 'rounded-t-lg' : ''} 
+      ${isLast ? 'rounded-b-lg border-none' : ''}
+    `}>
+      <div className="flex items-center gap-4 flex-1 min-w-0 w-full mb-3 md:mb-0">
+        <div className="w-11 h-11 rounded-full overflow-hidden flex-shrink-0 bg-[#EDF2F7]">
+          <GlobalAvatar 
+            url={isInvite ? (item as Invitation).profiles?.avatar_url : item.sender?.avatar_url} 
+            name={isInvite ? (item as Invitation).profiles?.full_name : item.sender?.full_name} 
+            email={isInvite ? (item as Invitation).profiles?.email : item.sender?.email}
+            size={44} 
+            fallbackColor={colorFromString(isInvite ? (item.profiles?.id || 'system') : (item.sender?.id || 'system'))} 
+          />
         </div>
-
-        {/* Project pill */}
-        <div className="flex items-center gap-2 mt-3 px-3 py-2 rounded-xl" style={{ background: `${projectColor}08`, border: `1px solid ${projectColor}18` }}>
-          <div className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0" style={{ background: projectColor }}>
-            {projectName
-              ? <span className="text-white text-[10px] font-black">{String(projectName)[0]}</span>
-              : <Building2 size={12} className="text-white" />}
+        <div className="min-w-0 overflow-hidden">
+          <div className="flex items-baseline gap-2 mb-0.5">
+            <span className="text-sm font-bold text-[#2D3748] truncate">{title}</span>
+            <span className="text-xs text-[#A0AEC0] whitespace-nowrap">{relativeTime(item.created_at)}</span>
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-[11.5px] font-black text-gray-800 truncate">{projectName}</p>
-            {workspaceName && (
-              <p className="text-[10px] text-gray-400 truncate flex items-center gap-1"><Building2 size={7} />{workspaceName}</p>
-            )}
-          </div>
-          {invitation.role && (
-            <span className="flex-shrink-0 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ background: `${projectColor}15`, color: projectColor, border: `1px solid ${projectColor}25` }}>
-              {invitation.role}
-            </span>
-          )}
+          <p className="text-[13px] text-[#718096] truncate md:line-clamp-2 md:whitespace-normal">
+            {preview}
+          </p>
         </div>
-
-        {/* Actions — invited user only */}
-        {isInvitedUser && (
-          <div className="mt-3">
-            {decided ? (
-              <motion.div
-                initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
-                className="flex items-center gap-2 px-3 py-2.5 rounded-xl"
-                style={decided === "accepted"
-                  ? { background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.2)" }
-                  : { background: "rgba(0,0,0,0.03)", border: "1px solid rgba(0,0,0,0.07)" }}
-              >
-                {decided === "accepted" ? (
-                  <>
-                    <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0"><Check size={11} strokeWidth={3} className="text-white" /></div>
-                    <div><p className="text-[12px] font-black text-emerald-700">You're in!</p><p className="text-[10px] text-emerald-500">Invitation accepted</p></div>
-                  </>
-                ) : (
-                  <>
-                    <div className="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0"><X size={11} strokeWidth={3} className="text-gray-500" /></div>
-                    <div><p className="text-[12px] font-black text-gray-500">Invitation declined</p><p className="text-[10px] text-gray-400">You can ask for a new one anytime</p></div>
-                  </>
-                )}
-              </motion.div>
-            ) : (
-              <div className="flex gap-2">
-                <motion.button
-                  whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-                  onClick={handleAccept} disabled={accepting || declining}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[12px] font-black text-white border-0 cursor-pointer disabled:opacity-50"
-                  style={{ background: `linear-gradient(135deg, ${projectColor}, ${projectColor}bb)`, boxShadow: `0 4px 14px ${projectColor}40`, fontFamily: "'Sora', sans-serif" }}
-                >
-                  {accepting ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} strokeWidth={2.5} />}
-                  {accepting ? "Accepting…" : "Accept"}
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-                  onClick={handleDecline} disabled={accepting || declining}
-                  className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-[12px] font-bold cursor-pointer disabled:opacity-50 border-0 transition-all"
-                  style={{ background: "rgba(0,0,0,0.04)", color: "#9CA3AF", fontFamily: "'Sora', sans-serif" }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#FEE2E2"; (e.currentTarget as HTMLButtonElement).style.color = "#DC2626"; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(0,0,0,0.04)"; (e.currentTarget as HTMLButtonElement).style.color = "#9CA3AF"; }}
-                >
-                  {declining ? <Loader2 size={13} className="animate-spin" /> : <X size={13} strokeWidth={2.5} />}
-                  {declining ? "Declining…" : "Decline"}
-                </motion.button>
-              </div>
-            )}
+      </div>
+      
+      <div className="flex items-center justify-end gap-3 w-full md:w-auto">
+        {isInvite ? (
+          <div className="flex gap-2 w-full md:w-auto">
+            <button onClick={() => onAccept?.(item.id)} className="flex-1 md:flex-none py-1.5 px-3 rounded text-[13px] font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 transition-colors cursor-pointer border-none font-sans">Accept</button>
+            <button onClick={() => onDecline?.(item.id)} className="flex-1 md:flex-none py-1.5 px-3 rounded text-[13px] font-bold text-red-600 bg-red-50 hover:bg-red-100 transition-colors cursor-pointer border-none font-sans">Decline</button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-3">
+             {!item.read && <button onClick={() => onMarkRead?.(item.id)} className="text-emerald-500 bg-transparent border-0 cursor-pointer p-1 rounded-full hover:bg-emerald-50" title="Mark Read"><Check size={16}/></button>}
+             <button onClick={() => onArchive?.(item.id)} className="text-gray-300 bg-transparent border-0 cursor-pointer p-1 rounded-full hover:bg-gray-100" title="Archive"><Archive size={16}/></button>
+             {item.project_id && (
+                <Link href={`/space/${item.project_id}`} className="text-[#319795] text-[13px] font-bold px-2 py-1 rounded hover:bg-[#E6FFFA] transition-colors no-underline">View</Link>
+             )}
           </div>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 }
 
-// ─── Notification Tile ────────────────────────────────────────────────────────
-
-function NotificationTile({
-  notif, onMarkRead, onArchive,
-}: {
-  notif: Notification;
-  onMarkRead: (id: string) => void;
-  onArchive: (id: string) => void;
-}) {
-  const cfg = TYPE_CONFIG[notif.type];
-
-  return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 6 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, x: -16, transition: { duration: 0.18 } }}
-      className="overflow-hidden"
-      style={{
-        background: "#fff",
-        border: `1.5px solid ${notif.read ? "rgba(0,0,0,0.06)" : `${cfg.accent}22`}`,
-        boxShadow: notif.read ? "none" : `0 2px 10px ${cfg.accent}10`,
-      }}
-    >
-
-      <div className="px-4 pt-3 pb-3">
-        {/* Top row */}
-        <div className="flex items-start gap-3">
-          <div className="flex-shrink-0 pt-0.5">
-            {notif.sender
-              ? <GlobalAvatar 
-                  url={notif.sender.avatar_url} 
-                  name={notif.sender.full_name} 
-                  size={36} 
-                  fallbackColor={colorFromString(notif.sender.id)} 
-                />
-              : <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: `${cfg.accent}12` }}><span style={{ color: cfg.accent }}>{cfg.icon}</span></div>}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-1.5 min-w-0">
-                <span className="text-[12.5px] font-black text-gray-900 truncate">{notif.sender?.full_name ?? "System"}</span>
-                <span className="flex items-center gap-0.5 text-[8.5px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full flex-shrink-0" style={{ background: `${cfg.accent}12`, color: cfg.accent }}>
-                  {cfg.icon}<span className="ml-0.5">{cfg.label}</span>
-                </span>
-              </div>
-              <div className="flex items-center gap-1 flex-shrink-0">
-                {!notif.read && <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: cfg.accent }} />}
-                <span className="text-[10px] text-gray-400 flex items-center gap-0.5"><Clock size={8} />{relativeTime(notif.created_at)}</span>
-              </div>
-            </div>
-            {(notif.project_name || notif.channel_name) && (
-              <div className="flex items-center gap-0.5 mt-0.5">
-                {notif.project_name && <span className="text-[10px] font-semibold text-gray-400 truncate">{notif.project_name}</span>}
-                {notif.channel_name && (<><ChevronRight size={8} className="text-gray-300 flex-shrink-0" /><Hash size={8} className="text-gray-400 flex-shrink-0" /><span className="text-[10px] font-semibold text-gray-400 truncate">{notif.channel_name}</span></>)}
-              </div>
-            )}
-            <p className="text-[12px] leading-relaxed mt-1.5 line-clamp-2" style={{ color: notif.read ? "#9CA3AF" : "#374151", fontWeight: notif.read ? 400 : 500 }}>
-              {notif.preview}
-            </p>
-          </div>
-        </div>
-
-        {/* Bottom action row */}
-        <div className="flex items-center justify-between mt-3 pt-2.5 border-t" style={{ borderTopColor: "rgba(0,0,0,0.05)" }}>
-
-          <div className="flex items-center gap-1">
-            {!notif.read && (
-              <button onClick={() => onMarkRead(notif.id)} title="Mark as read" className="w-6 h-6 rounded-md flex items-center justify-center text-gray-300 hover:text-emerald-500 transition-colors bg-transparent border-0 cursor-pointer">
-                <Check size={12} />
-              </button>
-            )}
-            <button onClick={() => onArchive(notif.id)} title="Archive" className="w-6 h-6 rounded-md flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors bg-transparent border-0 cursor-pointer">
-              <Archive size={12} />
-            </button>
-          </div>
-          <div>
-            {notif.project_id && (
-              <Link href={`/space/${notif.project_id}`}>
-                <motion.button
-                  whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold text-white border-0 cursor-pointer"
-                  style={{ background: "#0D0D0D", fontFamily: "'Sora', sans-serif" }}
-                >
-                  {notif.type === "message"
-                    ? <><ExternalLink size={11} />View in Chat</>
-                    : <><ArrowRight size={11} />View</>}
-                </motion.button>
-              </Link>
-            )}
-          </div>
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
-// ─── Main Page ────────────────────────────────────────────────────────────────
+// ─── Main Page Redesign ───
 
 export default function InboxPage() {
   const [filter, setFilter] = useState<FilterTab>("all");
   const [search, setSearch] = useState("");
   const [toasts, setToasts] = useState<ToastProps[]>([]);
   const [userId, setUserId] = useState<string>("");
-
-  const { playSound } = useNotificationSound();
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     import("@/lib/supabase/client").then(({ createClient }) => {
@@ -315,7 +157,7 @@ export default function InboxPage() {
     });
   }, []);
 
-  const { invitations, accept: acceptInvite, decline: declineInvite } = useInvitations(userId);
+  const { playSound } = useNotificationSound();
 
   const handleNewNotification = useCallback(
     (notification: Notification) => {
@@ -335,136 +177,130 @@ export default function InboxPage() {
     [playSound]
   );
 
+  const { invitations, accept: acceptInvite, decline: declineInvite } = useInvitations(userId);
   const { notifications, loading, unreadCount, markRead: handleMarkRead, markAllRead: handleMarkAllRead, archive: handleArchive } = useNotifications({
     enableSound: true, enableToast: true, onNewNotification: handleNewNotification,
   });
 
-  useEffect(() => {
-    if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "default") {
-      Notification.requestPermission();
+  const filteredItems = useMemo(() => {
+    let includedInvites: any[] = [];
+    if (filter === "all" || filter === "invites" || filter === "unread") {
+      includedInvites = invitations.map((i) => ({ ...i, __type: "invitation" }));
     }
-  }, []);
 
-  const filteredNotifications = notifications.filter((n) => {
-    if (n.type === "system" && /invited you to join/i.test(n.content)) return false;
-    if (filter === "unread" && n.read) return false;
-    if (filter === "mentions" && n.type !== "mention") return false;
-    if (filter === "messages" && n.type !== "message") return false;
-    if (filter === "invites") return false;
-    if (search && !n.content.toLowerCase().includes(search.toLowerCase()) && !n.sender?.full_name?.toLowerCase().includes(search.toLowerCase()) && !n.project_name?.toLowerCase().includes(search.toLowerCase())) return false;
-    return true;
-  });
+    const includedNotifications = filter === "invites" ? [] : notifications.filter((n) => {
+      if (n.type === "system" && /invited you to join/i.test(n.content)) return false;
+      if (filter === "unread" && n.read) return false;
+      if (filter === "mentions" && n.type !== "mention") return false;
+      if (filter === "messages" && n.type !== "message") return false;
+      if (search && !n.content.toLowerCase().includes(search.toLowerCase())) return false;
+      return true;
+    }).map((n) => ({ ...n, __type: "notification" }));
 
-  const filteredInvitations = filter === "invites" || filter === "all" ? invitations : [];
-  const hasContent = filteredInvitations.length > 0 || filteredNotifications.length > 0;
-  const totalUnread = unreadCount + invitations.length;
+    const combined = [...includedInvites, ...includedNotifications].sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
 
-  const handleAcceptInvite = async (id: string) => {
-    const result = await acceptInvite(id);
-    if (result.error) {
-      setToasts((prev) => [{ id: `err-${id}`, type: "system", title: "Error", message: result.error, onClose: (tid) => setToasts((p) => p.filter((t) => t.id !== tid)) }, ...prev]);
-    }
-  };
+    return groupItemsByDate(combined);
+  }, [notifications, invitations, filter, search]);
 
-  const TABS: { id: FilterTab; label: string }[] = [
-    { id: "all", label: "All" },
-    { id: "unread", label: unreadCount ? `Unread · ${unreadCount}` : "Unread" },
-    { id: "mentions", label: "Mentions" },
-    { id: "messages", label: "Messages" },
-    { id: "invites", label: invitations.length ? `Invites · ${invitations.length}` : "Invites" },
-  ];
+  const totalUnreadCount = unreadCount + invitations.length;
 
   return (
-    <>
-      <div className="flex flex-col h-full overflow-hidden" style={{ fontFamily: "'Sora', sans-serif", background: "#F7F7F5" }}>
-        {/* Header */}
-        <div className="flex-shrink-0 px-4 sm:px-5 pt-5 pb-3 bg-white border-b" style={{ borderBottomColor: "rgba(0,0,0,0.05)" }}>
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-[20px] font-black text-gray-900 tracking-tight">Inbox</h1>
-              <p className="text-[11.5px] text-gray-400 mt-0.5">
-                {loading ? "Loading…" : totalUnread > 0 ? `${totalUnread} pending` : "All caught up 🎉"}
-              </p>
-            </div>
-            {unreadCount > 0 && (
-              <motion.button whileTap={{ scale: 0.96 }} onClick={handleMarkAllRead}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold cursor-pointer border-0 transition-colors"
-                style={{ background: "rgba(0,0,0,0.04)", color: "#6B7280", fontFamily: "'Sora', sans-serif" }}
-              >
-                <CheckCheck size={11} />Mark all read
-              </motion.button>
-            )}
+    <div className="bg-[#F9F9F7] text-[#2D3748] min-h-screen flex flex-col font-sans">
+      {/* ─── Header Section ─── */}
+      <header className="p-6 md:p-10 pb-5">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-[#1A202C] mb-1">Notifications</h1>
+            <p className="text-sm text-[#4A5568]">
+              You have <span className="text-[#38A169] font-bold">{totalUnreadCount}</span> notifications to go through
+            </p>
           </div>
+          <button 
+            onClick={handleMarkAllRead} 
+            className="bg-white border border-[#E2E8F0] px-4 py-2 rounded-md text-[13px] font-semibold text-[#4A5568] hover:bg-[#F7FAFC] hover:border-[#CBD5E0] transition-colors w-full md:w-auto"
+          >
+            Mark all as Read
+          </button>
+        </div>
 
-          <div className="relative mb-3">
-            <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300" />
-            <input
-              value={search} onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search notifications…"
-              className="w-full pl-8 pr-8 py-2 rounded-xl text-[12px] text-gray-700 placeholder-gray-300 outline-none transition-all"
-              style={{ background: "rgba(0,0,0,0.04)", border: "1px solid transparent", fontFamily: "'Sora', sans-serif" }}
-              onFocus={(e) => (e.target.style.borderColor = "rgba(0,0,0,0.1)")}
-              onBlur={(e) => (e.target.style.borderColor = "transparent")}
+        <div className="flex flex-col xl:flex-row gap-4 xl:items-center mb-8">
+          {/* ─── Search Bar ─── */}
+          <div className="relative w-full max-w-[400px] group flex-shrink-0">
+            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-gray-500" />
+            <input 
+              type="text" 
+              placeholder="Search" 
+              className="w-full px-4 py-2.5 pl-11 bg-white border border-[#E2E8F0] rounded-lg text-sm focus:outline-none focus:border-[#CBD5E0] shadow-sm transition-all"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
             />
-            {search && (
-              <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500 border-0 bg-transparent cursor-pointer">
-                <X size={11} />
-              </button>
-            )}
+            <Mic size={18} className="absolute right-12 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer hover:text-gray-600" />
+            <div className="absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded bg-[#2D3748] flex items-center justify-center pointer-events-none">
+              <Search size={12} className="text-white" />
+            </div>
           </div>
 
-          <div className="flex gap-0.5 flex-wrap">
-            {TABS.map((t) => (
-              <button key={t.id} onClick={() => setFilter(t.id)}
-                className="px-3 py-1.5 rounded-lg text-[11px] font-bold cursor-pointer border-0 transition-all"
-                style={{ background: filter === t.id ? "#0D0D0D" : "transparent", color: filter === t.id ? "#fff" : "#9CA3AF", fontFamily: "'Sora', sans-serif" }}
+          {/* ─── Filter Tabs ─── */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 xl:pb-0 w-full hide-scrollbar">
+            {[
+              { id: "all", label: "All" },
+              { id: "unread", label: unreadCount ? `Unread · ${unreadCount}` : "Unread" },
+              { id: "mentions", label: "Mentions" },
+              { id: "messages", label: "Messages" },
+              { id: "invites", label: invitations.length ? `Invites · ${invitations.length}` : "Invites" },
+            ].map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setFilter(t.id as FilterTab)}
+                className={`px-4 py-2 rounded-lg text-[13px] font-semibold transition-all whitespace-nowrap border ${
+                  filter === t.id 
+                    ? "bg-[#2D3748] text-white border-[#2D3748]" 
+                    : "bg-white text-[#4A5568] border-[#E2E8F0] hover:bg-[#F7FAFC]"
+                }`}
               >
                 {t.label}
               </button>
             ))}
           </div>
         </div>
+      </header>
 
-        <div className="flex-1 overflow-y-auto pt-3 pb-4">
-          {loading ? (
-            <div className="flex items-center justify-center h-40"><Loader2 size={18} className="animate-spin text-gray-300" /></div>
+      {/* ─── Notifications List ─── */}
+      <main className="flex-1 overflow-y-auto pb-20 scroll-smooth">
+        {loading ? (
+          <div className="flex items-center justify-center h-40"><Loader2 className="animate-spin text-gray-400" /></div>
+        ) : (
+          Object.entries(filteredItems).length === 0 ? (
+            <div className="text-center mt-20 text-gray-400">No notifications found</div>
           ) : (
-            <AnimatePresence mode="popLayout">
-              {!hasContent ? (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center h-48 gap-2">
-                  <div className="w-10 h-10 rounded-2xl bg-gray-100 flex items-center justify-center"><Bell size={18} className="text-gray-300" /></div>
-                  <p className="text-[12.5px] font-semibold text-gray-400">No notifications</p>
-                </motion.div>
-              ) : (
-                <>
-                  {filteredInvitations.length > 0 && (
-                    <>
-                      {filter === "all" && (
-                        <div className="px-4 pb-1.5">
-                          <span className="text-[10px] font-black uppercase tracking-wider text-gray-400">Invitations · {filteredInvitations.length}</span>
-                        </div>
-                      )}
-                      {filteredInvitations.map((inv) => (
-                        <InvitationTile key={inv.id} invitation={inv} currentUserId={userId} onAccept={handleAcceptInvite} onDecline={async (id) => { await declineInvite(id); }} />
-                      ))}
-                      {filter === "all" && filteredNotifications.length > 0 && (
-                        <div className="px-4 pt-2 pb-1.5">
-                          <span className="text-[10px] font-black uppercase tracking-wider text-gray-400">Notifications</span>
-                        </div>
-                      )}
-                    </>
-                  )}
-                  {filteredNotifications.map((n) => (
-                    <NotificationTile key={n.id} notif={n} onMarkRead={handleMarkRead} onArchive={handleArchive} />
+            Object.entries(filteredItems).map(([dateLabel, items]) => (
+              <div key={dateLabel} className="mb-6">
+                <h2 className="text-sm font-semibold text-[#718096] mx-5 md:mx-10 mb-3">{dateLabel}</h2>
+                <div className="flex flex-col">
+                  {items.map((item: any, idx: number) => (
+                    <NotificationRow 
+                      key={item.id} 
+                      item={item} 
+                      type={item.__type}
+                      onMarkRead={handleMarkRead}
+                      onArchive={handleArchive}
+                      onAccept={acceptInvite}
+                      onDecline={async (id) => { await declineInvite(id); }}
+                      currentUserId={userId}
+                      isFirst={idx === 0}
+                      isLast={idx === items.length - 1}
+                    />
                   ))}
-                </>
-              )}
-            </AnimatePresence>
-          )}
-        </div>
-      </div>
+                </div>
+              </div>
+            ))
+          )
+        )}
+      </main>
 
       <ToastContainer toasts={toasts} onClose={(id) => setToasts((prev) => prev.filter((t) => t.id !== id))} />
-    </>
+    </div>
   );
 }

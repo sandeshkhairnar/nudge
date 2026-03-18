@@ -6,7 +6,7 @@ Shared across all tools and routers. Never expose this client to the frontend.
 
 from functools import lru_cache
 
-from supabase import Client, create_client
+from supabase import Client, create_client, create_async_client
 
 from config import get_settings
 
@@ -19,3 +19,10 @@ def get_supabase() -> Client:
     """
     settings = get_settings()
     return create_client(settings.supabase_url, settings.supabase_service_role_key)
+
+async def get_async_supabase():
+    """
+    Return async Supabase client, needed for realtime subscriptions.
+    """
+    settings = get_settings()
+    return await create_async_client(settings.supabase_url, settings.supabase_service_role_key)

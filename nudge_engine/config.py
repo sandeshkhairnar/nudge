@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     )
 
     # ── AI Provider ──────────────────────────────────────────────────────────
-    ai_provider: Literal["claude", "gemini", "openai"] = Field(
+    ai_provider: Literal["gemini", "claude", "openai"] = Field(
         ...,
         description="Active LLM provider. Controls get_llm() factory.",
     )
@@ -32,8 +32,8 @@ class Settings(BaseSettings):
 
     # Gemini (Google)
     google_api_key: str | None = Field(default=None, description="Required when ai_provider=gemini")
-    gemini_model: str = Field(default="gemini-1.5-pro", description="Smart/default Gemini model")
-    gemini_fast_model: str = Field(default="gemini-1.5-flash", description="Fast/cheap Gemini model")
+    gemini_model: str = Field(default="gemini-1.5-pro-latest", description="Smart/default Gemini model")
+    gemini_fast_model: str = Field(default="gemini-1.5-flash-latest", description="Fast/cheap Gemini model")
 
     # OpenAI
     openai_api_key: str | None = Field(default=None, description="Required when ai_provider=openai")

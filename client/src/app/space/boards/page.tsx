@@ -39,23 +39,28 @@ export default function BoardsPage() {
     if (projectIds.length > 0) {
       const { data: taskRows } = await supabase
         .from("tasks")
-        .select("*, assignee:profiles!tasks_assignee_id_fkey(id, full_name, avatar_url), projects!tasks_project_id_fkey(id, name, color)")
+        .select("*, assignee:profiles!tasks_assignee_id_fkey(id, full_name, avatar_url, email), projects!tasks_project_id_fkey(id, name, color)")
         .in("project_id", projectIds);
 
       if (taskRows) {
-        const hydratedTasks = taskRows.map((t: any) => ({
-          ...t,
-          project: t.projects?.name || "Unknown",
-          projectColor: t.projects?.color || "#9CA3AF",
-          assignee: t.assignee?.full_name || t.assignee?.email || "Unassigned",
-          assignee_id: t.assignee_id,
-          assigneeColor: colorFromString(t.assignee_id || "unassigned"),
-          avatar_url: t.assignee?.avatar_url,
-          tags: [], 
-          stalled: t.stalled_days > 3,
-          dueDate: t.due_date,
-          status: t.status
-        }));
+        const hydratedTasks = taskRows.map((t: any) => {
+          const wsMember = (mems || []).find((m: any) => m.profiles.id === t.assignee_id);
+          return {
+            ...t,
+            project: t.projects?.name || "Unknown",
+            projectColor: t.projects?.color || "#9CA3AF",
+            assignee: t.assignee?.full_name || t.assignee?.email || "Unassigned",
+            assignee_id: t.assignee_id,
+            assigneeColor: colorFromString(t.assignee_id || "unassigned"),
+            avatar_url: t.assignee?.avatar_url,
+            email: t.assignee?.email,
+            role: wsMember?.role || "Member",
+            tags: [], 
+            stalled: t.stalled_days > 3,
+            dueDate: t.due_date,
+            status: t.status
+          };
+        });
         setTasks(hydratedTasks as Task[]);
       }
     } else {
