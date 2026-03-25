@@ -2,7 +2,8 @@ import { create } from "zustand";
 
 export interface Notification {
   id: string;
-  type: "mention" | "message" | "task" | "system";
+  type: "mention" | "message" | "task" | "system" | "call";
+
   read: boolean;
   created_at: string;
   project_id: string | null;

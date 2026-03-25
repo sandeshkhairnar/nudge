@@ -1,10 +1,11 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useNotificationSound } from "@/hooks/useNotificationSound";
 import { ToastContainer, ToastProps } from "@/components/global/toast";
-import { usePathname } from "next/navigation";
+import { IncomingCallModal, IncomingCall } from "@/components/global/IncomingCallModal";
+import { usePathname, useRouter } from "next/navigation";
 import { useNotificationStore, type Notification } from "@/store/notification-store";
 
 interface NotificationContextType {
@@ -25,9 +26,11 @@ export function useNotificationActions() {
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const supabase = createClient();
+  const router = useRouter();
   const pathname = usePathname();
   const [toasts, setToasts] = useState<ToastProps[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
+  const [incomingCall, setIncomingCall] = useState<IncomingCall | null>(null);
   const { playSound } = useNotificationSound();
 
   const { setNotifications, prependNotification, markRead, markAllRead, updateNotification, removeNotification } =
@@ -74,6 +77,15 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     fetchUserAndNotifications();
   }, []);
 
+  const handleDeclineCall = useCallback(() => {
+    setIncomingCall(null);
+  }, []);
+
+  const handleAcceptCall = useCallback((room: string) => {
+    setIncomingCall(null);
+    router.push(`/space/video-call?room=${encodeURIComponent(room)}`);
+  }, [router]);
+
   useEffect(() => {
     if (!userId) return;
 
@@ -112,6 +124,20 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
             };
 
             prependNotification(shaped);
+
+            // Incoming call — show the dedicated modal instead of a toast
+            if (shaped.type === "call") {
+              playSound("call");
+              setIncomingCall({
+                id: shaped.id,
+                room: shaped.content,          // content holds the room name
+                callerName: shaped.sender?.full_name ?? "Someone",
+                callerAvatarUrl: shaped.sender?.avatar_url ?? null,
+                callerEmail: null,
+              });
+              return; // don't show a regular toast for calls
+            }
+
             playSound(shaped.type);
 
             if (!isInboxPage) {
@@ -194,6 +220,14 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   return (
     <NotificationContext.Provider value={{ markAsRead, markAllAsRead, archiveNotification }}>
       {children}
+
+      {/* Incoming call modal — shown above everything */}
+      <IncomingCallModal
+        call={incomingCall}
+        onAccept={handleAcceptCall}
+        onDecline={handleDeclineCall}
+      />
+
       <ToastContainer
         toasts={toasts}
         onClose={(id) => setToasts((prev) => prev.filter((t) => t.id !== id))}

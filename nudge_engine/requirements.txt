@@ -49,3 +49,7 @@ httpx
 pytest
 pytest-asyncio
 pytest-mock
+
+
+# ── Communication ─────────────────────────────────────────────────────────────
+livekit

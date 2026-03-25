@@ -1,4 +1,4 @@
-from typing import Optional, Any
+from typing import Optional, Any, Dict
 from pydantic import BaseModel
 
 class MessagePayload(BaseModel):
@@ -24,7 +24,7 @@ class GitHubPayload(BaseModel):
     repository: str
     sender: str
     action: Optional[str] = None
-    data: dict[str, Any]
+    data: Dict[str, Any]
 
 class AgentEvent(BaseModel):
     """
@@ -33,5 +33,6 @@ class AgentEvent(BaseModel):
     event_type: str  # message | stall | github | meeting | cron
     workspace_id: str
     project_id: Optional[str] = None
-    payload: dict[str, Any]
+    payload: Dict[str, Any]
     timestamp: str
+

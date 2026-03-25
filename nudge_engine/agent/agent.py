@@ -3,7 +3,8 @@ import asyncio
 import json
 from typing import Any, Dict, List, Optional, AsyncGenerator
 
-from langchain_classic.agents import AgentExecutor, create_tool_calling_agent
+from langchain.agents import AgentExecutor, create_tool_calling_agent
+
 from langchain_core.messages import HumanMessage
 from langchain_core.runnables import RunnableConfig
 
