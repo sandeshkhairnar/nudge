@@ -21,6 +21,8 @@ from routers.agent_router import router as agent_router
 from routers.nudge_router import router as nudge_router
 from routers.github_router import router as github_router
 from routers.analytics_router import router as analytics_router
+from routers.video_call_router import router as video_call_router
+
 
 # ── Infrastructure imports ────────────────────────────────────────────────────
 
@@ -85,6 +87,8 @@ def create_app() -> FastAPI:
     app.include_router(nudge_router)           # GET  /nudges
     app.include_router(github_router)          # POST /webhooks/github
     app.include_router(analytics_router)       # GET  /analytics
+    app.include_router(video_call_router)      # GET  /video/token
+
 
 
 

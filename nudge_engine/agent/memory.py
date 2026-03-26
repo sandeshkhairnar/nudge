@@ -1,6 +1,4 @@
-import json
-from typing import Any, List
-
+from typing import Any, List, Dict, Optional
 from langchain_classic.memory import ConversationBufferWindowMemory
 from langchain_core.messages import BaseMessage, message_to_dict, messages_from_dict
 
@@ -13,7 +11,8 @@ class RedisBackedMemory(ConversationBufferWindowMemory):
     """
     workspace_id: str
 
-    def load_memory_variables(self, inputs: dict[str, Any]) -> dict[str, Any]:
+    def load_memory_variables(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
+
         # Implementation depends on how we want to hook into LangChain's memory flow
         # In this simplistic version, we'll manually handle load/save in the agent loop.
         return super().load_memory_variables(inputs)

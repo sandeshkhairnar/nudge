@@ -5,7 +5,7 @@ import { useRef, useCallback } from "react";
 export function useNotificationSound() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const playSound = useCallback((type: "mention" | "message" | "task" | "system" = "message") => {
+  const playSound = useCallback((type: "mention" | "message" | "task" | "system" | "call" = "message") => {
     if (typeof window === "undefined") return;
 
     if (!audioRef.current) {
@@ -17,7 +17,9 @@ export function useNotificationSound() {
       message: "/sounds/message.mp3",
       task: "/sounds/task.mp3",
       system: "/sounds/system.mp3",
+      call: "/sounds/call.mp3",
     };
+
 
     audioRef.current.src = soundMap[type] ?? "/sounds/message.mp3";
     audioRef.current.volume = 0.5;

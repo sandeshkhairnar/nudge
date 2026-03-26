@@ -5,10 +5,10 @@ All secrets are read at startup; never logged or exposed.
 """
 
 from functools import lru_cache
-from typing import Literal
-
+from typing import Literal, Optional, Union, Dict
 from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
 
 
 class Settings(BaseSettings):
@@ -20,32 +20,38 @@ class Settings(BaseSettings):
     )
 
     # ── AI Provider ──────────────────────────────────────────────────────────
-    ai_provider: Literal["gemini", "claude", "openai"] = Field(
+    ai_provider: Literal["gemini", "claude", "openai", "groq"] = Field(
         ...,
         description="Active LLM provider. Controls get_llm() factory.",
     )
 
     # Claude (Anthropic)
-    anthropic_api_key: str | None = Field(default=None, description="Required when ai_provider=claude")
+    anthropic_api_key: Optional[str] = Field(default=None, description="Required when ai_provider=claude")
     claude_model: str = Field(default="claude-sonnet-4-5", description="Smart/default Claude model")
     claude_fast_model: str = Field(default="claude-haiku-4-5", description="Fast/cheap Claude model")
 
     # Gemini (Google)
-    google_api_key: str | None = Field(default=None, description="Required when ai_provider=gemini")
+    google_api_key: Optional[str] = Field(default=None, description="Required when ai_provider=gemini")
     gemini_model: str = Field(default="gemini-1.5-pro-latest", description="Smart/default Gemini model")
     gemini_fast_model: str = Field(default="gemini-1.5-flash-latest", description="Fast/cheap Gemini model")
 
     # OpenAI
-    openai_api_key: str | None = Field(default=None, description="Required when ai_provider=openai")
+    openai_api_key: Optional[str] = Field(default=None, description="Required when ai_provider=openai")
     openai_model: str = Field(default="gpt-4o", description="Smart/default OpenAI model")
     openai_fast_model: str = Field(default="gpt-4o-mini", description="Fast/cheap OpenAI model")
+
+    # Groq
+    groq_api_key: Optional[str] = Field(default=None, description="Required when ai_provider=groq")
+    groq_model: str = Field(default="llama-3.3-70b-versatile", description="Smart/default Groq model")
+    groq_fast_model: str = Field(default="llama-3.1-8b-instant", description="Fast/cheap Groq model")
 
     # ── Infrastructure ───────────────────────────────────────────────────────
     supabase_url: str = Field(..., description="Supabase project URL")
     supabase_service_role_key: str = Field(
         ..., description="Supabase service-role key — never expose to frontend"
     )
-    redis_url: str = Field(..., description="Redis connection string, e.g. redis://localhost:6379/0")
+    redis_url: str = Field(default="redis://localhost:6379/0", description="Redis connection string, e.g. redis://localhost:6379/0")
+
 
     # ── Auth ─────────────────────────────────────────────────────────────────
     engine_secret: str = Field(
@@ -53,15 +59,20 @@ class Settings(BaseSettings):
     )
 
     # ── Optional Integrations ────────────────────────────────────────────────
-    slack_webhook_url: str | None = Field(default=None, description="Slack incoming webhook URL")
-    sendgrid_api_key: str | None = Field(default=None, description="SendGrid key for digest emails")
-    github_webhook_secret: str | None = Field(
+    slack_webhook_url: Optional[str] = Field(default=None, description="Slack incoming webhook URL")
+    sendgrid_api_key: Optional[str] = Field(default=None, description="SendGrid key for digest emails")
+    github_webhook_secret: Optional[str] = Field(
         default=None, description="HMAC-SHA256 secret for GitHub webhook verification"
     )
 
     # ── LangSmith Observability ──────────────────────────────────────────────
     langchain_tracing_v2: bool = Field(default=False, description="Enable LangSmith tracing")
-    langchain_api_key: str | None = Field(default=None, description="LangSmith API key")
+    langchain_api_key: Optional[str] = Field(default=None, description="LangSmith API key")
+
+    # ── LiveKit ─────────────────────────────────────────────────────────────
+    livekit_url: Optional[str] = Field(default=None, description="LiveKit Host URL")
+    livekit_api_key: Optional[str] = Field(default=None, description="LiveKit API Key")
+    livekit_api_secret: Optional[str] = Field(default=None, description="LiveKit API Secret")
 
     # ── Agent Tuning ─────────────────────────────────────────────────────────
     agent_max_iterations: int = Field(
@@ -89,6 +100,7 @@ class Settings(BaseSettings):
             "claude": self.claude_model,
             "gemini": self.gemini_model,
             "openai": self.openai_model,
+            "groq": self.groq_model,
         }[self.ai_provider]
 
     @property
@@ -98,6 +110,7 @@ class Settings(BaseSettings):
             "claude": self.claude_fast_model,
             "gemini": self.gemini_fast_model,
             "openai": self.openai_fast_model,
+            "groq": self.groq_fast_model,
         }[self.ai_provider]
 
     # ── Validation ────────────────────────────────────────────────────────────
@@ -105,21 +118,24 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def _check_provider_key(self) -> "Settings":
         """Ensure the API key for the active provider is present."""
-        required: dict[str, str | None] = {
+        required: Dict[str, Optional[str]] = {
             "claude": self.anthropic_api_key,
             "gemini": self.google_api_key,
             "openai": self.openai_api_key,
+            "groq": self.groq_api_key,
         }
         if not required[self.ai_provider]:
             key_name = {
                 "claude": "ANTHROPIC_API_KEY",
                 "gemini": "GOOGLE_API_KEY",
                 "openai": "OPENAI_API_KEY",
+                "groq": "GROQ_API_KEY",
             }[self.ai_provider]
             raise ValueError(
                 f"AI_PROVIDER is '{self.ai_provider}' but {key_name} is not set."
             )
         return self
+
 
     @field_validator("redis_url")
     @classmethod

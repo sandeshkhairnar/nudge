@@ -7,10 +7,13 @@ from typing import Any
 import asyncio
 import redis.asyncio as redis
 from config import get_settings
+from typing import Any, Optional, List, Dict
 
 # ── Client ────────────────────────────────────────────────────────────────────
 
-_redis: redis.Redis | None = None
+_redis: Optional[redis.Redis] = None
+
+
 
 
 def get_redis() -> redis.Redis:
@@ -99,7 +102,8 @@ async def get_rate_limit_usage(workspace_id: str) -> dict[str, int]:
 
 # ── Conversation memory ───────────────────────────────────────────────────────
 
-async def get_memory(workspace_id: str) -> list[dict[str, Any]]:
+async def get_memory(workspace_id: str) -> List[Dict[str, Any]]:
+
     """
     Load serialized conversation turns for a workspace.
     Returns an empty list if no memory exists yet.
@@ -114,7 +118,8 @@ async def get_memory(workspace_id: str) -> list[dict[str, Any]]:
         return []
 
 
-async def set_memory(workspace_id: str, turns: list[dict[str, Any]]) -> None:
+async def set_memory(workspace_id: str, turns: List[Dict[str, Any]]) -> None:
+
     """
     Persist conversation turns for a workspace with a 24-hour TTL.
     Trims to the last MEMORY_WINDOW_K turns before saving.

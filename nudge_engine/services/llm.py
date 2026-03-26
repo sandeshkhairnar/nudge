@@ -38,6 +38,14 @@ def get_llm(provider: Optional[str] = None, use_fast: bool = False, streaming: b
             api_key=settings.openai_api_key,
             streaming=streaming
         )
+    elif target_provider == "groq":
+        model = settings.groq_fast_model if use_fast else settings.groq_model
+        return ChatOpenAI(
+            model=model,
+            api_key=settings.groq_api_key,
+            base_url="https://api.groq.com/openai/v1",
+            streaming=streaming
+        )
     else:
         raise ValueError(f"Unsupported AI provider: {target_provider}")
 

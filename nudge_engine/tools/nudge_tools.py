@@ -3,7 +3,7 @@ from database.supabase_client import get_supabase
 from services.audit_service import write_audit_log
 
 @tool
-def generate_nudge(
+async def generate_nudge(
     workspace_id: str,
     project_id: str,
     task_id: str,
@@ -23,7 +23,7 @@ def generate_nudge(
     res = supabase.table("nudges").insert(data).execute()
     
     # Audit log
-    write_audit_log(workspace_id, "nudge_generated", {"task_id": task_id})
+    await write_audit_log(workspace_id, "nudge_generated", {"task_id": task_id})
     
     return f"Nudge generated: {res.data[0].get('id')}"
 

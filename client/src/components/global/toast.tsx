@@ -2,9 +2,11 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect } from "react";
-import { Bell, MessageSquare, AtSign, AlertCircle, X, Hash } from "lucide-react";
+import { Bell, MessageSquare, AtSign, AlertCircle, X, Hash, Video } from "lucide-react";
 
-export type ToastType = "mention" | "message" | "task" | "system";
+
+export type ToastType = "mention" | "message" | "task" | "system" | "call";
+
 
 export interface ToastProps {
   id: string;
@@ -22,7 +24,9 @@ const toastConfig: Record<ToastType, { icon: React.ElementType; color: string; l
   message: { icon: MessageSquare, color: "#2EB67D", label: "Message", bg: "rgba(46,182,125,0.08)" },
   task: { icon: AlertCircle, color: "#ECB22E", label: "Task", bg: "rgba(236,178,46,0.08)" },
   system: { icon: Bell, color: "#A259FF", label: "System", bg: "rgba(162,89,255,0.08)" },
+  call: { icon: Video, color: "#00e5a0", label: "Call", bg: "rgba(0,229,160,0.08)" },
 };
+
 
 export function Toast({ id, type, title, message, projectName, channelName, onClose, onClick }: ToastProps) {
   const cfg = toastConfig[type];
