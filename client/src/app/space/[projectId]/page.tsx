@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
@@ -14,7 +16,8 @@ import {
   Send, Loader2, AlertCircle, Link as LinkIcon, FileText, Sparkles,
   Paperclip, ImageIcon, Smile, Bold, Italic, Code, Menu,
   Book, Mail, CheckCircle2, Settings as SettingsIcon, Github,
-  MessageCircle, CornerDownRight, Trash2, AtSign
+  MessageCircle, CornerDownRight, Trash2, AtSign, Video,
+  Calendar
 } from "lucide-react";
 import { TaskBoard, Task as BoardTask } from "@/components/workspace/TaskBoard";
 import GlobalAvatar from "@/components/global/Avatar";
@@ -454,12 +457,24 @@ export default function SpacePage() {
     return { type: file.type.startsWith("image/") ? "image" : "file", name: file.name, url: publicUrl, size: file.size };
   };
 
-  const parseContent = (raw: string): { text: string; attachments?: FileAttachment[] } => {
+  const parseContent = (raw: any): { text: string; attachments?: FileAttachment[]; type?: string; room?: string } => {
+    if (typeof raw === 'object' && raw !== null) {
+      return { 
+        text: raw.text ?? "", 
+        attachments: raw.attachments, 
+        type: raw.type, 
+        room: raw.room 
+      };
+    }
     try {
-      const p = JSON.parse(raw);
-      if (p.text !== undefined || p.attachments !== undefined) return { text: p.text ?? "", attachments: p.attachments };
+      if (typeof raw === 'string') {
+        const p = JSON.parse(raw);
+        if (p.text !== undefined || p.attachments !== undefined || p.type !== undefined) {
+          return { text: p.text ?? "", attachments: p.attachments, type: p.type, room: p.room };
+        }
+      }
     } catch { }
-    return { text: raw };
+    return { text: String(raw) };
   };
 
   const handleSend = async () => {
@@ -662,6 +677,42 @@ export default function SpacePage() {
     const canDelete = isSelf;
     const isDeleting = deletingId === m.id;
     const showDeleteConfirm = deleteConfirmId === m.id;
+
+    if (parsed.type === "system_call" || parsed.type === "system_scheduled" || parsed.type === "system_call_ended") {
+      const cleanText = parsed.text.replace(/\[.*?\].*$/, '').trim();
+      const isOngoing = parsed.type === "system_call";
+      const isEnded = parsed.type === "system_call_ended";
+
+      return (
+        <div key={m.id} className="group relative flex items-center justify-center py-2 px-4 hover:bg-[#F9F9F7] rounded-lg transition-colors"
+          onMouseEnter={() => setHovered(m.id)} onMouseLeave={() => setHovered(null)}>
+          
+          <div className="flex items-center gap-2 text-[13px] text-gray-500 font-medium">
+            <span className="flex items-center justify-center w-5 h-5 rounded-md bg-gray-100 text-gray-400">
+              {isEnded ? <CheckCircle2 size={12} /> : isOngoing ? <Video size={12} /> : <Calendar size={12} />}
+            </span>
+            <span dangerouslySetInnerHTML={{ __html: renderMarkdown(cleanText).replace(/<br\/>/g, ' ') }} className="inline-block [&>p]:inline-block [&>p]:m-0" />
+            <span className="text-gray-300">•</span>
+            <span className="text-[11px] text-gray-400">{formatTime(m.created_at)}</span>
+            
+            {/* Join logic removed per user request - users should join from the Lobby Hub */}
+          </div>
+
+          <AnimatePresence>
+            {isHovered && canDelete && (
+              <motion.div initial={{ opacity: 0, scale: 0.9, y: 0 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9 }} transition={{ duration: 0.1 }}
+                className="absolute right-4 flex items-center justify-center bg-white border border-gray-200 rounded-lg shadow-sm px-1 py-1 z-10 w-7 h-7">
+                <button onClick={() => handleDeleteMessage(m.id, isThread)} title="Delete message" disabled={isDeleting}
+                  className="w-full h-full flex items-center justify-center hover:bg-red-50 rounded-md cursor-pointer border-0 bg-transparent text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50">
+                  {isDeleting ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      );
+    }
 
     return (
       <div key={m.id}
@@ -1008,6 +1059,11 @@ export default function SpacePage() {
                 <Plus size={13} /><span className="hidden sm:inline">Add</span>
               </button>
             )}
+            <Link href={`/space/video-call?room=project-${projectId}`}
+              className="px-3 py-1.5 rounded-lg text-[12px] font-bold cursor-pointer flex items-center gap-1.5 border border-[#EBEBEB] bg-white text-gray-900 hover:text-[#36C5F0] hover:border-[#36C5F0]/30 shadow-sm transition-all no-underline"
+              style={{ fontFamily: "'Sora',sans-serif" }}>
+              <Video size={13} className="text-[#36C5F0]" /><span className="hidden sm:inline">Meet</span>
+            </Link>
             <div className="flex -space-x-1.5">
               {team.slice(0, 3).map((m, i) => {
                 const p = m.profiles; if (!p) return null;

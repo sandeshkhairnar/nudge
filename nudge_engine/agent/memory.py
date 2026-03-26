@@ -1,5 +1,5 @@
 from typing import Any, List, Dict, Optional
-from langchain.memory import ConversationBufferWindowMemory
+from langchain_classic.memory import ConversationBufferWindowMemory
 from langchain_core.messages import BaseMessage, message_to_dict, messages_from_dict
 
 from services.redis_service import get_memory, set_memory

@@ -3,7 +3,7 @@
 import { JSX, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useWorkspaceStore } from "@/store/workspace-store";
 import { getUserWorkspaces } from "@/lib/workspace";
@@ -11,6 +11,7 @@ import { WorkspaceSwitcher } from "@/components/space/workspace-switcher";
 import { useNotificationStore } from "@/store/notification-store";
 import { useProjectsStore } from "@/store/projects-store";
 import Avatar from "@/components/global/Avatar";
+import { Video } from "lucide-react";
 
 function NudgeLogo({ collapsed }: { collapsed: boolean }) {
   const id = "sidebar-pills";
@@ -240,6 +241,7 @@ interface Profile {
 }
 
 export default function Sidebar() {
+  const params = useParams();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -532,7 +534,23 @@ export default function Sidebar() {
           />
         ))}
 
-        <div className="mt-3">
+        <div className={`mt-3 flex flex-col gap-3 ${collapsed && !isMobile ? "items-center" : "items-start"}`}>
+          {collapsed && !isMobile && (
+            <motion.button
+              onClick={() => {
+                const room = params.projectId ? `project-${params.projectId}` : "general-meeting";
+                window.open(`/space/video-call?room=${room}`, "_blank");
+              }}
+              whileHover={{ scale: 1.1, background: "rgba(54,197,240,0.15)", color: "#36C5F0" }}
+              whileTap={{ scale: 0.97 }}
+              className="flex items-center justify-center w-8 h-8 rounded-lg text-[#36C5F0] transition-all border-0 cursor-pointer"
+              style={{ background: "rgba(54,197,240,0.08)" }}
+              title="Start Meeting"
+            >
+              <Video size={14} />
+            </motion.button>
+          )}
+
           <div className="flex items-center gap-3">
             <Avatar 
               url={profile?.avatar_url} 
@@ -553,17 +571,34 @@ export default function Sidebar() {
                     {profile.email}
                   </p>
                 </div>
-                <motion.button
-                  onClick={signOut}
-                  whileHover={{ scale: 1.1, background: "#EF4444", color: "#FFFFFF" }}
-                  whileTap={{ scale: 0.97 }}
-                  className="flex items-center justify-center w-9 h-9 rounded-lg text-white font-semibold text-sm transition-all border-0 cursor-pointer flex-shrink-0"
-                  style={{ background: "rgba(255,255,255,0.06)", fontFamily: "'Sora', sans-serif" }}
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h4a2 2 0 012 2v1" />
-                  </svg>
-                </motion.button>
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <motion.button
+                    onClick={() => {
+                      const room = params.projectId ? `project-${params.projectId}` : "general-meeting";
+                      window.open(`/space/video-call?room=${room}`, "_blank");
+                    }}
+                    whileHover={{ scale: 1.1, background: "rgba(54,197,240,0.15)", color: "#36C5F0" }}
+                    whileTap={{ scale: 0.97 }}
+                    className="flex items-center justify-center w-9 h-9 rounded-lg text-[#36C5F0] transition-all border-0 cursor-pointer"
+                    style={{ background: "rgba(54,197,240,0.08)" }}
+                    title="Start Meeting"
+                  >
+                    <Video size={16} />
+                  </motion.button>
+
+                  <motion.button
+                    onClick={signOut}
+                    whileHover={{ scale: 1.1, background: "#EF4444", color: "#FFFFFF" }}
+                    whileTap={{ scale: 0.97 }}
+                    className="flex items-center justify-center w-9 h-9 rounded-lg text-white font-semibold text-sm transition-all border-0 cursor-pointer"
+                    style={{ background: "rgba(255,255,255,0.06)", fontFamily: "'Sora', sans-serif" }}
+                    title="Sign Out"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h4a2 2 0 012 2v1" />
+                    </svg>
+                  </motion.button>
+                </div>
               </div>
             )}
           </div>
