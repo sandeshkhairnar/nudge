@@ -131,7 +131,6 @@ const icons: Record<string, JSX.Element> = {
   ),
 };
 
-
 interface NavItemType {
   label: string;
   href: string;

@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     )
 
     # ── AI Provider ──────────────────────────────────────────────────────────
-    ai_provider: Literal["gemini", "claude", "openai"] = Field(
+    ai_provider: Literal["gemini", "claude", "openai", "groq"] = Field(
         ...,
         description="Active LLM provider. Controls get_llm() factory.",
     )
@@ -39,6 +39,11 @@ class Settings(BaseSettings):
     openai_api_key: Optional[str] = Field(default=None, description="Required when ai_provider=openai")
     openai_model: str = Field(default="gpt-4o", description="Smart/default OpenAI model")
     openai_fast_model: str = Field(default="gpt-4o-mini", description="Fast/cheap OpenAI model")
+
+    # Groq
+    groq_api_key: Optional[str] = Field(default=None, description="Required when ai_provider=groq")
+    groq_model: str = Field(default="llama-3.3-70b-versatile", description="Smart/default Groq model")
+    groq_fast_model: str = Field(default="llama-3.1-8b-instant", description="Fast/cheap Groq model")
 
     # ── Infrastructure ───────────────────────────────────────────────────────
     supabase_url: str = Field(..., description="Supabase project URL")
@@ -95,6 +100,7 @@ class Settings(BaseSettings):
             "claude": self.claude_model,
             "gemini": self.gemini_model,
             "openai": self.openai_model,
+            "groq": self.groq_model,
         }[self.ai_provider]
 
     @property
@@ -104,6 +110,7 @@ class Settings(BaseSettings):
             "claude": self.claude_fast_model,
             "gemini": self.gemini_fast_model,
             "openai": self.openai_fast_model,
+            "groq": self.groq_fast_model,
         }[self.ai_provider]
 
     # ── Validation ────────────────────────────────────────────────────────────
@@ -115,12 +122,14 @@ class Settings(BaseSettings):
             "claude": self.anthropic_api_key,
             "gemini": self.google_api_key,
             "openai": self.openai_api_key,
+            "groq": self.groq_api_key,
         }
         if not required[self.ai_provider]:
             key_name = {
                 "claude": "ANTHROPIC_API_KEY",
                 "gemini": "GOOGLE_API_KEY",
                 "openai": "OPENAI_API_KEY",
+                "groq": "GROQ_API_KEY",
             }[self.ai_provider]
             raise ValueError(
                 f"AI_PROVIDER is '{self.ai_provider}' but {key_name} is not set."

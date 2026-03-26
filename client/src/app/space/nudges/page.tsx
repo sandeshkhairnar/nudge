@@ -24,24 +24,103 @@ export default function NudgesPage() {
 
   // Settings state initialized from workspace
   const [engineActive, setEngineActive] = useState((workspace as any)?.nudge_engine_active ?? true);
-  const [checkTime, setCheckTime] = useState((workspace as any)?.nudge_check_time ?? "09:00");
+  const [checkTimes, setCheckTimes] = useState<string[]>((workspace as any)?.nudge_check_times ?? ["09:00"]);
+  const [newTime, setNewTime] = useState("09:00");
+  const [nextRunText, setNextRunText] = useState<string | null>(null);
 
   useEffect(() => {
     const loadSettings = async () => {
       if (!workspace?.id) return;
-      const { data, error } = await supabase
+      
+      // Try to select with new column first
+      let { data, error } = await supabase
         .from("workspaces")
-        .select("nudge_engine_active, nudge_check_time")
+        .select("nudge_engine_active, nudge_check_time, nudge_check_times")
         .eq("id", workspace.id)
         .single();
         
+      if (error && error.code === '42703') {
+        // Fallback if column missing
+        const fallback = await supabase
+          .from("workspaces")
+          .select("nudge_engine_active, nudge_check_time")
+          .eq("id", workspace.id)
+          .single();
+        data = fallback.data as any;
+        error = fallback.error;
+      }
+        
       if (data && !error) {
         if (data.nudge_engine_active !== null) setEngineActive(data.nudge_engine_active);
-        if (data.nudge_check_time !== null) setCheckTime(data.nudge_check_time);
+        
+        let times: string[] = [];
+        if (Array.isArray(data.nudge_check_times)) {
+          times = data.nudge_check_times;
+        } else if (data.nudge_check_time) {
+          times = [data.nudge_check_time];
+        }
+        setCheckTimes(times.length ? times : ["09:00"]);
       }
     };
     loadSettings();
   }, [workspace?.id]);
+
+  useEffect(() => {
+    if (checkTimes.length === 0) {
+      setNextRunText(null);
+      return;
+    }
+
+    const updateCountdown = () => {
+        const now = new Date();
+        const currentStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+        const sorted = [...checkTimes].sort();
+        const nextTimeStr = sorted.find(t => t > currentStr) ?? sorted[0];
+
+        const [h, m] = nextTimeStr.split(':').map(Number);
+        const target = new Date();
+        target.setHours(h, m, 0, 0);
+        
+        if (target < now) {
+            target.setDate(target.getDate() + 1);
+        }
+
+        const diffMs = target.getTime() - now.getTime();
+        const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+        const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+        if (diffHrs > 0) {
+            setNextRunText(`in ${diffHrs}hr ${diffMins}m`);
+        } else {
+            setNextRunText(`in ${diffMins === 0 ? 'less than a minute' : `${diffMins}m`}`);
+        }
+    };
+
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 30000);
+    return () => clearInterval(interval);
+  }, [checkTimes]);
+
+  const saveTimes = async (times: string[]) => {
+    if (!workspace?.id) return;
+    await supabase
+      .from("workspaces")
+      .update({ nudge_check_times: times })
+      .eq("id", workspace.id);
+  };
+
+  const addTime = () => {
+    if (checkTimes.includes(newTime)) return;
+    const updated = [...checkTimes, newTime].sort();
+    setCheckTimes(updated);
+    saveTimes(updated);
+  };
+
+  const removeTime = (t: string) => {
+    const updated = checkTimes.filter(time => time !== t);
+    setCheckTimes(updated);
+    saveTimes(updated);
+  };
 const handleToggleEngine = async () => {
   if (!workspace?.id) return;
   const newState = !engineActive;
@@ -60,23 +139,13 @@ const handleToggleEngine = async () => {
   }
 };
 
-const handleTimeBlur = async () => {
-  if (!workspace?.id || !checkTime) return;
-
-  const { data, error } = await supabase
-    .from("workspaces")
-    .update({ nudge_check_time: checkTime })
-    .eq("id", workspace.id)
-    .select("nudge_check_time")
-    .single();
-
-  if (error || !data) {
-    console.error("Time save failed:", error);
-  }
-};
-
-  const handleTimeChange = (newTime: string) => {
-    setCheckTime(newTime);
+  const handleRunNow = async () => {
+    if (!workspace?.id) return;
+    // Manual trigger - typically calls the agent router directly in the engine
+    // For now we simulate success and reload nudges
+    setTimeout(() => {
+        loadNudges();
+    }, 2000);
   };
   useEffect(() => {
     if (workspace?.id) {
@@ -133,13 +202,23 @@ const handleTimeBlur = async () => {
           </h1>
           <p className="text-gray-500 text-[14px]">AI-generated action items and project updates.</p>
         </div>
-        <button 
-          onClick={loadNudges}
-          className="flex items-center gap-2 px-4 py-2 text-gray-400 hover:text-gray-900 transition-all border-0 bg-transparent cursor-pointer font-bold text-[13px]"
-        >
-          <RefreshCw size={14} />
-          Refresh
-        </button>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={handleRunNow}
+            disabled={!engineActive}
+            className="flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white rounded-xl text-[13px] font-bold hover:bg-emerald-600 transition-all border-0 cursor-pointer shadow-lg shadow-emerald-500/20 disabled:opacity-50"
+          >
+            <Zap size={14} className="fill-white" />
+            Run Now
+          </button>
+          <button 
+            onClick={loadNudges}
+            className="flex items-center gap-2 px-4 py-2 text-gray-400 hover:text-gray-900 transition-all border-0 bg-transparent cursor-pointer font-bold text-[13px]"
+          >
+            <RefreshCw size={14} />
+            Refresh
+          </button>
+        </div>
       </div>
 
       <div className="bg-white border text-gray-900 border-gray-100 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -155,23 +234,52 @@ const handleTimeBlur = async () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-6 sm:gap-8">
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-black tracking-wider uppercase text-gray-400">Daily Check Time</label>
-            <div className="relative">
-              <Clock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input 
-                type="time" 
-                value={checkTime}
-                onChange={(e) => handleTimeChange(e.target.value)}
-                onBlur={handleTimeBlur}
-                disabled={!engineActive}
-                className="pl-9 pr-3 py-2 bg-gray-50 border border-gray-100 rounded-lg text-[13px] font-bold text-gray-700 outline-none focus:border-[#36C5F0] transition-colors disabled:opacity-50"
-              />
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 sm:gap-10">
+          <div className="flex flex-col gap-2">
+            <label className="text-[10px] font-black tracking-wider uppercase text-gray-400">Scheduled Check-ins</label>
+            <div className="flex flex-wrap gap-2 items-center">
+              {checkTimes.map((t) => (
+                <div key={t} className="flex items-center gap-1.5 px-2.5 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-[13px] font-bold text-gray-700">
+                  <Clock size={12} className="text-[#36C5F0]" />
+                  {t}
+                  <button 
+                    onClick={() => removeTime(t)}
+                    className="ml-1 text-gray-300 hover:text-red-500 border-0 bg-transparent cursor-pointer p-0"
+                  >
+                    <XCircle size={14} />
+                  </button>
+                </div>
+              ))}
+              <div className="flex items-center gap-2">
+                <input 
+                  type="time" 
+                  value={newTime}
+                  onChange={(e) => setNewTime(e.target.value)}
+                  disabled={!engineActive}
+                  className="px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-[12px] font-bold outline-none focus:border-[#36C5F0] transition-colors w-28 disabled:opacity-50"
+                />
+                <button 
+                  onClick={addTime}
+                  disabled={!engineActive}
+                  className="p-1.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:opacity-50 border-0 cursor-pointer"
+                >
+                  <RefreshCw size={14} />
+                </button>
+              </div>
             </div>
           </div>
 
-          <div className="flex flex-col gap-1.5 items-end">
+          {nextRunText && (
+            <div className="flex flex-col gap-1.5 transition-all">
+              <label className="text-[10px] font-black tracking-wider uppercase text-gray-400">Next engine run</label>
+              <div className="flex items-center gap-2 text-[15px] font-black text-[#36C5F0] bg-blue-50/50 px-3 py-1 rounded-lg border border-blue-100/50">
+                <Clock size={16} />
+                {nextRunText}
+              </div>
+            </div>
+          )}
+
+          <div className="flex flex-col gap-1.5 items-end ml-auto">
             <label className="text-[10px] font-black tracking-wider uppercase text-gray-400">Status</label>
             <motion.div 
               className={`w-11 h-6 flex items-center bg-gray-200 rounded-full p-1 cursor-pointer transition-colors ${engineActive ? 'bg-emerald-500' : ''}`}

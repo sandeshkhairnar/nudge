@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Sora } from "next/font/google";
 import "./globals.css";
 import { NotificationProvider } from "@/components/global/notification-provider";
+import { Toaster } from "sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,7 +39,9 @@ export default function RootLayout({
       >
         <NotificationProvider>
           {children}
-        </NotificationProvider>      </body>
+        </NotificationProvider>
+        <Toaster position="top-right" richColors closeButton />
+      </body>
     </html>
   );
 }
