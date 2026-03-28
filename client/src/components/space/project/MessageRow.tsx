@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Loader2, FileText, CornerDownRight, Trash2, MessageCircle,
-  Smile, CheckCircle2, Video, Calendar,
+  Smile, CheckCircle2, Video, Calendar, ClipboardList, Zap,
 } from "lucide-react";
 import GlobalAvatar from "@/components/global/Avatar";
 import { strColor } from "@/lib/utils/color";
@@ -56,8 +56,7 @@ export default function MessageRow({
 
   const parsed = (() => {
     let data: any = m.content;
-    
-    // Multi-pass parsing for potentially double-encoded JSON
+
     for (let i = 0; i < 2; i++) {
       if (typeof data === "string" && (data.trim().startsWith("{") || data.trim().startsWith("["))) {
         try {
@@ -77,7 +76,6 @@ export default function MessageRow({
     let finalText = data && typeof data === "object" ? (data.text ?? "") : String(m.content);
     let attachments = data && typeof data === "object" ? data.attachments : undefined;
 
-    // Final bulletproof detection pass on whatever text we have
     if (!finalType && typeof finalText === "string") {
       const lowerText = finalText.toLowerCase();
       if (lowerText.includes("started a meeting")) finalType = "system_call";
@@ -85,34 +83,35 @@ export default function MessageRow({
       else if (lowerText.includes("is calling you")) finalType = "system_call_ringing";
     }
 
-    // If it's still JSON-like and no type, it's a failed parse of a possible system msg
     if (!finalType && finalText.trim().startsWith("{") && finalText.includes('"text"')) {
-       // Deep extraction fallback
-       const match = finalText.match(/"text"\s*:\s*"([^"]*)"?/);
-       if (match) {
-         finalText = match[1];
-         const lowerText = finalText.toLowerCase();
-         if (lowerText.includes("started a meeting")) finalType = "system_call";
-         else if (lowerText.includes("ended the meeting")) finalType = "system_call_ended";
-         else if (lowerText.includes("is calling you")) finalType = "system_call_ringing";
-       }
+      const match = finalText.match(/"text"\s*:\s*"([^"]*)"?/);
+      if (match) {
+        finalText = match[1];
+        const lowerText = finalText.toLowerCase();
+        if (lowerText.includes("started a meeting")) finalType = "system_call";
+        else if (lowerText.includes("ended the meeting")) finalType = "system_call_ended";
+        else if (lowerText.includes("is calling you")) finalType = "system_call_ringing";
+      }
     }
 
-    return { 
-      text: finalText, 
-      type: finalType, 
+    return {
+      text: finalText,
+      type: finalType,
       attachments: attachments,
-      room: data?.room 
+      room: data?.room
     };
   })();
 
+  // ── System call / meeting pills ──────────────────────────────────────────
   if (
     parsed.type?.startsWith("system_") ||
     parsed.type === "call" ||
-    parsed.type === "call_ended"
+    parsed.type === "call_ended" ||
+    parsed.type === "nudge"
   ) {
     const isOngoing = parsed.type === "system_call" || parsed.type === "call";
     const isEnded = parsed.type === "system_call_ended" || parsed.type === "call_ended";
+    const isNudge = parsed.type === "nudge" || parsed.type === "system_nudge";
 
     return (
       <div
@@ -122,13 +121,13 @@ export default function MessageRow({
         onMouseLeave={() => onHover(null)}
       >
         <div className="flex items-center gap-2.5 bg-[#F9F9F7] border border-[#F0F0EB] px-3 py-1 rounded-full">
-          <span className={`flex items-center justify-center w-4.5 h-4.5 rounded-full ${isEnded ? 'bg-emerald-100 text-emerald-600' : 'bg-indigo-100 text-indigo-600'}`}>
-            {isEnded ? <CheckCircle2 size={11} /> : isOngoing ? <Video size={11} /> : <Calendar size={11} />}
+          <span className={`flex items-center justify-center w-4.5 h-4.5 rounded-full ${isEnded ? 'bg-emerald-100 text-emerald-600' : isNudge ? 'bg-emerald-50 text-emerald-500' : 'bg-indigo-100 text-indigo-600'}`}>
+            {isEnded ? <CheckCircle2 size={11} /> : isNudge ? <Zap size={10} strokeWidth={3} className="fill-emerald-500" /> : isOngoing ? <Video size={11} /> : <Calendar size={11} />}
           </span>
           <div className="flex items-center gap-2 text-[12px] font-semibold text-gray-500">
             <span
-              dangerouslySetInnerHTML={{ 
-                __html: renderMarkdown(parsed.text.replace(/\[Join now\].*$/, "").trim()).replace(/<br\/>/g, " ") 
+              dangerouslySetInnerHTML={{
+                __html: renderMarkdown(parsed.text.replace(/\[Join now\].*$/, "").trim()).replace(/<br\/>/g, " ")
               }}
               className="inline-block [&>p]:inline-block [&>p]:m-0"
             />
@@ -140,6 +139,134 @@ export default function MessageRow({
     );
   }
 
+  // ── MOM Card (system-generated, centered in chat) ────────────────────────
+  if (parsed.type === "mom_card" || (parsed.text && parsed.text.startsWith("[MOM_CARD]\n"))) {
+    const rawMarkdown =
+      parsed.type === "mom_card"
+        ? parsed.text
+        : parsed.text.replace("[MOM_CARD]\n", "");
+
+    // Parse markdown sections into structured data
+    const sections: { heading: string; icon: string; items: string[] }[] = [];
+    const lines = rawMarkdown.split("\n");
+    let currentSection: { heading: string; icon: string; items: string[] } | null = null;
+
+    const sectionIcons: Record<string, string> = {
+      summary: "🤔",
+      "key decisions": "📝",
+      "action items": "📋",
+    };
+
+    for (const line of lines) {
+      const h2 = line.match(/^#{2,3}\s+(.+)/);
+      const bullet = line.match(/^[*-]\s+(.+)/);
+      const isBlank = line.trim() === "" || line.trim().startsWith("---");
+
+      if (h2) {
+        if (currentSection) sections.push(currentSection);
+        const headingText = h2[1].replace(/[\p{Emoji}\uFE0F]/gu, "").trim();
+        const key = headingText.toLowerCase();
+        // Skip date/metadata sections
+        if (key.startsWith("date")) {
+          currentSection = null;
+          continue;
+        }
+        currentSection = {
+          heading: headingText,
+          icon: sectionIcons[key] ?? "•",
+          items: [],
+        };
+      } else if (bullet && currentSection) {
+        // Strip bold markdown from bullet items
+        currentSection.items.push(bullet[1].replace(/\*\*(.*?)\*\*/g, "$1").trim());
+      } else if (!isBlank && currentSection && line.trim().length > 0 && !line.startsWith("#")) {
+        // Treat plain paragraph lines as items (fixes Summary not showing)
+        currentSection.items.push(line.trim());
+      }
+    }
+    if (currentSection) sections.push(currentSection);
+
+    return (
+      <div
+        key={m.id}
+        className="flex flex-col items-center w-full px-4 py-3 my-2"
+        onMouseEnter={() => onHover(m.id)}
+        onMouseLeave={() => onHover(null)}
+      >
+        {/* Divider line with label — matches system message visual language */}
+        <div className="flex items-center gap-3 w-full max-w-[560px] mb-3">
+          <div className="flex-1 h-px bg-[#EBEBEB]" />
+          <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[#F4F4F1] border border-[#E8E8E4] rounded-full">
+            <ClipboardList size={10} className="text-gray-400" />
+            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+              Meeting Minutes · {formatTime(m.created_at)}
+            </span>
+          </div>
+          <div className="flex-1 h-px bg-[#EBEBEB]" />
+        </div>
+
+        {/* Card */}
+        <div className="w-full max-w-[560px] bg-white border border-[#E8E8E4] rounded-2xl overflow-hidden shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
+
+          {/* Card header */}
+          <div className="flex items-center gap-3 px-5 py-3.5 bg-[#FAFAF8] border-b border-[#F0F0EB]">
+            <div className="w-7 h-7 rounded-[9px] bg-emerald-50 flex items-center justify-center text-[15px]">
+              <Zap size={12} className={'fill-emerald-500 border-none'} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[13px] font-black text-[#0D0D0D] leading-tight">AI Meeting Minutes</p>
+              <p className="text-[10px] font-semibold text-[#B0B0A8] uppercase tracking-wider mt-0.5">
+                Generated by Nudge Engine
+              </p>
+            </div>
+            {/* Pulse indicator — same visual pattern as call pills */}
+            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white border border-[#EBEBEB] rounded-full">
+              <div className="w-1.5 h-1.5 rounded-full bg-[#36C5F0] animate-pulse" />
+              <span className="text-[9px] font-black text-[#B0B0A8] uppercase tracking-wider">Auto</span>
+            </div>
+          </div>
+
+          {/* Sections */}
+          <div className="px-5 py-4 flex flex-col gap-4">
+            {sections.map((section, si) => (
+              <div key={si}>
+                {/* Section heading */}
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-[13px]">{section.icon}</span>
+                  <span className="text-[11.5px] font-black text-[#0D0D0D] uppercase tracking-wide">
+                    {section.heading}
+                  </span>
+                </div>
+
+                {/* Items */}
+                <ul className="flex flex-col gap-1.5 pl-1">
+                  {section.items.map((item, ii) => (
+                    <li key={ii} className="flex items-start gap-2.5">
+                      {section.heading.toLowerCase().includes("action") ? (
+                        // Action items get a checkbox-style dot
+                        <span className="mt-[5px] w-3.5 h-3.5 rounded-[4px] border border-[#C8C8C0] flex-shrink-0" />
+                      ) : (
+                        // Other items get a subtle bullet
+                        <span className="mt-[7px] w-1.5 h-1.5 rounded-full bg-[#C8C8C0] flex-shrink-0" />
+                      )}
+                      <span className="text-[13px] text-[#4A4A45] leading-relaxed">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                {/* Divider between sections (not after last) */}
+                {si < sections.length - 1 && (
+                  <div className="mt-4 h-px bg-[#F0F0EB]" />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Regular message ──────────────────────────────────────────────────────
   return (
     <div
       key={m.id}
@@ -232,11 +359,10 @@ export default function MessageRow({
               <button
                 key={ri}
                 onClick={() => onToggleReaction(m.id, r.emoji)}
-                className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[12px] border cursor-pointer transition-all ${
-                  r.mine
-                    ? "bg-blue-50 border-blue-200 text-blue-800"
-                    : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
-                }`}
+                className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[12px] border cursor-pointer transition-all ${r.mine
+                  ? "bg-blue-50 border-blue-200 text-blue-800"
+                  : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                  }`}
               >
                 {r.emoji}
                 <span className="text-[11px] font-semibold">{r.count}</span>

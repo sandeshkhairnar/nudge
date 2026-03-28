@@ -19,6 +19,30 @@ def get_tasks(workspace_id: str, project_id: Optional[str] = None) -> str:
     res = query.neq("status", "done").execute()
     return str(res.data)
 
+def resolve_user_id(name: str, supabase) -> Optional[str]:
+    """
+    Try to resolve a human name to a UUID from the profiles table.
+    If name is already a UUID, return it.
+    """
+    if not name:
+        return None
+        
+    # Check if it's already a UUID (basic check)
+    if len(name) == 36 and "-" in name:
+        return name
+
+    # Search by full_name
+    res = supabase.table("profiles").select("id").ilike("full_name", f"%{name}%").limit(1).execute()
+    if res.data:
+        return res.data[0]["id"]
+    
+    # Search by email as fallback
+    res = supabase.table("profiles").select("id").ilike("email", f"%{name}%").limit(1).execute()
+    if res.data:
+        return res.data[0]["id"]
+        
+    return None
+
 @tool
 def create_task(
     workspace_id: str,
@@ -29,13 +53,24 @@ def create_task(
 ) -> str:
     """
     Create a new task in the project board.
+    The 'assignee_id' can be a UUID or a human name (e.g. 'Sandesh' or 'Adarsh').
     """
     supabase = get_supabase()
+    
+    # Resolve name to ID if needed
+    final_assignee_id = assignee_id
+    if assignee_id and not (len(assignee_id) == 36 and "-" in assignee_id):
+        resolved_id = resolve_user_id(assignee_id, supabase)
+        if resolved_id:
+            final_assignee_id = resolved_id
+        else:
+            return f"Error: Could not find a user matching the name '{assignee_id}'. Please provide a more specific name or their ID."
+
     data = {
         "project_id": project_id,
         "title": title,
         "description": description,
-        "assignee_id": assignee_id,
+        "assignee_id": final_assignee_id,
         "status": "todo"
     }
     res = supabase.table("tasks").insert(data).execute()

@@ -19,7 +19,7 @@ RULES:
 - For general status questions ("How is everything?", "Status overview"), use the `get_workspace_analytics` tool.
 - For project-specific questions where only a name is provided, use `list_projects` to find the ID first.
 - DO NOT ask the user for IDs. Silently look them up using available tools.
-- For task creation: identify Title, Priority, and Assignee from context.
+- For task creation: identify Title, Priority, and Assignee from context. You can use human names (e.g. "Adarsh") for assignment; the tool will resolve them to IDs.
 - Always use the tools provided to interact with the database.
 """
 

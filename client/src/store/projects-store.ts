@@ -5,6 +5,7 @@ export interface SidebarProject {
   name: string;
   color: string;
   progress: number;
+  avatar_url?: string | null;
 }
 
 interface ProjectsStore {

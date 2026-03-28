@@ -55,17 +55,25 @@ async def create_system_message(
         return "Error: Could not find a valid user to back the system message."
     
     # 3. Format as JSON for the frontend system message renderer
-    content_obj = {
-        "type": system_type,
-        "text": text
-    }
-    content_json = json.dumps(content_obj)
+    # If it's a MOM, we use the specific 'mom_card' type as requested
+    if system_type == "system_mom":
+        content_obj = {
+            "type": "mom_card",
+            "text": text
+        }
+        content_json = json.dumps(content_obj)
+    else:
+        content_obj = {
+            "type": system_type,
+            "text": text
+        }
+        content_json = json.dumps(content_obj)
     
     # 4. Insert into messages
     data = {
         "channel_id": channel_id,
         "content": content_json,
-        "is_ai": False,
+        "is_ai": (system_type == "system_mom"), # Make it an AI message if it's a MOM
         "user_id": user_id
     }
     

@@ -77,6 +77,7 @@ export interface Project {
   color: string;
   progress: number;
   workspace_id: string;
+  avatar_url?: string | null;
 }
 
 export interface OnlineUser {

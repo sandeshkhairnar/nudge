@@ -37,11 +37,25 @@ export default function MentionDropdown({
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 4, scale: 0.97 }}
       transition={{ duration: 0.12 }}
-      className="absolute bottom-full left-3 right-3 mb-2 bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden z-30"
+      className="absolute bottom-full left-0 right-0 mb-2 z-40 overflow-hidden"
+      style={{
+        background: "#fff",
+        border: "1px solid #E8E8E4",
+        borderRadius: 14,
+        boxShadow: "0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06)",
+        maxHeight: 220,
+        overflowY: "auto",
+      }}
     >
-      <div className="px-3 py-2 border-b border-gray-50 flex items-center gap-1.5">
+      <div
+        className="px-3 py-2 flex items-center gap-1.5"
+        style={{ borderBottom: "1px solid #F0F0EB" }}
+      >
         <AtSign size={11} className="text-blue-400" />
-        <span className="text-[10.5px] font-black uppercase tracking-wider text-gray-400">
+        <span
+          className="text-[10px] font-black uppercase tracking-wider"
+          style={{ color: "#C4C4BC", letterSpacing: "0.08em" }}
+        >
           Mention someone
         </span>
       </div>
@@ -53,8 +67,15 @@ export default function MentionDropdown({
             e.preventDefault();
             onSelect(member);
           }}
-          className="w-full flex items-center gap-2.5 px-3 py-2.5 cursor-pointer border-0 bg-transparent text-left transition-colors"
-          style={{ background: idx === activeIndex ? "#EFF6FF" : "transparent" }}
+          className="w-full flex items-center gap-2.5 px-3 py-2.5 cursor-pointer border-0 text-left transition-colors"
+          style={{ background: idx === activeIndex ? "#F4F4F1" : "transparent" }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLElement).style.background = "#F7F7F4";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLElement).style.background =
+              idx === activeIndex ? "#F4F4F1" : "transparent";
+          }}
         >
           <GlobalAvatar
             url={member.avatar_url}
@@ -65,15 +86,27 @@ export default function MentionDropdown({
           />
           <div className="min-w-0 flex-1">
             <p
-              className="text-[13px] font-bold text-gray-800 truncate"
-              style={{ fontFamily: "'Sora',sans-serif" }}
+              className="text-[12.5px] font-semibold truncate leading-tight"
+              style={{ color: "#0D0D0D", fontFamily: "'Sora', sans-serif" }}
             >
               {member.full_name ?? member.email}
             </p>
-            <p className="text-[10.5px] text-gray-400 truncate">{member.email}</p>
+            <p
+              className="text-[10.5px] truncate leading-tight"
+              style={{ color: "#B0B0A8" }}
+            >
+              {member.email}
+            </p>
           </div>
           {idx === activeIndex && (
-            <span className="text-[9px] text-blue-400 font-bold border border-blue-200 bg-blue-50 px-1.5 py-0.5 rounded-md flex-shrink-0">
+            <span
+              className="text-[9px] font-bold px-1.5 py-0.5 rounded-md flex-shrink-0"
+              style={{
+                color: "#60A5FA",
+                background: "#EFF6FF",
+                border: "1px solid #BFDBFE",
+              }}
+            >
               Enter
             </span>
           )}

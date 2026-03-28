@@ -87,6 +87,17 @@ async def run_agent(event: Dict[str, Any]) -> str:
         )
     elif event_type == "github":
         input_text = context_prefix + f"GitHub event {payload.get('event_name')} received for repo {payload.get('repository')}. Details: {payload.get('data')}. Process this update."
+    elif event_type == "mom_generation":
+        project_name = payload.get("project_name", payload.get("room_name"))
+        input_text = context_prefix + (
+            f"MEETING ENDED: The meeting for project/room '{project_name}' has ended. "
+            f"Here is the continuous raw transcript and chat log:\n---\n{payload.get('transcript')}\n---\n"
+            "Please analyze this transcript text. Synthesize it into a structured 'Minute of Meeting' (MOM) "
+            "containing a short Summary, Key Decisions, and Action Items. "
+            "Then, you MUST use the 'create_system_message' tool to post this MOM as a system alert to the project chat so everyone is informed. "
+            "IMPORTANT: When calling create_system_message, use the argument `system_type='system_mom'`. "
+            "Format the text beautifully with Markdown and emojis for readability."
+        )
     else:
         input_text = context_prefix + str(payload)
 
