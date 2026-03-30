@@ -3,7 +3,15 @@ import { create } from "zustand";
 interface Workspace {
   id: string;
   name: string;
-  plan: string;
+  slug: string;
+  logo_url?: string;
+  owner_id: string;
+  plan?: string;
+  created_at: string;
+  updated_at: string;
+  nudge_engine_active?: boolean;
+  nudge_check_time?: string;
+  nudge_check_times?: string[];
 }
 
 interface WorkspaceStore {

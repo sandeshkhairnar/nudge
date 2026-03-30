@@ -497,7 +497,7 @@ export default function Sidebar() {
       if (workspaces.length > 0) {
         setWorkspaces(workspaces);
         const lastWorkspaceId = localStorage.getItem("lastWorkspaceId");
-        const last = workspaces.find((w: { id: string | null }) => w.id === lastWorkspaceId);
+        const last = workspaces.find((w: any) => w?.id === lastWorkspaceId);
         setWorkspace(last || workspaces[0]);
       }
     };

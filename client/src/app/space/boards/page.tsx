@@ -83,11 +83,11 @@ export default function BoardsPage() {
   );
 
   return (
-    <div className="flex flex-col h-full bg-[#FAFAF8] p-6 lg:p-8 overflow-hidden">
+    <div className="flex flex-col h-full bg-transparent p-6 lg:p-8 overflow-hidden">
       <div className="flex items-start justify-between mb-8 flex-shrink-0">
         <div>
-          <h1 className="text-[28px] font-black text-[#0D0D0D] tracking-tight">Boards</h1>
-          <p className="text-[14px] text-gray-500 font-medium mt-1">
+          <h1 className="text-[28px] font-[800] text-[#111111] tracking-[-0.02em]">Boards</h1>
+          <p className="text-[14px] text-[#A0A09B] font-[600] mt-1 tracking-tight">
             {tasks.length} total tasks · {tasks.filter(t => t.status === "in_progress").length} in progress
           </p>
         </div>

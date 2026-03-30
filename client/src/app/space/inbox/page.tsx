@@ -19,10 +19,10 @@ type NotifType = "mention" | "message" | "task" | "system";
 type FilterTab = "all" | "mentions" | "messages" | "unread" | "invites";
 
 function getGroupLabel(date: Date): string {
-  if (isToday(date)) return "Today";
-  if (isYesterday(date)) return "Yesterday";
-  if (isTomorrow(date)) return "Tomorrow";
-  return format(date, "d MMM");
+  if (isToday(date)) return "TODAY";
+  if (isYesterday(date)) return "YESTERDAY";
+  if (isTomorrow(date)) return "TOMORROW";
+  return format(date, "d MMM").toUpperCase();
 }
 
 function groupItemsByDate<T extends { created_at: string }>(items: T[]) {
@@ -38,13 +38,13 @@ function groupItemsByDate<T extends { created_at: string }>(items: T[]) {
 function relativeTime(iso: string) {
   const diff = Date.now() - new Date(iso).getTime();
   const m = Math.floor(diff / 60000);
-  if (m < 1) return "just now";
-  if (m < 60) return `${m}m ago`;
+  if (m < 1) return "JUST NOW";
+  if (m < 60) return `${m}M AGO`;
   const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
+  if (h < 24) return `${h}H AGO`;
   const d = Math.floor(h / 24);
-  if (d < 7) return `${d}d ago`;
-  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  if (d < 7) return `${d}D AGO`;
+  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" }).toUpperCase();
 }
 
 function colorFromString(s: string) {
@@ -82,7 +82,7 @@ function parseSystemContent(raw: string): ParsedSystemMessage | null {
 
   const cleanText = text
     .replace(/\[MOM_CARD\]\s*/gi, "")
-    .replace(/[📝📋🤔✍️🤝🤝🏃‍♂️🚨✨]/gu, "") // Strip common AI emojis
+    .replace(/[📝📋🤔✍️🤝🤝🏃‍♂️🚨✨]/gu, "") 
     .replace(/#{1,4}\s*/g, "")
     .replace(/\*\*/g, "")
     .replace(/\*/g, "")
@@ -96,7 +96,7 @@ function parseSystemContent(raw: string): ParsedSystemMessage | null {
       return {
         type,
         text,
-        label: "Meeting Minutes",
+        label: "MEETING MINUTES",
         icon: <ClipboardList size={12} />,
         accent: "#36C5F0",
         bg: "#E8F5FD",
@@ -108,7 +108,7 @@ function parseSystemContent(raw: string): ParsedSystemMessage | null {
       return {
         type,
         text,
-        label: "Nudge",
+        label: "NUDGE",
         icon: <Zap size={10} strokeWidth={3} className="fill-emerald-500" />,
         accent: "#10B981",
         bg: "#ECFDF5",
@@ -121,7 +121,7 @@ function parseSystemContent(raw: string): ParsedSystemMessage | null {
       return {
         type,
         text,
-        label: "Stall Alert",
+        label: "STALL ALERT",
         icon: <AlertTriangle size={12} />,
         accent: "#ECB22E",
         bg: "#FFFBEB",
@@ -133,7 +133,7 @@ function parseSystemContent(raw: string): ParsedSystemMessage | null {
       return {
         type,
         text,
-        label: "Started Meeting",
+        label: "STARTED MEETING",
         icon: <Bell size={12} />,
         accent: "#2EB67D",
         bg: "#F0FFF4",
@@ -145,10 +145,10 @@ function parseSystemContent(raw: string): ParsedSystemMessage | null {
       return {
         type,
         text,
-        label: "Archive Meeting",
+        label: "ARCHIVED MEETING",
         icon: <Archive size={12} />,
-        accent: "#718096",
-        bg: "#F7FAFC",
+        accent: "#A0A09B",
+        bg: "#F9F9F8",
         preview: previewText,
       };
 
@@ -156,7 +156,7 @@ function parseSystemContent(raw: string): ParsedSystemMessage | null {
       return {
         type,
         text,
-        label: "Incoming Call",
+        label: "INCOMING CALL",
         icon: <Bell size={12} />,
         accent: "#E01E5A",
         bg: "#FFF5F7",
@@ -168,10 +168,10 @@ function parseSystemContent(raw: string): ParsedSystemMessage | null {
       return {
         type: type || "system",
         text,
-        label: "System",
+        label: "SYSTEM",
         icon: <Info size={12} />,
-        accent: "#A0AEC0",
-        bg: "#F7FAFC",
+        accent: "#A0A09B",
+        bg: "#F9F9F8",
         preview: previewText,
       };
   }
@@ -180,7 +180,7 @@ function parseSystemContent(raw: string): ParsedSystemMessage | null {
 function parseMomCardPreview(content: string): string {
   const cleaned = content
     .replace(/\[MOM_CARD\]\s*/gi, "")
-    .replace(/[📝📋🤔✍️🤝🤝🏃‍♂️🚨✨]/gu, "") // Strip common AI emojis
+    .replace(/[📝📋🤔✍️🤝🤝🏃‍♂️🚨✨]/gu, "")
     .replace(/#{1,4}\s*/g, "")
     .replace(/\*\*/g, "")
     .replace(/\*/g, "")
@@ -192,18 +192,17 @@ function parseMomCardPreview(content: string): string {
 function getNotificationPreview(n: Notification): { preview: string; systemParsed: ParsedSystemMessage | null } {
   const raw = (n as any).content ?? n.preview ?? "";
 
-  const momCardMatch =
-    typeof raw === "string" && raw.includes("[MOM_CARD]");
+  const momCardMatch = typeof raw === "string" && raw.includes("[MOM_CARD]");
   if (momCardMatch) {
     return {
       preview: parseMomCardPreview(raw),
       systemParsed: {
         type: "mom_card",
         text: raw,
-        label: "Meeting Minutes",
+        label: "MEETING MINUTES",
         icon: <ClipboardList size={12} />,
         accent: "#36C5F0",
-        bg: "#EBF8FF",
+        bg: "#E8F5FD",
         preview: parseMomCardPreview(raw),
       },
     };
@@ -221,17 +220,17 @@ function getNotificationPreview(n: Notification): { preview: string; systemParse
 }
 
 const TYPE_CONFIG: Record<NotifType, { icon: React.ReactNode; accent: string; label: string }> = {
-  mention: { icon: <AtSign size={10} strokeWidth={2.5} />, accent: "#36C5F0", label: "Mention" },
-  message: { icon: <MessageSquare size={10} strokeWidth={2.5} />, accent: "#2EB67D", label: "Message" },
-  task: { icon: <AlertCircle size={10} strokeWidth={2.5} />, accent: "#ECB22E", label: "Task" },
-  system: { icon: <Bell size={10} strokeWidth={2.5} />, accent: "#A259FF", label: "System" },
+  mention: { icon: <AtSign size={10} strokeWidth={3} />, accent: "#36C5F0", label: "MENTION" },
+  message: { icon: <MessageSquare size={10} strokeWidth={3} />, accent: "#2EB67D", label: "MESSAGE" },
+  task: { icon: <AlertCircle size={10} strokeWidth={3} />, accent: "#ECB22E", label: "TASK" },
+  system: { icon: <Bell size={10} strokeWidth={3} />, accent: "#A259FF", label: "SYSTEM" },
 } as const;
 
 function SystemBadge({ label, icon, accent, bg }: { label: string; icon: React.ReactNode; accent: string; bg: string }) {
   return (
     <span
-      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap flex-shrink-0"
-      style={{ color: accent, background: bg, border: `1px solid ${accent}22` }}
+      className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[6px] shadow-sm text-[9px] font-[800] tracking-wider whitespace-nowrap flex-shrink-0"
+      style={{ color: accent, background: bg, border: `1px solid color-mix(in srgb, ${accent}, transparent 85%)` }}
     >
       {icon}
       {label}
@@ -246,8 +245,6 @@ function NotificationRow({
   onArchive,
   onAccept,
   onDecline,
-  isFirst,
-  isLast,
 }: {
   item: any;
   type: "notification" | "invitation";
@@ -290,43 +287,42 @@ function NotificationRow({
   return (
     <div
       className={`
-        bg-white mx-2 md:mx-10 px-4 md:px-6 py-4 flex flex-col md:flex-row items-start md:items-center justify-between
-        border-b border-[#F0F4F8] transition-colors hover:bg-[#F9FAFB]
-        ${isFirst ? "rounded-t-lg" : ""}
-        ${isLast ? "rounded-b-lg border-none" : ""}
-        ${!item.read && !isInvite ? "border-l-2 border-l-[#36C5F0]" : ""}
+        bg-white mx-3 md:mx-10 px-6 py-5 flex flex-col md:flex-row items-start md:items-center justify-between
+        border border-[#F4F4F0] rounded-[24px] mb-3 transition-all duration-300
+        hover:shadow-[0_12px_48px_rgba(0,0,0,0.04)] hover:-translate-y-0.5
+        ${!item.read && !isInvite ? "ring-2 ring-[#36C5F0]/20 shadow-[0_4px_16px_rgba(54,197,240,0.08)]" : "shadow-[0_2px_8px_rgba(0,0,0,0.02)]"}
       `}
     >
       <div className="flex items-start gap-4 flex-1 min-w-0 w-full mb-3 md:mb-0">
         <div className="relative flex-shrink-0">
           {isSystemType && !avatarUrl ? (
             <div
-              className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0"
-              style={{ background: systemParsed?.bg ?? "#F7FAFC", border: `1.5px solid ${systemParsed?.accent ?? "#A0AEC0"}33` }}
+              className="w-[42px] h-[42px] rounded-full flex items-center justify-center flex-shrink-0 shadow-sm"
+              style={{ background: systemParsed?.bg ?? "#F9F9F8", border: `2px solid color-mix(in srgb, ${systemParsed?.accent ?? "#A0A09B"}, transparent 85%)` }}
             >
-              <span style={{ color: systemParsed?.accent ?? "#A0AEC0" }}>
-                {systemParsed?.icon ?? <Bell size={18} />}
+              <span style={{ color: systemParsed?.accent ?? "#A0A09B" }}>
+                {systemParsed?.icon ?? <Bell size={18} strokeWidth={2.5} />}
               </span>
             </div>
           ) : (
-            <div className="w-11 h-11 rounded-full overflow-hidden flex-shrink-0 bg-[#EDF2F7]">
+            <div className="w-[42px] h-[42px] rounded-full overflow-hidden flex-shrink-0 border-2 border-white shadow-sm">
               <GlobalAvatar
                 url={avatarUrl}
                 name={avatarName}
                 email={avatarEmail}
-                size={44}
+                size={38}
                 fallbackColor={colorFromString(avatarId || "system")}
               />
             </div>
           )}
           {!item.read && !isInvite && (
-            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#36C5F0] border-2 border-white" />
+            <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-[#36C5F0] border-[3px] border-white shadow-sm" />
           )}
         </div>
 
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-            <span className="text-sm font-bold text-[#2D3748] truncate">{title}</span>
+        <div className="min-w-0 flex-1 mt-0.5">
+          <div className="flex items-center gap-2.5 mb-1.5 flex-wrap">
+            <span className="text-[14px] font-[800] text-[#111111] truncate">{title}</span>
             {systemParsed && (
               <SystemBadge
                 label={systemParsed.label}
@@ -337,15 +333,15 @@ function NotificationRow({
             )}
             {isInvite && (
               <SystemBadge
-                label="Invite"
-                icon={<Bell size={10} />}
+                label="INVITE"
+                icon={<Bell size={10} strokeWidth={3} />}
                 accent="#2EB67D"
-                bg="#F0FFF4"
+                bg="#ECFDF5"
               />
             )}
-            <span className="text-xs text-[#A0AEC0] whitespace-nowrap ml-auto">{relativeTime(item.created_at)}</span>
+            <span className="text-[10px] font-[800] text-[#A0A09B] whitespace-nowrap ml-auto tracking-wider">{relativeTime(item.created_at)}</span>
           </div>
-          <p className="text-[13px] text-[#718096] line-clamp-2">{preview}</p>
+          <p className="text-[13.5px] font-[500] text-[#111111] leading-relaxed line-clamp-2 md:pr-8">{preview}</p>
         </div>
       </div>
 
@@ -354,15 +350,15 @@ function NotificationRow({
           <div className="flex gap-2 w-full md:w-auto">
             <button
               onClick={() => onAccept?.(item.id)}
-              className="flex-1 md:flex-none py-1.5 px-3 rounded text-[13px] font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 transition-colors cursor-pointer border-none font-sans"
+              className="flex-1 md:flex-none py-2 px-5 rounded-[12px] text-[12px] font-[800] text-emerald-700 bg-emerald-50 hover:bg-emerald-100 hover:scale-105 active:scale-95 transition-all cursor-pointer border-0 shadow-sm"
             >
-              Accept
+              ACCEPT
             </button>
             <button
               onClick={() => onDecline?.(item.id)}
-              className="flex-1 md:flex-none py-1.5 px-3 rounded text-[13px] font-bold text-red-600 bg-red-50 hover:bg-red-100 transition-colors cursor-pointer border-none font-sans"
+              className="flex-1 md:flex-none py-2 px-5 rounded-[12px] text-[12px] font-[800] text-red-700 bg-red-50 hover:bg-red-100 hover:scale-105 active:scale-95 transition-all cursor-pointer border-0 shadow-sm"
             >
-              Decline
+              DECLINE
             </button>
           </div>
         ) : (
@@ -370,25 +366,25 @@ function NotificationRow({
             {!item.read && (
               <button
                 onClick={() => onMarkRead?.(item.id)}
-                className="text-emerald-500 bg-transparent border-0 cursor-pointer p-1.5 rounded-full hover:bg-emerald-50 transition-colors"
-                title="Mark Read"
+                className="text-emerald-500 bg-emerald-50 border border-transparent hover:border-emerald-200 cursor-pointer p-2 rounded-[12px] hover:scale-105 active:scale-95 transition-all shadow-sm"
+                title="Mark as Read"
               >
-                <Check size={15} />
+                <Check size={16} strokeWidth={3} />
               </button>
             )}
             <button
               onClick={() => onArchive?.(item.id)}
-              className="text-gray-300 bg-transparent border-0 cursor-pointer p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+              className="text-[#A0A09B] bg-[#F9F9F8] border border-transparent hover:border-[#E0E0E0] hover:text-[#111111] cursor-pointer p-2 rounded-[12px] hover:scale-105 active:scale-95 transition-all shadow-sm"
               title="Archive"
             >
-              <Archive size={15} />
+              <Archive size={16} strokeWidth={2.5} />
             </button>
             {item.project_id && (
               <Link
                 href={`/space/${item.project_id}`}
-                className="text-[#319795] text-[13px] font-bold px-2.5 py-1 rounded hover:bg-[#E6FFFA] transition-colors no-underline whitespace-nowrap"
+                className="text-white text-[12px] font-[800] bg-[#111111] px-5 py-2 rounded-[12px] hover:bg-[#222222] hover:scale-105 active:scale-95 shadow-md hover:shadow-lg transition-all no-underline whitespace-nowrap tracking-wider flex items-center gap-1.5"
               >
-                View
+                VIEW <ArrowRight size={12} strokeWidth={3} />
               </Link>
             )}
           </div>
@@ -503,62 +499,59 @@ export default function InboxPage() {
   const totalUnreadCount = unreadCount + invitations.length;
 
   return (
-    <div className="bg-[#F9F9F7] text-[#2D3748] min-h-screen flex flex-col font-sans">
-      <header className="p-6 md:p-10 pb-5">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+    <div className="bg-transparent text-[#111111] min-h-screen flex flex-col font-sans">
+      <header className="p-6 md:p-10 pb-6 relative z-10">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
           <div>
-            <h1 className="text-2xl font-bold text-[#1A202C] mb-1">Notifications</h1>
-            <p className="text-sm text-[#4A5568]">
+            <h1 className="text-[32px] font-[800] text-[#111111] mb-1.5 tracking-[-0.02em]">Inbox</h1>
+            <p className="text-[14px] text-[#A0A09B] font-[600] tracking-tight">
               You have{" "}
-              <span className="text-[#38A169] font-bold">{totalUnreadCount}</span>{" "}
-              notifications to go through
+              <span className="text-[#36C5F0] font-[800]">{totalUnreadCount}</span>{" "}
+              unread notifications
             </p>
           </div>
           <button
             onClick={handleMarkAllRead}
-            className="bg-white border border-[#E2E8F0] px-4 py-2 rounded-md text-[13px] font-semibold text-[#4A5568] hover:bg-[#F7FAFC] hover:border-[#CBD5E0] transition-colors w-full md:w-auto"
+            className="bg-white border border-[#F4F4F0] px-5 py-2.5 rounded-[12px] text-[12px] font-[800] text-[#111111] shadow-sm hover:shadow-[0_4px_16px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 active:scale-95 transition-all cursor-pointer tracking-wider"
           >
-            Mark all as Read
+            MARK ALL READ
           </button>
         </div>
 
-        <div className="flex flex-col xl:flex-row gap-4 xl:items-center mb-8">
-          <div className="relative w-full max-w-[400px] group flex-shrink-0">
-            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-gray-500" />
+        <div className="flex flex-col xl:flex-row gap-5 xl:items-center">
+          <div className="relative w-full max-w-[420px] group flex-shrink-0 z-20">
+            <Search size={16} strokeWidth={2.5} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#A0A09B] group-focus-within:text-[#111111] transition-colors" />
             <input
               type="text"
-              placeholder="Search notifications…"
-              className="w-full px-4 py-2.5 pl-11 pr-20 bg-white border border-[#E2E8F0] rounded-lg text-sm focus:outline-none focus:border-[#CBD5E0] shadow-sm transition-all"
+              placeholder="SEARCH..."
+              className="w-full px-5 py-3.5 pl-[42px] pr-12 bg-white border border-[#F4F4F0] rounded-[16px] text-[13px] font-[700] text-[#111111] placeholder:text-[#A0A09B] focus:outline-none focus:border-[#E0E0E0] focus:ring-4 focus:ring-[#E0E0E0]/30 shadow-sm hover:shadow-[0_4px_16px_rgba(0,0,0,0.04)] transition-all uppercase tracking-wider"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
             {search && (
               <button
-                className="absolute right-10 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 bg-transparent border-0 cursor-pointer p-0"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-[#A0A09B] hover:text-[#111111] bg-[#F9F9F8] rounded-full p-1.5 border-0 cursor-pointer transition-colors"
                 onClick={() => setSearch("")}
               >
-                <X size={14} />
+                <X size={14} strokeWidth={2.5} />
               </button>
             )}
-            <div className="absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded bg-[#2D3748] flex items-center justify-center pointer-events-none">
-              <Search size={12} className="text-white" />
-            </div>
           </div>
 
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 xl:pb-0 w-full hide-scrollbar">
+          <div className="flex items-center gap-2 overflow-x-auto w-full hide-scrollbar sm:flex-wrap">
             {[
-              { id: "all", label: "All" },
-              { id: "unread", label: unreadCount ? `Unread · ${unreadCount}` : "Unread" },
-              { id: "mentions", label: "Mentions" },
-              { id: "messages", label: "Messages" },
-              { id: "invites", label: invitations.length ? `Invites · ${invitations.length}` : "Invites" },
+              { id: "all", label: "ALL" },
+              { id: "unread", label: unreadCount ? `UNREAD · ${unreadCount}` : "UNREAD" },
+              { id: "mentions", label: "MENTIONS" },
+              { id: "messages", label: "MESSAGES" },
+              { id: "invites", label: invitations.length ? `INVITES · ${invitations.length}` : "INVITES" },
             ].map((t) => (
               <button
                 key={t.id}
                 onClick={() => setFilter(t.id as FilterTab)}
-                className={`px-4 py-2 rounded-lg text-[13px] font-semibold transition-all whitespace-nowrap border ${filter === t.id
-                  ? "bg-[#2D3748] text-white border-[#2D3748]"
-                  : "bg-white text-[#4A5568] border-[#E2E8F0] hover:bg-[#F7FAFC]"
+                className={`px-5 py-3 rounded-[14px] text-[11px] font-[800] transition-all tracking-wider ${filter === t.id
+                  ? "bg-[#111111] text-white shadow-md -translate-y-0.5"
+                  : "bg-white text-[#A0A09B] border border-[#F4F4F0] hover:text-[#111111] hover:shadow-[0_4px_16px_rgba(0,0,0,0.04)] hover:-translate-y-0.5 cursor-pointer"
                   }`}
               >
                 {t.label}
@@ -568,20 +561,22 @@ export default function InboxPage() {
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto pb-20 scroll-smooth">
+      <main className="flex-1 overflow-y-auto pb-20 scroll-smooth px-3 lg:px-0 relative z-0">
         {loading ? (
           <div className="flex items-center justify-center h-40">
-            <Loader2 className="animate-spin text-gray-400" />
+            <Loader2 className="animate-spin text-[#36C5F0]" size={32} />
           </div>
         ) : Object.entries(filteredItems).length === 0 ? (
-          <div className="flex flex-col items-center justify-center mt-20 gap-3 text-gray-400">
-            <Bell size={32} strokeWidth={1.5} />
-            <p className="text-sm font-medium">No notifications found</p>
+          <div className="flex flex-col items-center justify-center mt-32 gap-4 text-[#A0A09B]">
+            <div className="w-16 h-16 rounded-full bg-white border border-[#F4F4F0] shadow-sm flex items-center justify-center">
+              <Bell size={28} strokeWidth={2.5} className="text-[#A0A09B]/50" />
+            </div>
+            <p className="text-[14px] font-[800] text-[#A0A09B] tracking-widest uppercase">ALL CAUGHT UP</p>
           </div>
         ) : (
           Object.entries(filteredItems).map(([dateLabel, items]) => (
-            <div key={dateLabel} className="mb-6">
-              <h2 className="text-sm font-semibold text-[#718096] mx-5 md:mx-10 mb-3">{dateLabel}</h2>
+            <div key={dateLabel} className="mb-10">
+              <h2 className="text-[10px] font-[900] text-[#A0A09B] mx-6 md:mx-12 mb-4 tracking-[0.15em] uppercase">{dateLabel}</h2>
               <div className="flex flex-col">
                 {items.map((item: any, idx: number) => (
                   <NotificationRow
@@ -607,7 +602,7 @@ export default function InboxPage() {
         {hasMore && notifications.length > 0 && (
           <div ref={sentinelRef} className="py-8 flex justify-center">
             {isLoadingMore ? (
-              <Loader2 className="animate-spin text-gray-400" />
+              <Loader2 className="animate-spin text-[#36C5F0]" size={24} />
             ) : (
               <div className="h-1" />
             )}

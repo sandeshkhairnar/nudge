@@ -78,7 +78,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         input::placeholder { color: #C4C4BC; }
       `}</style>
 
-      <div className="flex h-screen overflow-hidden bg-[#F9F9F7]">
+      <div className="flex h-screen overflow-hidden bg-[#FAFAFA]">
         {/* Desktop sidebar */}
         <div className="hidden md:flex flex-shrink-0">
           <Sidebar />
@@ -88,13 +88,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <Sidebar />
         </div>
 
-        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-white/50">
           <Topbar
             title={title}
             projectColor={projectColor}
             onOpenCreate={() => setOpen(true)}
           />
-          <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-7 bg-[#F9F9F7]">
+          <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-7 relative z-0 bg-[#F9F9F7]">
             {children}
           </div>
         </div>

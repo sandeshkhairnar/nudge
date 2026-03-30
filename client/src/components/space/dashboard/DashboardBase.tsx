@@ -32,14 +32,12 @@ export function CountUp({ to }: { to: number }) {
   return <span ref={ref}>{v}</span>;
 }
 
-export function Card({ children, className = "", dark = false, style }: { children: React.ReactNode; className?: string; dark?: boolean; style?: React.CSSProperties }) {
+export function Card({ children, className = "", style }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) {
   return (
     <div
-      className={`h-full flex flex-col rounded-2xl border overflow-hidden ${className}`}
+      className={`h-full flex flex-col rounded-[24px] bg-white transition-all duration-300 relative z-10 ${className}`}
       style={{
-        ...(dark
-          ? { background: "#0D0D0D", borderColor: "rgba(255,255,255,0.07)", boxShadow: "0 4px 20px rgba(0,0,0,0.18)" }
-          : { background: "#fff", borderColor: "#EBEBEB", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }),
+        boxShadow: "0 12px 48px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.02)",
         ...style,
       }}>
       {children}
@@ -47,12 +45,19 @@ export function Card({ children, className = "", dark = false, style }: { childr
   );
 }
 
-export function CardHeader({ title, sub, right }: { title: string; sub?: string; right?: React.ReactNode }) {
+export function CardHeader({ title, sub, right, icon }: { title: string; sub?: string; right?: React.ReactNode; icon?: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between px-5 py-4 border-b border-[#F5F5F2] flex-shrink-0">
-      <div>
-        <p className="text-[13px] font-black text-[#0D0D0D] leading-none">{title}</p>
-        {sub && <p className="text-[10.5px] text-[#B0B0A8] mt-0.5">{sub}</p>}
+    <div className="flex items-center justify-between px-6 py-5 border-b border-[#F4F4F0] flex-shrink-0">
+      <div className="flex items-center gap-3">
+        {icon && (
+          <div className="w-8 h-8 rounded-[10px] bg-[#36C5F0]/10 flex items-center justify-center text-[#36C5F0]">
+            {icon}
+          </div>
+        )}
+        <div>
+          <p className="text-[14px] font-[800] text-[#111111] leading-tight tracking-tight">{title}</p>
+          {sub && <p className="text-[12px] text-[#A0A09B] font-[600] tracking-wide mt-0.5">{sub}</p>}
+        </div>
       </div>
       {right}
     </div>

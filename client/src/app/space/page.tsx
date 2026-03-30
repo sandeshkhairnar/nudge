@@ -191,47 +191,107 @@ export default function DashboardPage() {
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
   if (loading) return (
-    <div className="flex items-center justify-center h-64">
-      <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-        className="w-7 h-7 rounded-full border-2 border-[#36C5F0] border-t-transparent" />
+    <div className="flex flex-col gap-5 pb-8 relative min-h-full">
+      {/* <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-[#36C5F0]/[0.08] to-transparent pointer-events-none -z-10" /> */}
+      <div className="absolute top-0 left-0 w-full h-[600px] pointer-events-none -z-10" />
+      <div className="absolute top-20 right-10 w-[600px] h-[600px] bg-[#2EB67D]/[0.05] blur-[120px] rounded-full pointer-events-none -z-10" />
+      <div className="absolute top-80 left-10 w-[500px] h-[500px] bg-[#A259FF]/[0.05] blur-[120px] rounded-full pointer-events-none -z-10" />
+
+      {/* Greeting Skeleton */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 py-2 border-b border-black/[0.02] pb-6 mb-2">
+        <div className="space-y-3">
+          <div className="h-3 w-40 bg-black/[0.04] rounded-full animate-pulse" />
+          <div className="h-8 w-72 bg-black/[0.04] rounded-full animate-pulse" />
+        </div>
+        <div className="h-16 w-48 bg-black/[0.04] rounded-2xl animate-pulse" />
+      </div>
+
+      {/* StatsRow Skeleton */}
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+        {[...Array(6)].map((_, i) => (
+          <div key={i} className="h-28 bg-black/[0.03] rounded-2xl animate-pulse" />
+        ))}
+      </div>
+
+      {/* Velocity & AI Skeleton */}
+      <div className="grid grid-cols-12 gap-4 items-stretch">
+        <div className="col-span-12 lg:col-span-8 h-[400px] bg-black/[0.03] rounded-[22px] animate-pulse" />
+        <div className="col-span-12 lg:col-span-4 h-[500px] lg:h-auto bg-black/[0.03] rounded-[22px] animate-pulse" />
+      </div>
+
+      {/* Tasks & Feed Skeleton */}
+      <div className="grid grid-cols-12 gap-4 items-stretch">
+        <div className="col-span-12 lg:col-span-8 h-[400px] bg-black/[0.03] rounded-[22px] animate-pulse" />
+        <div className="col-span-12 lg:col-span-4 h-[400px] bg-black/[0.03] rounded-[22px] animate-pulse" />
+      </div>
+
+      {/* Bottom Row Skeleton */}
+      <div className="grid grid-cols-12 gap-4 items-stretch">
+        <div className="col-span-12 md:col-span-6 lg:col-span-4 h-[350px] bg-black/[0.03] rounded-[22px] animate-pulse" />
+        <div className="col-span-12 md:col-span-6 lg:col-span-4 h-[350px] bg-black/[0.03] rounded-[22px] animate-pulse" />
+        <div className="col-span-12 lg:col-span-4 h-[350px] bg-black/[0.03] rounded-[22px] animate-pulse" />
+      </div>
     </div>
   );
 
   return (
-    <div className="flex flex-col gap-4 pb-6">
+    <div className="flex flex-col gap-5 pb-8 relative min-h-full">
+      {/* Ambient Dashboard Background Glows */}
+      <div className="absolute top-0 left-0 w-full h-[600px] pointer-events-none -z-10" />
+      <div className="absolute top-20 right-10 w-[600px] h-[600px] bg-[#2EB67D]/[0.05] blur-[120px] rounded-full pointer-events-none -z-10" />
+      <div className="absolute top-80 left-10 w-[500px] h-[500px] bg-[#A259FF]/[0.05] blur-[120px] rounded-full pointer-events-none -z-10" />
+
       {/* ── ROW 1: Greeting ── */}
       <Reveal>
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 py-2 border-b border-[#F4F4F0] pb-6 mb-3">
           <div>
-            <p className="text-[11.5px] text-[#B0B0A8] font-semibold mb-0.5">
-              {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
-            </p>
-            <h1 className="text-[22px] font-black text-[#0D0D0D] tracking-[-0.025em]">
-              {greeting}, {me?.full_name?.split(" ")[0] ?? "there"} 👋
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#2EB67D] shadow-[0_0_8px_rgba(46,182,125,0.4)] relative">
+                <span className="absolute inset-0 rounded-full bg-[#2EB67D] animate-ping opacity-50" />
+              </span>
+              <p className="text-[10px] text-[#A0A09B] font-[800] uppercase tracking-[0.15em]">
+                {new Date().toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}
+              </p>
+            </div>
+            <h1 className="text-[28px] font-[800] text-[#111111] tracking-[-0.03em] leading-none">
+              {greeting}, {me?.full_name?.split(" ")[0] ?? "there"}
             </h1>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2.5 bg-white border border-[#EBEBEB] rounded-xl px-3.5 py-2" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
-              <svg width="28" height="28" viewBox="0 0 28 28">
-                <circle cx="14" cy="14" r="10" fill="none" stroke="#F0F0EB" strokeWidth="3.5" />
-                <motion.circle cx="14" cy="14" r="10" fill="none" stroke="#2EB67D" strokeWidth="3.5"
-                  strokeLinecap="round" strokeDasharray={62.8}
-                  initial={{ strokeDashoffset: 62.8 }}
-                  animate={{ strokeDashoffset: 62.8 - (pct / 100) * 62.8 }}
-                  transition={{ duration: 1.2, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                  style={{ transformOrigin: "center", transform: "rotate(-90deg)" }} />
-              </svg>
-              <div className="leading-none">
-                <p className="text-[9.5px] text-[#B0B0A8] font-semibold mb-2">Overall</p>
-                <p className="text-[13px] font-black text-[#0D0D0D]">{pct}% done</p>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 bg-white border border-[#F4F4F0] rounded-2xl px-4 py-2.5 shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
+              <div className="relative w-8 h-8 flex items-center justify-center">
+                <svg width="32" height="32" viewBox="0 0 32 32" className="absolute inset-0 -rotate-90">
+                  <circle cx="16" cy="16" r="14" fill="none" stroke="#F4F4F0" strokeWidth="4" />
+                  <motion.circle cx="16" cy="16" r="14" fill="none" stroke="#2EB67D" strokeWidth="4"
+                    strokeLinecap="round" strokeDasharray={88}
+                    initial={{ strokeDashoffset: 88 }}
+                    animate={{ strokeDashoffset: 88 - (pct / 100) * 88 }}
+                    transition={{ duration: 1.5, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                  />
+                </svg>
+              </div>
+              <div>
+                <p className="text-[9px] text-[#A0A09B] font-[800] uppercase tracking-wider mb-0.5">Workspace Health</p>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-[16px] font-[800] text-[#111111] leading-none">{pct}%</span>
+                  <span className="text-[10px] font-[600] text-[#A0A09B]">done</span>
+                </div>
               </div>
             </div>
             {stats.stalled > 0 && (
-              <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
-                className="flex items-center gap-1.5 bg-[#FFF8EC] border border-[#FDEBC8] rounded-xl px-3.5 py-2">
-                <motion.div animate={{ scale: [1, 1.3, 1] }} transition={{ duration: 1.8, repeat: Infinity }}
-                  className="w-1.5 h-1.5 rounded-full bg-[#ECB22E] flex-shrink-0" />
-                <span className="text-[12px] font-bold text-[#92400E]">{stats.stalled} stalled</span>
+              <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+                className="flex items-center gap-2.5 bg-white border border-[#F4F4F0] rounded-2xl px-4 py-2.5 shadow-[0_2px_12px_rgba(236,178,46,0.08)]">
+                <div className="w-8 h-8 rounded-full bg-[#ECB22E]/10 flex items-center justify-center">
+                  <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 2, repeat: Infinity }}
+                    className="w-2.5 h-2.5 rounded-full bg-[#ECB22E] shadow-[0_0_10px_rgba(236,178,46,0.4)]" />
+                </div>
+                <div>
+                  <p className="text-[9px] font-[800] uppercase tracking-wider text-[#ECB22E] mb-0.5">Attention Needed</p>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-[16px] font-[800] text-[#111111] leading-none">{stats.stalled}</span>
+                    <span className="text-[10px] font-[600] text-[#A0A09B]">stalled</span>
+                  </div>
+                </div>
               </motion.div>
             )}
           </div>
@@ -249,7 +309,7 @@ export default function DashboardPage() {
           <VelocityCard tasks={tasks} weekly={weekly} />
         </Reveal>
         <Reveal delay={0.08} className="col-span-12 lg:col-span-4">
-          <NudgeAiCard 
+          <NudgeAiCard
             messages={messages}
             input={aiInput}
             loading={isAiTyping}
