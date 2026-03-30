@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, Plus, X, Mail, CheckCircle2, AlertCircle } from "lucide-react";
+import { Loader2, Plus, X, Mail, CheckCircle2, AlertCircle, Link as LinkIcon, FileText } from "lucide-react";
 import GlobalAvatar from "@/components/global/Avatar";
 import { strColor } from "@/lib/utils/color";
 import { TeamMember } from "@/types";
@@ -288,34 +288,99 @@ interface NewResourceModalProps {
   label: string;
   url: string;
   category: string;
+  type: "link" | "file" | "credential";
+  credentialValue: string;
+  selectedFile: File | null;
   loading: boolean;
   onLabelChange: (v: string) => void;
   onUrlChange: (v: string) => void;
   onCategoryChange: (v: string) => void;
+  onTypeChange: (v: "link" | "file" | "credential") => void;
+  onCredentialValueChange: (v: string) => void;
+  onFileSelect: (f: File | null) => void;
   onAdd: () => void;
   onCancel: () => void;
 }
 
-export function NewResourceModal({ label, url, category, loading, onLabelChange, onUrlChange, onCategoryChange, onAdd, onCancel }: NewResourceModalProps) {
+export function NewResourceModal({
+  label, url, category, type, credentialValue, selectedFile, loading,
+  onLabelChange, onUrlChange, onCategoryChange, onTypeChange,
+  onCredentialValueChange, onFileSelect, onAdd, onCancel
+}: NewResourceModalProps) {
   const CATEGORIES = ["Documentation", "Credentials", "Deployment", "Testing", "Design", "Other"];
+  const TYPES = [
+    { id: "link", label: "Link", icon: <LinkIcon size={14} /> },
+    { id: "file", label: "File", icon: <FileText size={14} /> },
+    { id: "credential", label: "Credential", icon: <Mail size={14} /> } // Reuse Mail for secrets
+  ];
   return (
     <>
       <h3 className="text-[18px] font-black text-gray-900 mb-1">Add Resource</h3>
       <p className="text-[12.5px] text-gray-400 mb-5">Link or document for this project.</p>
+      <div className="flex bg-gray-100 p-1 rounded-xl mb-4">
+        {TYPES.map((t) => (
+          <button
+            key={t.id}
+            onClick={() => {
+              onTypeChange(t.id as any);
+              if (t.id === "credential") onCategoryChange("Credentials");
+            }}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[11px] font-bold transition-all cursor-pointer border-0
+              ${type === t.id ? "bg-white text-gray-900 shadow-sm" : "text-gray-400 hover:text-gray-600"}`}
+            style={{ fontFamily: "'Sora',sans-serif" }}
+          >
+            {/* @ts-ignore */}
+            {t.icon}
+            {t.label}
+          </button>
+        ))}
+      </div>
+
       <div className="flex flex-col gap-3 mb-4">
         <input value={label} onChange={(e) => onLabelChange(e.target.value)}
-          placeholder="Label (e.g. Figma File)" autoFocus
+          placeholder="Resource Name (e.g. Figma File, API Key)" autoFocus
           className="w-full px-4 py-3 border border-gray-200 rounded-xl text-[14px] font-medium text-gray-900 outline-none placeholder-gray-300"
           style={{ fontFamily: "'Sora',sans-serif" }} />
-        <input value={url} onChange={(e) => onUrlChange(e.target.value)}
-          placeholder="URL (optional)"
-          className="w-full px-4 py-3 border border-gray-200 rounded-xl text-[14px] font-medium text-gray-900 outline-none placeholder-gray-300"
-          style={{ fontFamily: "'Sora',sans-serif" }} />
-        <select value={category} onChange={(e) => onCategoryChange(e.target.value)}
-          className="w-full px-4 py-3 border border-gray-200 rounded-xl text-[14px] font-medium text-gray-900 outline-none"
-          style={{ fontFamily: "'Sora',sans-serif" }}>
-          {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-        </select>
+        
+        {type === "link" && (
+          <input value={url} onChange={(e) => onUrlChange(e.target.value)}
+            placeholder="URL (e.g. https://...)"
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl text-[14px] font-medium text-gray-900 outline-none placeholder-gray-300"
+            style={{ fontFamily: "'Sora',sans-serif" }} />
+        )}
+
+        {type === "credential" && (
+          <input value={credentialValue} onChange={(e) => onCredentialValueChange(e.target.value)}
+            placeholder="Credential / Secret Value"
+            type="password"
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl text-[14px] font-medium text-gray-900 outline-none placeholder-gray-300"
+            style={{ fontFamily: "'Sora',sans-serif" }} />
+        )}
+
+        {type === "file" && (
+          <div className="relative group">
+            <input 
+              type="file" 
+              onChange={(e) => onFileSelect(e.target.files?.[0] || null)}
+              className="absolute inset-0 opacity-0 cursor-pointer z-10"
+            />
+            <div className="w-full px-4 py-6 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center gap-2 group-hover:border-[#36C5F0] transition-colors bg-gray-50/50">
+              <Plus size={24} className="text-gray-300 group-hover:text-[#36C5F0] transition-colors" />
+              <p className="text-[12px] font-bold text-gray-400 group-hover:text-[#36C5F0]">
+                {selectedFile ? selectedFile.name : "Click or drop file here"}
+              </p>
+            </div>
+          </div>
+        )}
+
+        <div className="flex flex-col">
+          <label className="text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1.5 ml-1">Category</label>
+          <select value={category} onChange={(e) => onCategoryChange(e.target.value)}
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl text-[14px] font-medium text-gray-900 outline-none bg-white"
+            style={{ fontFamily: "'Sora',sans-serif" }}>
+            {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
       </div>
       <div className="flex gap-2.5">
         <button onClick={onCancel} className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl text-[13px] font-bold cursor-pointer border-0">Cancel</button>

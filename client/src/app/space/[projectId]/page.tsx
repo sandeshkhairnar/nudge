@@ -11,7 +11,8 @@ import { addResource, deleteResource } from "@/lib/resources";
 import { inviteProjectMember, getProjectMembers } from "@/lib/project-members";
 import { getProjectIntegrations, upsertGitHubIntegration, deleteIntegration, Integration } from "@/lib/integrations";
 import { useParams } from "next/navigation";
-import { Hash, Menu, Mail, Plus, Video, Loader2, X } from "lucide-react";
+import { Hash, Menu, Mail, Plus, Video, Loader2, X, Camera } from "lucide-react";
+import { useProjectsStore } from "@/store/projects-store";
 
 import { Task as BoardTask } from "@/components/workspace/TaskBoard";
 import GlobalAvatar from "@/components/global/Avatar";
@@ -42,7 +43,9 @@ export default function SpacePage() {
   const threadEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const threadTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const updateProjectStore = useProjectsStore((s) => s.updateProject);
   const params = useParams();
   const projectId = params.projectId as string;
 
@@ -52,6 +55,8 @@ export default function SpacePage() {
   const [activeChannel, setActiveChannel] = useState<Channel | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [team, setTeam] = useState<TeamMember[]>([]);
@@ -101,6 +106,9 @@ export default function SpacePage() {
   const [newResourceLabel, setNewResourceLabel] = useState("");
   const [newResourceUrl, setNewResourceUrl] = useState("");
   const [newResourceCategory, setNewResourceCategory] = useState("Documentation");
+  const [newResourceType, setNewResourceType] = useState<"link" | "file" | "credential">("link");
+  const [newResourceCredentialValue, setNewResourceCredentialValue] = useState("");
+  const [newResourceFile, setNewResourceFile] = useState<File | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
 
   const [integrations, setIntegrations] = useState<Integration[]>([]);
@@ -110,7 +118,6 @@ export default function SpacePage() {
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
   useEffect(() => { threadEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [threadMessages]);
 
   useEffect(() => {
@@ -170,24 +177,53 @@ export default function SpacePage() {
   const fetchMessages = useCallback(async (channelId: string) => {
     setMessagesLoading(true);
     setMessages([]);
+    setHasMore(true);
     const { data, error } = await supabase
       .from("messages")
       .select("id,content,is_ai,created_at,edited_at,user_id,parent_id,profiles!messages_user_id_fkey(id,full_name,avatar_url)")
       .eq("channel_id", channelId)
       .is("parent_id", null)
-      .order("created_at", { ascending: true })
-      .limit(100);
+      .order("created_at", { ascending: false })
+      .limit(50);
     if (!error && data) {
       const formatted = (data as (typeof data[0] & { profiles: MessageProfile | MessageProfile[] | null })[]).map((m) => ({
         ...m,
         profiles: Array.isArray(m.profiles) ? m.profiles[0] : m.profiles,
       })) as Message[];
+      // Keep DESC order (newest first) for column-reverse
       setMessages(formatted);
+      setHasMore(data.length === 50);
       fetchReactions(formatted.map((m) => m.id));
       fetchReplyCounts(formatted.map((m) => m.id));
     }
     setMessagesLoading(false);
   }, [fetchReactions, fetchReplyCounts]);
+
+  const fetchOlderMessages = useCallback(async () => {
+    if (!activeChannel?.id || !hasMore || isLoadingMore || messagesLoading || messages.length === 0) return;
+    setIsLoadingMore(true);
+    const oldestMessage = messages[messages.length - 1];
+    const { data, error } = await supabase
+      .from("messages")
+      .select("id,content,is_ai,created_at,edited_at,user_id,parent_id,profiles!messages_user_id_fkey(id,full_name,avatar_url)")
+      .eq("channel_id", activeChannel.id)
+      .is("parent_id", null)
+      .lt("created_at", oldestMessage.created_at)
+      .order("created_at", { ascending: false })
+      .limit(50);
+    if (!error && data) {
+      const formatted = (data as (typeof data[0] & { profiles: MessageProfile | MessageProfile[] | null })[]).map((m) => ({
+        ...m,
+        profiles: Array.isArray(m.profiles) ? m.profiles[0] : m.profiles,
+      })) as Message[];
+      // Append older messages to the END of the array (bottom of DESC list)
+      setMessages((prev) => [...prev, ...formatted]);
+      setHasMore(data.length === 50);
+      fetchReactions(formatted.map((m) => m.id));
+      fetchReplyCounts(formatted.map((m) => m.id));
+    }
+    setIsLoadingMore(false);
+  }, [activeChannel?.id, hasMore, isLoadingMore, messagesLoading, messages, fetchReactions, fetchReplyCounts]);
 
   const fetchThreadMessages = useCallback(async (parentId: string) => {
     setThreadLoading(true);
@@ -226,7 +262,8 @@ export default function SpacePage() {
               }
               setReplyCounts((prev) => ({ ...prev, [message.parent_id!]: (prev[message.parent_id!] ?? 0) + 1 }));
             } else {
-              setMessages((prev) => prev.some((m) => m.id === message.id) ? prev : [...prev, message]);
+              // Add to FRONT for column-reverse
+              setMessages((prev) => prev.some((m) => m.id === message.id) ? prev : [message, ...prev]);
             }
           }
         })
@@ -354,6 +391,50 @@ export default function SpacePage() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !projectId) return;
+
+    const toastId = toast.loading("Uploading project avatar...");
+    const ext = file.name.split(".").pop();
+    const path = `${projectId}/avatar-${Date.now()}.${ext}`;
+
+    try {
+      // 1. Upload to bucket
+      const { error: uploadError } = await supabase.storage
+        .from("project-avatars")
+        .upload(path, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      // 2. Get Public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from("project-avatars")
+        .getPublicUrl(path);
+
+      // 3. Update DB
+      const { error: dbError } = await supabase
+        .from("projects")
+        .update({ avatar_url: publicUrl })
+        .eq("id", projectId);
+
+      if (dbError) throw dbError;
+
+      // 4. Update local state
+      if (project) setProject({ ...project, avatar_url: publicUrl });
+      
+      // 5. Update global store
+      updateProjectStore(projectId, { avatar_url: publicUrl });
+      
+      toast.success("Project avatar updated", { id: toastId });
+    } catch (err: any) {
+      console.error(err);
+      toast.error("Failed to update avatar", { id: toastId });
+    } finally {
+      if (avatarInputRef.current) avatarInputRef.current.value = "";
+    }
+  };
+
   const uploadFile = async (file: File): Promise<FileAttachment | null> => {
     const ext = file.name.split(".").pop();
     const path = `attachments/${projectId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
@@ -386,7 +467,8 @@ export default function SpacePage() {
       profiles: { id: currentUser.id, full_name: currentUser.full_name, avatar_url: currentUser.avatar_url },
       attachments: attachments.length ? attachments : undefined,
     };
-    setMessages((prev) => [...prev, optimistic]);
+    // Add to FRONT for column-reverse
+    setMessages((prev) => [optimistic, ...prev]);
     const { data, error } = await supabase.from("messages")
       .insert({ channel_id: activeChannel.id, user_id: currentUser.id, content: contentPayload, is_ai: false })
       .select("id,content,is_ai,created_at,edited_at,user_id,profiles!messages_user_id_fkey(id,full_name,avatar_url)")
@@ -502,12 +584,48 @@ export default function SpacePage() {
   const handleAddResource = async () => {
     if (!newResourceLabel.trim()) return;
     setActionLoading(true);
-    const result = await addResource({ projectId, category: newResourceCategory, label: newResourceLabel, url: newResourceUrl || undefined });
-    if (result.resource) {
-      setResources((p) => [...p, result.resource as Resource]);
-      toast.success("Resource added");
+
+    let finalUrl = newResourceUrl;
+    let fileName = null;
+    let fileSize = null;
+    let metadata = null;
+
+    if (newResourceType === "file" && newResourceFile) {
+      const result = await uploadFile(newResourceFile);
+      if (result) {
+        finalUrl = result.url;
+        fileName = result.name;
+        fileSize = result.size;
+      }
+    } else if (newResourceType === "credential") {
+      metadata = { value: newResourceCredentialValue };
+      finalUrl = ""; // No URL for credentials
     }
-    setNewResourceLabel(""); setNewResourceUrl(""); setShowNewResource(false); setActionLoading(false);
+
+    const { resource, error } = await addResource({
+      projectId,
+      category: newResourceCategory,
+      label: newResourceLabel,
+      url: finalUrl || undefined,
+      type: newResourceType,
+      file_name: fileName || undefined,
+      file_size: fileSize || undefined,
+      metadata
+    });
+
+    if (resource) {
+      setResources((p) => [...p, resource as Resource]);
+      toast.success("Resource added");
+      setNewResourceLabel("");
+      setNewResourceUrl("");
+      setNewResourceCredentialValue("");
+      setNewResourceFile(null);
+      setNewResourceType("link");
+      setShowNewResource(false);
+    } else if (error) {
+      toast.error(error);
+    }
+    setActionLoading(false);
   };
 
   const handleDeleteResource = async (id: string) => {
@@ -516,17 +634,21 @@ export default function SpacePage() {
     toast.success("Resource removed");
   };
 
+  const refreshIntegrations = async () => {
+    const { integrations: updated } = await getProjectIntegrations(projectId);
+    if (updated) setIntegrations(updated);
+  };
+
   const handleConnectRepo = async () => {
     if (!repoInput.trim() || !project) return;
     setIntLoading(true);
     const res = await upsertGitHubIntegration({ workspaceId: project.workspace_id, projectId: project.id, repoFullName: repoInput.trim() });
     if (res.success) {
-      const { integrations: updated } = await getProjectIntegrations(projectId);
-      if (updated) setIntegrations(updated);
+      await refreshIntegrations();
       setRepoInput("");
       toast.success("Repository connected");
     } else {
-      toast.error("Failed to connect repository");
+      toast.error(res.error ?? "Failed to connect repository");
     }
     setIntLoading(false);
   };
@@ -574,6 +696,7 @@ export default function SpacePage() {
         onChannelSelect={(ch) => { setActiveChannel(ch); setActiveThreadId(null); }}
         onAddChannel={() => setShowNewChannel(true)}
         onClose={() => setSidebarOpen(false)}
+        onAvatarClick={() => avatarInputRef.current?.click()}
       />
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
@@ -592,11 +715,7 @@ export default function SpacePage() {
             <h2 className="text-[14px] font-black text-gray-900 capitalize truncate">
               {tab === "chat" ? (activeChannel?.name ?? "chat") : tab}
             </h2>
-            {tab === "chat" && (
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${isConnected ? "bg-emerald-50 text-emerald-600" : "bg-gray-50 text-gray-400"}`}>
-                {isConnected ? "● live" : "○ …"}
-              </span>
-            )}
+
           </div>
           <div className="flex items-center gap-2">
             {tab === "tasks" && (
@@ -652,12 +771,15 @@ export default function SpacePage() {
             key={tab + (activeChannel?.id ?? "")}
             initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.15 }}
-            className="flex-1 overflow-y-auto min-h-0"
+            className="flex-1 flex flex-col min-h-0"
           >
             {tab === "chat" && (
               <ChatTab
                 messages={messages}
                 loading={messagesLoading}
+                isLoadingMore={isLoadingMore}
+                hasMore={hasMore}
+                onLoadMore={fetchOlderMessages}
                 reactions={reactions}
                 replyCounts={replyCounts}
                 activeChannelName={activeChannel?.name}
@@ -694,9 +816,12 @@ export default function SpacePage() {
                 repoInput={repoInput}
                 integrations={integrations}
                 intLoading={intLoading}
+                projectId={projectId}
+                workspaceId={project?.workspace_id ?? ""}
                 onRepoInputChange={setRepoInput}
                 onConnectRepo={handleConnectRepo}
                 onDeleteIntegration={handleDeleteIntegration}
+                onIntegrationsChange={refreshIntegrations}
               />
             )}
           </motion.div>
@@ -742,7 +867,22 @@ export default function SpacePage() {
             fileInputRef={fileInputRef}
           />
         )}
-      </div>
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        className="hidden"
+        onChange={handleFileSelect}
+      />
+
+      <input
+        ref={avatarInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleAvatarUpload}
+      />
+    </div>
 
       <ThreadPanel
         activeThreadId={activeThreadId}
@@ -850,10 +990,16 @@ export default function SpacePage() {
                   label={newResourceLabel}
                   url={newResourceUrl}
                   category={newResourceCategory}
+                  type={newResourceType}
+                  credentialValue={newResourceCredentialValue}
+                  selectedFile={newResourceFile}
                   loading={actionLoading}
                   onLabelChange={setNewResourceLabel}
                   onUrlChange={setNewResourceUrl}
                   onCategoryChange={setNewResourceCategory}
+                  onTypeChange={setNewResourceType}
+                  onCredentialValueChange={setNewResourceCredentialValue}
+                  onFileSelect={setNewResourceFile}
                   onAdd={handleAddResource}
                   onCancel={closeModal}
                 />

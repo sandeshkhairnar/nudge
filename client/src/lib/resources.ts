@@ -37,6 +37,10 @@ export async function addResource(data: {
   label: string;
   url?: string;
   emoji?: string;
+  type?: "link" | "file" | "credential";
+  file_name?: string;
+  file_size?: number;
+  metadata?: any;
 }) {
   const supabase = await createClient();
   const user = await getCurrentUser();
@@ -49,7 +53,11 @@ export async function addResource(data: {
       category: data.category,
       label: data.label,
       url: data.url ?? null,
-      emoji: data.emoji ?? "📄",
+      emoji: data.emoji ?? (data.type === "file" ? "📁" : data.type === "credential" ? "🔑" : "📄"),
+      type: data.type ?? "link",
+      file_name: data.file_name ?? null,
+      file_size: data.file_size ?? null,
+      metadata: data.metadata ?? {},
       created_by: user.id,
     })
     .select()

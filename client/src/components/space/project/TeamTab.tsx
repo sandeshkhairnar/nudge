@@ -13,7 +13,7 @@ interface TeamTabProps {
 
 export default function TeamTab({ team, onlineUsers }: TeamTabProps) {
   return (
-    <div className="p-4 sm:p-5">
+    <div className="h-full overflow-y-auto p-4 sm:p-5">
       {onlineUsers.length > 0 && (
         <div className="mb-5">
           <p className="text-[10px] font-black uppercase tracking-widest text-gray-300 mb-2.5 flex items-center gap-1.5">

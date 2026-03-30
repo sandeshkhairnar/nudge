@@ -17,6 +17,7 @@ interface ProjectSidebarProps {
   onChannelSelect: (ch: Channel) => void;
   onAddChannel: () => void;
   onClose: () => void;
+  onAvatarClick?: () => void;
 }
 
 const TABS: { id: Tab; label: string }[] = [
@@ -38,6 +39,7 @@ export default function ProjectSidebar({
   onChannelSelect,
   onAddChannel,
   onClose,
+  onAvatarClick,
 }: ProjectSidebarProps) {
   return (
     <div
@@ -48,18 +50,29 @@ export default function ProjectSidebar({
     >
       <div className="px-4 py-3 border-b border-gray-100 flex-shrink-0">
         <div className="flex items-center gap-2.5">
-          <div
-            className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={onAvatarClick}
+            className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 cursor-pointer overflow-hidden relative group"
             style={{
-              background: project?.color
-                ? `linear-gradient(135deg,${project.color},#2EB67D)`
-                : "linear-gradient(135deg,#36C5F0,#2EB67D)",
+              background: project?.avatar_url 
+                ? "transparent" 
+                : (project?.color ? `linear-gradient(135deg,#2EB67D)` : "linear-gradient(135deg,#36C5F0,#2EB67D)"),
+              border: project?.avatar_url ? "1px solid #E8E8E4" : "none",
             }}
           >
-            <span className="text-white font-extrabold text-sm">
-              {project?.name?.[0] ?? "P"}
-            </span>
-          </div>
+            {project?.avatar_url ? (
+              <img src={project.avatar_url} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-white font-extrabold text-sm relative z-10">
+                {project?.name?.[0] ?? "P"}
+              </span>
+            )}
+            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <Plus size={12} className="text-white" />
+            </div>
+          </motion.div>
           <div className="min-w-0 flex-1">
             <p className="text-[12.5px] font-black text-gray-900 truncate leading-tight">
               {project?.name ?? "Project"}

@@ -32,6 +32,9 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
   const supabase = createClient();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [userId, setUserId] = useState<string | null>(null);
   const onNewNotificationRef = useRef(options.onNewNotification);
 
@@ -39,7 +42,17 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
     onNewNotificationRef.current = options.onNewNotification;
   }, [options.onNewNotification]);
 
+  const fetchUnreadCount = useCallback(async (uid: string) => {
+    const { count, error } = await supabase
+      .from("notifications")
+      .select("*", { count: "exact", head: true })
+      .eq("recipient_id", uid)
+      .eq("read", false);
+    if (!error && count !== null) setUnreadCount(count);
+  }, [supabase]);
+
   const fetchNotifications = useCallback(async (uid: string) => {
+    setLoading(true);
     const { data, error } = await supabase
       .from("notifications")
       .select(`
@@ -62,11 +75,47 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
         sender: n.sender ?? null,
         project_name: n.project?.name ?? null,
         channel_name: n.channel?.name ?? null,
-      }));
+      })) as Notification[];
       setNotifications(shaped);
+      setHasMore(data.length === 50);
     }
     setLoading(false);
-  }, [supabase]);
+    fetchUnreadCount(uid);
+  }, [supabase, fetchUnreadCount]);
+
+  const fetchMore = useCallback(async () => {
+    if (!userId || !hasMore || isLoadingMore || loading || notifications.length === 0) return;
+    setIsLoadingMore(true);
+    const oldest = notifications[notifications.length - 1];
+    const { data, error } = await supabase
+      .from("notifications")
+      .select(`
+        id, type, read, created_at,
+        project_id, channel_id, message_id,
+        content, preview,
+        sender:profiles!notifications_sender_id_fkey (
+          id, full_name, avatar_url, email
+        ),
+        project:projects ( name ),
+        channel:channels ( name )
+      `)
+      .eq("recipient_id", userId)
+      .lt("created_at", oldest.created_at)
+      .order("created_at", { ascending: false })
+      .limit(50);
+
+    if (!error && data) {
+      const shaped = data.map((n: any) => ({
+        ...n,
+        sender: n.sender ?? null,
+        project_name: n.project?.name ?? null,
+        channel_name: n.channel?.name ?? null,
+      })) as Notification[];
+      setNotifications((prev) => [...prev, ...shaped]);
+      setHasMore(data.length === 50);
+    }
+    setIsLoadingMore(false);
+  }, [supabase, userId, hasMore, isLoadingMore, loading, notifications]);
 
   useEffect(() => {
     let realtimeChannel: RealtimeChannel;
@@ -111,6 +160,7 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
               } as Notification;
 
               setNotifications((prev) => [shaped, ...prev]);
+              setUnreadCount((prev) => prev + 1);
               showBrowserNotification(shaped);
               onNewNotificationRef.current?.(shaped);
             }
@@ -130,6 +180,11 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
                 n.id === payload.new.id ? { ...n, ...payload.new } : n
               )
             );
+            if (payload.old?.read === false && payload.new.read === true) {
+              setUnreadCount((prev) => Math.max(0, prev - 1));
+            } else if (payload.old?.read === true && payload.new.read === false) {
+              setUnreadCount((prev) => prev + 1);
+            }
           }
         )
         .subscribe();
@@ -165,7 +220,10 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
   return {
     notifications,
     loading,
-    unreadCount: notifications.filter((n) => !n.read).length,
+    isLoadingMore,
+    hasMore,
+    unreadCount,
+    fetchMore,
     markRead,
     markAllRead,
     archive,
@@ -179,7 +237,7 @@ function showBrowserNotification(n: Notification) {
 
   const title =
     n.type === "mention"
-      ? `🔔 ${n.sender?.full_name} mentioned you`
+      ? `${n.sender?.full_name} mentioned you`
       : n.sender?.full_name ?? "Nudge";
 
   new Notification(title, {

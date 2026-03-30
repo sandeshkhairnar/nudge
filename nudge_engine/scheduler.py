@@ -234,6 +234,89 @@ async def update_stalled_days_job():
     except Exception as e:
         print(f"\033[91m[Nudge Engine]\033[0m Error in update_stalled_days_job: {e}")
 
+async def mom_generation_job():
+    """
+    Check for ended meetings and generate Minutes of Meeting (MOM).
+    Waits 2 minutes after end to ensure all transcripts synced.
+    """
+    try:
+        supabase = get_supabase()
+        two_mins_ago = (datetime.now(timezone.utc) - timedelta(minutes=2)).isoformat()
+        
+        # 1. Fetch ended/missed calls without MOM, ended > 2 mins ago
+        res = (
+            supabase.table("call_logs")
+            .select("*")
+            .in_("status", ["ended", "missed"])
+            .eq("mom_generated", False)
+            .lte("ended_at", two_mins_ago)
+            .execute()
+        )
+        
+        calls = res.data
+        if not calls:
+            return
+
+        print(f"\033[95m[Nudge Engine]\033[0m Found {len(calls)} finished meetings ready for MOM generation.")
+        
+        processed_rooms = set()
+        for call in calls:
+            room_name = call["room_name"]
+            if room_name in processed_rooms:
+                continue
+            processed_rooms.add(room_name)
+            
+            # Fetch all transcripts for this room
+            trans_res = (
+                supabase.table("meeting_transcripts")
+                .select("content, created_at")
+                .eq("room_name", room_name)
+                .order("created_at", desc=False)
+                .execute()
+            )
+            
+            transcript_chunks = [t["content"] for t in trans_res.data]
+            full_transcript = "\n".join(transcript_chunks)
+            if not full_transcript.strip():
+                full_transcript = "(No speech or chat was captured during this meeting.)"
+            
+            # Formulate event for agent
+            # Only associate project if it's a project call
+            projectId = call.get("project_id") or (room_name.replace("project-", "") if room_name.startswith("project-") else None)
+            
+            project_name = room_name
+            if projectId:
+                try:
+                    p_res = supabase.table("projects").select("name").eq("id", projectId).execute()
+                    if p_res.data:
+                        project_name = p_res.data[0]["name"]
+                except Exception:
+                    pass
+
+            event = {
+                "event_type": "mom_generation",
+                "workspace_id": "system", # Using system workspace for now or omit if handled in agent
+                "project_id": projectId,
+                "payload": {
+                    "room_name": room_name,
+                    "project_name": project_name,
+                    "transcript": full_transcript
+                }
+            }
+            
+            print(f"\033[95m[Nudge Engine]\033[0m Generating MOM for {room_name}...")
+            
+            # Mark ALL logs for this room as generated immediately
+            supabase.table("call_logs").update({"mom_generated": True}).eq("room_name", room_name).execute()
+            
+            # Trigger Agent
+            if projectId: # Only post MOM if it's attached to a project (group) chat
+                await run_agent(event)
+
+    except Exception as e:
+        logger.error(f"Error in mom_generation_job: {e}", exc_info=True)
+
+
 async def nudge_expiry_cleanup():
     """
     Dismiss nudges older than 7 days.
@@ -248,6 +331,9 @@ def setup_scheduler():
     """
     # Stall detection runs every minute
     scheduler.add_job(stall_detection_job, CronTrigger(minute="*"), misfire_grace_time=30)
+    
+    # MOM sweep runs every minute
+    scheduler.add_job(mom_generation_job, CronTrigger(minute="*"), misfire_grace_time=30)
     
     # Print status to terminal every minute
     scheduler.add_job(terminal_status_job, CronTrigger(minute="*"), misfire_grace_time=30)

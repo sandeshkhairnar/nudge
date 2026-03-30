@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { useWorkspaceStore } from "@/store/workspace-store";
 import Avatar from "@/components/global/Avatar";
-import { 
+import {
   Building, Shield, Bell, Zap, LogOut, Camera, Check, Loader2, AlertCircle,
   User, Mail, ShieldCheck, Lock, Trash2, CreditCard
 } from "lucide-react";
@@ -61,7 +61,7 @@ export default function SettingsPage() {
       .from("profiles")
       .update({ full_name: fullName })
       .eq("id", profile.id);
-    
+
     if (!error) {
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
@@ -77,7 +77,7 @@ export default function SettingsPage() {
       .from("workspaces")
       .update({ name: wsName })
       .eq("id", workspace.id);
-    
+
     if (!error) {
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
@@ -174,21 +174,20 @@ export default function SettingsPage() {
               { label: "Security", icon: Shield },
               { label: "Integrations", icon: Zap },
             ].map((item, i) => (
-              <button 
+              <button
                 key={i}
                 onClick={() => setActiveTab(item.label)}
-                className={`flex-shrink-0 flex items-center gap-3 px-4 py-2.5 rounded-xl text-[13.5px] font-bold border-0 cursor-pointer transition-all ${
-                  activeTab === item.label 
-                    ? "bg-[#36C5F0]/10 text-[#36C5F0] shadow-sm" 
+                className={`flex-shrink-0 flex items-center gap-3 px-4 py-2.5 rounded-xl text-[13.5px] font-bold border-0 cursor-pointer transition-all ${activeTab === item.label
+                    ? "bg-[#36C5F0]/10 text-[#36C5F0] shadow-sm"
                     : "bg-transparent text-gray-500 hover:bg-gray-50 hover:text-gray-900"
-                }`}
+                  }`}
               >
                 <item.icon size={16} />
                 <span className="whitespace-nowrap">{item.label}</span>
               </button>
             ))}
             <div className="hidden lg:block pt-6 mt-6 border-t border-gray-100/50">
-              <button 
+              <button
                 onClick={handleSignOut}
                 className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-[13.5px] font-bold text-red-500 border-0 bg-transparent cursor-pointer hover:bg-red-50/50 hover:shadow-sm transition-all grayscale hover:grayscale-0"
               >
@@ -202,7 +201,7 @@ export default function SettingsPage() {
         <div className="lg:col-span-3 space-y-6 min-w-0">
           <AnimatePresence mode="wait">
             {activeTab === "Profile" && (
-              <motion.section 
+              <motion.section
                 key="profile"
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -212,16 +211,16 @@ export default function SettingsPage() {
                 <h3 className="text-[18px] font-black text-gray-900 mb-6 flex items-center gap-2">
                   Personal Information
                 </h3>
-                
+
                 <div className="flex items-center gap-6 mb-8">
                   <div className="relative group">
-                    <Avatar 
-                      url={profile?.avatar_url} 
-                      name={fullName} 
+                    <Avatar
+                      url={profile?.avatar_url}
+                      name={fullName}
                       email={email}
                       role="You"
-                      size={80} 
-                      className="rounded-2xl" 
+                      size={80}
+                      className="rounded-2xl"
                     />
                     <label className="absolute -bottom-2 -right-2 p-2 bg-white rounded-xl border border-gray-100 shadow-lg text-gray-500 hover:text-[#36C5F0] transition-all border-0 cursor-pointer group-hover:scale-110">
                       <Camera size={16} />
@@ -239,7 +238,7 @@ export default function SettingsPage() {
                     <label className="text-[11px] font-black uppercase tracking-widest text-gray-400">Full Name</label>
                     <div className="relative">
                       <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                      <input 
+                      <input
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
                         className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-[14px] font-medium outline-none focus:border-[#36C5F0] transition-all"
@@ -250,7 +249,7 @@ export default function SettingsPage() {
                     <label className="text-[11px] font-black uppercase tracking-widest text-gray-400">Email Address</label>
                     <div className="relative">
                       <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                      <input 
+                      <input
                         value={email}
                         disabled
                         className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-[14px] font-medium outline-none opacity-60 cursor-not-allowed"
@@ -262,7 +261,7 @@ export default function SettingsPage() {
 
                 <div className="mt-8 pt-8 border-t border-gray-50 flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div className="flex items-center gap-3 w-full sm:w-auto">
-                    <button 
+                    <button
                       onClick={handleSave}
                       disabled={saving || fullName === profile?.full_name}
                       className="flex-1 sm:flex-none px-6 py-2.5 bg-[#0D0D0D] text-white rounded-xl text-[13.5px] font-bold border-0 cursor-pointer disabled:opacity-50 hover:bg-gray-800 transition-all flex items-center justify-center gap-2"
@@ -270,7 +269,7 @@ export default function SettingsPage() {
                       {saving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
                       Save Changes
                     </button>
-                    <button 
+                    <button
                       onClick={() => setFullName(profile?.full_name || "")}
                       disabled={saving || fullName === profile?.full_name}
                       className="flex-1 sm:flex-none px-6 py-2.5 bg-gray-50 text-gray-500 rounded-xl text-[13.5px] font-bold border-0 cursor-pointer disabled:opacity-50 hover:bg-gray-100 transition-all"
@@ -279,7 +278,7 @@ export default function SettingsPage() {
                     </button>
                   </div>
                   {success && (
-                    <motion.div 
+                    <motion.div
                       initial={{ opacity: 0, x: 10 }}
                       animate={{ opacity: 1, x: 0 }}
                       className="flex items-center gap-2 text-emerald-600 font-bold text-[13px] bg-emerald-50 px-4 py-2 rounded-lg"
@@ -293,7 +292,7 @@ export default function SettingsPage() {
             )}
 
             {activeTab === "Workspace" && (
-              <motion.section 
+              <motion.section
                 key="workspace"
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -303,13 +302,13 @@ export default function SettingsPage() {
                 <h3 className="text-[18px] font-black text-gray-900 mb-6 flex items-center gap-2">
                   Workspace Settings
                 </h3>
-                
+
                 <div className="space-y-5">
                   <div className="space-y-2">
                     <label className="text-[11px] font-black uppercase tracking-widest text-gray-400">Workspace Name</label>
                     <div className="relative">
                       <Building className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                      <input 
+                      <input
                         value={wsName}
                         onChange={(e) => setWsName(e.target.value)}
                         className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-[14px] font-medium outline-none focus:border-[#36C5F0] transition-all"
@@ -319,7 +318,7 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="mt-8 pt-8 border-t border-gray-50 flex flex-col sm:flex-row items-center gap-4">
-                  <button 
+                  <button
                     onClick={handleSaveWorkspace}
                     disabled={wsSaving || wsName === workspace?.name}
                     className="w-full sm:w-auto px-6 py-2.5 bg-[#0D0D0D] text-white rounded-xl text-[13.5px] font-bold border-0 cursor-pointer disabled:opacity-50 hover:bg-gray-800 transition-all flex items-center justify-center gap-2"
@@ -328,7 +327,7 @@ export default function SettingsPage() {
                     Update Workspace
                   </button>
                   {success && (
-                    <motion.div 
+                    <motion.div
                       initial={{ opacity: 0, x: 10 }}
                       animate={{ opacity: 1, x: 0 }}
                       className="flex items-center gap-2 text-emerald-600 font-bold text-[13px] bg-emerald-50 px-4 py-2 rounded-lg"
@@ -342,7 +341,7 @@ export default function SettingsPage() {
                 <div className="mt-12 pt-8 border-t border-red-50">
                   <h4 className="text-[14px] font-black text-red-600 mb-2 uppercase tracking-widest">Danger Zone</h4>
                   <p className="text-[13px] text-gray-400 mb-4">Once you delete a workspace, there is no going back. Please be certain.</p>
-                  <button 
+                  <button
                     onClick={() => setShowDeleteConfirm(true)}
                     className="px-6 py-3 bg-red-50 text-red-600 rounded-xl text-[13px] font-bold border border-red-100 hover:bg-red-600 hover:text-white transition-all cursor-pointer"
                   >
@@ -353,7 +352,7 @@ export default function SettingsPage() {
             )}
 
             {activeTab === "Notifications" && (
-              <motion.section 
+              <motion.section
                 key="notifications"
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -372,13 +371,13 @@ export default function SettingsPage() {
                         <h4 className="text-[14px] font-bold text-gray-900">{pref.title}</h4>
                         <p className="text-[12px] text-gray-400">{pref.desc}</p>
                       </div>
-                      <div 
+                      <div
                         onClick={() => setNotificationPrefs(prev => ({ ...prev, [pref.key]: !prev[pref.key] }))}
                         className={`w-12 h-6 rounded-full relative cursor-pointer p-1 transition-all ${notificationPrefs[pref.key] ? "bg-[#36C5F0]" : "bg-gray-200"}`}
                       >
-                        <motion.div 
+                        <motion.div
                           animate={{ x: notificationPrefs[pref.key] ? 24 : 0 }}
-                          className="w-4 h-4 bg-white rounded-full" 
+                          className="w-4 h-4 bg-white rounded-full"
                         />
                       </div>
                     </div>
@@ -388,7 +387,7 @@ export default function SettingsPage() {
             )}
 
             {activeTab === "Integrations" && (
-              <motion.section 
+              <motion.section
                 key="integrations"
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -415,9 +414,8 @@ export default function SettingsPage() {
                         <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center shadow-sm border border-gray-100 group-hover:scale-110 transition-transform">
                           <Zap size={24} style={{ color: app.icon }} />
                         </div>
-                        <button className={`px-4 py-1.5 rounded-full text-[12px] font-bold border-0 cursor-pointer transition-all ${
-                          app.connected ? "bg-emerald-50 text-emerald-600" : "bg-white text-gray-900 shadow-sm hover:shadow-md"
-                        }`}>
+                        <button className={`px-4 py-1.5 rounded-full text-[12px] font-bold border-0 cursor-pointer transition-all ${app.connected ? "bg-emerald-50 text-emerald-600" : "bg-white text-gray-900 shadow-sm hover:shadow-md"
+                          }`}>
                           {app.connected ? "Connected" : "Connect"}
                         </button>
                       </div>
@@ -430,7 +428,7 @@ export default function SettingsPage() {
             )}
 
             {activeTab === "Security" && (
-              <motion.section 
+              <motion.section
                 key="security"
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -441,16 +439,16 @@ export default function SettingsPage() {
                 <div className="space-y-6">
                   <div className="space-y-2">
                     <label className="text-[11px] font-black uppercase tracking-widest text-gray-400">New Password</label>
-                    <input 
-                      type="password" 
+                    <input
+                      type="password"
                       value={passwords.new}
                       onChange={(e) => setPasswords(prev => ({ ...prev, new: e.target.value }))}
-                      placeholder="••••••••" 
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-[14px] outline-none focus:border-[#36C5F0] transition-colors" 
+                      placeholder="••••••••"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-[14px] outline-none focus:border-[#36C5F0] transition-colors"
                     />
                   </div>
                   <div className="flex items-center justify-between pt-4">
-                    <button 
+                    <button
                       onClick={handleUpdatePassword}
                       disabled={securityLoading || !passwords.new}
                       className="px-6 py-2.5 bg-[#0D0D0D] text-white rounded-xl text-[13.5px] font-bold border-0 cursor-pointer disabled:opacity-50 hover:bg-gray-800 transition-all flex items-center gap-2"
@@ -467,7 +465,7 @@ export default function SettingsPage() {
 
           {activeTab === "Workspace" && showDeleteConfirm && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-              <motion.div 
+              <motion.div
                 initial={{ scale: 0.95, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 className="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl space-y-4"
@@ -476,20 +474,20 @@ export default function SettingsPage() {
                 <p className="text-[14px] text-gray-500 leading-relaxed">
                   This action is permanent. To confirm, please type <span className="font-bold text-gray-900">{workspace?.name}</span> below.
                 </p>
-                <input 
+                <input
                   value={deleteInput}
                   onChange={(e) => setDeleteInput(e.target.value)}
                   placeholder="Workspace Name"
                   className="w-full px-4 py-3 bg-gray-50 border border-red-100 rounded-xl text-[14px] outline-none focus:border-red-500"
                 />
                 <div className="flex gap-3 pt-4">
-                  <button 
+                  <button
                     onClick={() => setShowDeleteConfirm(false)}
                     className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold text-[14px] hover:bg-gray-200 transition-all border-0 cursor-pointer"
                   >
                     Cancel
                   </button>
-                  <button 
+                  <button
                     onClick={handleDeleteWorkspace}
                     disabled={deleteInput !== workspace?.name}
                     className="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold text-[14px] hover:bg-red-700 transition-all border-0 cursor-pointer disabled:opacity-50"
@@ -502,13 +500,13 @@ export default function SettingsPage() {
           )}
 
           <section className="bg-amber-50 border border-amber-100 rounded-2xl p-6 flex gap-4">
-            <Avatar 
-              url={profile?.avatar_url} 
-              name={profile?.full_name} 
+            <Avatar
+              url={profile?.avatar_url}
+              name={profile?.full_name}
               email={profile?.email}
               role="You"
-              size={32} 
-              fallbackColor="#36C5F0" 
+              size={32}
+              fallbackColor="#36C5F0"
             />
             <div>
               <h4 className="text-[14px] font-black text-amber-900 mb-1">Workspace Sync</h4>

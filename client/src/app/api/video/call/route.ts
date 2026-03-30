@@ -39,8 +39,9 @@ export async function POST(req: Request) {
 
     const isDuplicate = recentMessage && (new Date().getTime() - new Date(recentMessage.created_at).getTime() < 30000); // 30s gap
 
+    // Prevent querying issues if multiple matched by getting only the first one
     let callLogId = existingCall?.id || null;
-    const isNew = !existingCall || existingCall.status === 'ringing';
+    const isNew = !existingCall;
 
     if (!existingCall) {
       // Create new log if none found
@@ -56,7 +57,7 @@ export async function POST(req: Request) {
       }).select().single();
       callLogId = newCall?.id ?? null;
     } else if (existingCall.status === 'ringing') {
-      // Update existing ringing/scheduled call to ongoing
+      // If someone else joins an actively ringing call, upgrade status to ongoing!
       await supabaseAdmin.from('call_logs').update({
         status: 'ongoing',
         started_at: existingCall.started_at || new Date().toISOString()

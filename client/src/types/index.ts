@@ -69,6 +69,12 @@ export interface Resource {
   label: string;
   url: string | null;
   emoji: string;
+  type?: "link" | "file" | "credential";
+  file_name?: string | null;
+  file_size?: number | null;
+  metadata?: {
+    value?: string;
+  } | null;
 }
 
 export interface Project {
@@ -77,6 +83,7 @@ export interface Project {
   color: string;
   progress: number;
   workspace_id: string;
+  avatar_url?: string | null;
 }
 
 export interface OnlineUser {

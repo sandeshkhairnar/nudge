@@ -16,6 +16,7 @@ def get_llm(provider: Optional[str] = None, use_fast: bool = False, streaming: b
     """
     settings = get_settings()
     target_provider = provider or settings.ai_provider
+    logger.info(f"Initializing LLM: provider={target_provider}, use_fast={use_fast}, streaming={streaming}")
 
     if target_provider == "claude":
         model = settings.claude_fast_model if use_fast else settings.claude_model
