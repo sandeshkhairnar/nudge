@@ -4,8 +4,8 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
-export function usePresence(channelName: string, userId: string) {
-  const [onlineIds, setOnlineIds] = useState<Set<string>>(new Set());
+export function usePresence(channelName: string, userId: string, metadata: any = {}, shouldTrack: boolean = true) {
+  const [presenceState, setPresenceState] = useState<Record<string, any>>({});
   const supabase = createClient();
 
   useEffect(() => {
@@ -17,20 +17,18 @@ export function usePresence(channelName: string, userId: string) {
 
     channel
       .on("presence", { event: "sync" }, () => {
-        const state = channel.presenceState<{ userId: string }>();
-        const ids = new Set(Object.keys(state));
-        setOnlineIds(ids);
+        setPresenceState(channel.presenceState());
       })
       .subscribe(async (status) => {
-        if (status === "SUBSCRIBED") {
-          await channel.track({ userId, online_at: new Date().toISOString() });
+        if (status === "SUBSCRIBED" && shouldTrack) {
+          await channel.track({ userId, ...metadata, online_at: new Date().toISOString() });
         }
       });
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [channelName, userId]);
+  }, [channelName, userId, JSON.stringify(metadata), shouldTrack]);
 
-  return onlineIds;
+  return presenceState;
 }

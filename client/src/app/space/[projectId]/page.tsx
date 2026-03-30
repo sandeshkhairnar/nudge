@@ -106,6 +106,9 @@ export default function SpacePage() {
   const [newResourceLabel, setNewResourceLabel] = useState("");
   const [newResourceUrl, setNewResourceUrl] = useState("");
   const [newResourceCategory, setNewResourceCategory] = useState("Documentation");
+  const [newResourceType, setNewResourceType] = useState<"link" | "file" | "credential">("link");
+  const [newResourceCredentialValue, setNewResourceCredentialValue] = useState("");
+  const [newResourceFile, setNewResourceFile] = useState<File | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
 
   const [integrations, setIntegrations] = useState<Integration[]>([]);
@@ -581,12 +584,48 @@ export default function SpacePage() {
   const handleAddResource = async () => {
     if (!newResourceLabel.trim()) return;
     setActionLoading(true);
-    const result = await addResource({ projectId, category: newResourceCategory, label: newResourceLabel, url: newResourceUrl || undefined });
-    if (result.resource) {
-      setResources((p) => [...p, result.resource as Resource]);
-      toast.success("Resource added");
+
+    let finalUrl = newResourceUrl;
+    let fileName = null;
+    let fileSize = null;
+    let metadata = null;
+
+    if (newResourceType === "file" && newResourceFile) {
+      const result = await uploadFile(newResourceFile);
+      if (result) {
+        finalUrl = result.url;
+        fileName = result.name;
+        fileSize = result.size;
+      }
+    } else if (newResourceType === "credential") {
+      metadata = { value: newResourceCredentialValue };
+      finalUrl = ""; // No URL for credentials
     }
-    setNewResourceLabel(""); setNewResourceUrl(""); setShowNewResource(false); setActionLoading(false);
+
+    const { resource, error } = await addResource({
+      projectId,
+      category: newResourceCategory,
+      label: newResourceLabel,
+      url: finalUrl || undefined,
+      type: newResourceType,
+      file_name: fileName || undefined,
+      file_size: fileSize || undefined,
+      metadata
+    });
+
+    if (resource) {
+      setResources((p) => [...p, resource as Resource]);
+      toast.success("Resource added");
+      setNewResourceLabel("");
+      setNewResourceUrl("");
+      setNewResourceCredentialValue("");
+      setNewResourceFile(null);
+      setNewResourceType("link");
+      setShowNewResource(false);
+    } else if (error) {
+      toast.error(error);
+    }
+    setActionLoading(false);
   };
 
   const handleDeleteResource = async (id: string) => {
@@ -595,17 +634,21 @@ export default function SpacePage() {
     toast.success("Resource removed");
   };
 
+  const refreshIntegrations = async () => {
+    const { integrations: updated } = await getProjectIntegrations(projectId);
+    if (updated) setIntegrations(updated);
+  };
+
   const handleConnectRepo = async () => {
     if (!repoInput.trim() || !project) return;
     setIntLoading(true);
     const res = await upsertGitHubIntegration({ workspaceId: project.workspace_id, projectId: project.id, repoFullName: repoInput.trim() });
     if (res.success) {
-      const { integrations: updated } = await getProjectIntegrations(projectId);
-      if (updated) setIntegrations(updated);
+      await refreshIntegrations();
       setRepoInput("");
       toast.success("Repository connected");
     } else {
-      toast.error("Failed to connect repository");
+      toast.error(res.error ?? "Failed to connect repository");
     }
     setIntLoading(false);
   };
@@ -773,9 +816,12 @@ export default function SpacePage() {
                 repoInput={repoInput}
                 integrations={integrations}
                 intLoading={intLoading}
+                projectId={projectId}
+                workspaceId={project?.workspace_id ?? ""}
                 onRepoInputChange={setRepoInput}
                 onConnectRepo={handleConnectRepo}
                 onDeleteIntegration={handleDeleteIntegration}
+                onIntegrationsChange={refreshIntegrations}
               />
             )}
           </motion.div>
@@ -944,10 +990,16 @@ export default function SpacePage() {
                   label={newResourceLabel}
                   url={newResourceUrl}
                   category={newResourceCategory}
+                  type={newResourceType}
+                  credentialValue={newResourceCredentialValue}
+                  selectedFile={newResourceFile}
                   loading={actionLoading}
                   onLabelChange={setNewResourceLabel}
                   onUrlChange={setNewResourceUrl}
                   onCategoryChange={setNewResourceCategory}
+                  onTypeChange={setNewResourceType}
+                  onCredentialValueChange={setNewResourceCredentialValue}
+                  onFileSelect={setNewResourceFile}
                   onAdd={handleAddResource}
                   onCancel={closeModal}
                 />
