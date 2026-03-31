@@ -417,7 +417,7 @@ function LoginInner() {
                     <>
                       <div className="flex flex-col gap-2.5 mb-6">
                         {[
-                          { icon: "G", label: "Continue with Google", action: () => signInWithGoogle() },
+                          { icon: "G", label: "Continue with Google", action: () => signInWithGoogle(typeof window !== 'undefined' && 'electronAPI' in window) },
                           { icon: "⌘", label: "Continue with SSO", action: () => {} },
                         ].map((btn, i) => (
                           <motion.button

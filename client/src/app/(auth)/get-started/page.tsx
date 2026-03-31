@@ -458,7 +458,7 @@ function SignupInner() {
                   {!invite && (
                     <>
                       <motion.button
-                        onClick={() => signInWithGoogle()}
+                        onClick={() => signInWithGoogle(typeof window !== 'undefined' && 'electronAPI' in window)}
                         whileHover={{ y: -2, boxShadow: "0 4px 16px rgba(0,0,0,0.08)" }}
                         whileTap={{ scale: 0.98 }}
                         className="w-full py-3 px-5 bg-white border border-gray-200 rounded-xl text-[13px] font-bold text-gray-800 flex items-center gap-3 cursor-pointer mb-5"
