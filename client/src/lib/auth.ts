@@ -74,13 +74,17 @@ export async function signIn(formData: { email: string; password: string }) {
 // ─────────────────────────────────────────────────────────────────
 // SIGN IN WITH GOOGLE
 // ─────────────────────────────────────────────────────────────────
-export async function signInWithGoogle() {
+export async function signInWithGoogle(isDesktop?: boolean) {
   const supabase = await createClient();
+
+  const redirectTo = isDesktop 
+    ? "nudge://auth/callback" 
+    : `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`;
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
+      redirectTo,
     },
   });
 

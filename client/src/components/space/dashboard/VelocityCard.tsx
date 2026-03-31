@@ -12,14 +12,49 @@ interface VelocityCardProps {
 
 export default function VelocityCard({ tasks, weekly }: VelocityCardProps) {
   const velOpts: ApexCharts.ApexOptions = {
-    chart: { type: "bar", stacked: true, toolbar: { show: false }, background: "transparent", fontFamily: "inherit", animations: { enabled: true, speed: 600 } },
-    plotOptions: { bar: { borderRadius: 3, columnWidth: "50%", borderRadiusApplication: "end" } },
-    colors: ["#2EB67D", "#36C5F0", "#EBEBEB"],
+    chart: {
+      type: "bar",
+      stacked: true,
+      toolbar: { show: false },
+      background: "transparent",
+      fontFamily: "inherit",
+      animations: { enabled: true, speed: 800 }
+    },
+    plotOptions: {
+      bar: {
+        borderRadius: 6,
+        columnWidth: "45%",
+        borderRadiusApplication: "end",
+        borderRadiusWhenStacked: "last"
+      }
+    },
+    colors: ["#2EB67D", "#36C5F0", "rgba(0,0,0,0.05)"],
     dataLabels: { enabled: false },
-    xaxis: { categories: weekly.map(w => w.week), labels: { style: { colors: "#9CA3AF", fontSize: "10px" } }, axisBorder: { show: false }, axisTicks: { show: false } },
-    yaxis: { labels: { style: { colors: "#9CA3AF", fontSize: "10px" } }, tickAmount: 3 },
-    grid: { borderColor: "#F0F0EB", strokeDashArray: 4, padding: { left: -4, right: 0, top: -6, bottom: 0 } },
-    legend: { show: false }, tooltip: { theme: "light" }, fill: { opacity: 1 },
+    xaxis: {
+      categories: weekly.map(w => w.week),
+      labels: { style: { colors: "#B0B0A8", fontSize: "10px", fontWeight: 700 } },
+      axisBorder: { show: false },
+      axisTicks: { show: false }
+    },
+    yaxis: {
+      labels: { style: { colors: "#B0B0A8", fontSize: "10px", fontWeight: 700 } },
+      tickAmount: 3
+    },
+    grid: {
+      borderColor: "rgba(0,0,0,0.03)",
+      strokeDashArray: 4,
+      padding: { left: 10, right: 10, top: 0, bottom: 0 }
+    },
+    legend: { show: false },
+    tooltip: {
+      theme: "light",
+      style: { fontSize: "11px", fontFamily: "inherit" },
+      y: { formatter: (v) => `${v} tasks` }
+    },
+    fill: { opacity: 1 },
+    states: {
+      hover: { filter: { type: "darken" } }
+    }
   };
 
   const velSeries = [
@@ -30,32 +65,35 @@ export default function VelocityCard({ tasks, weekly }: VelocityCardProps) {
 
   return (
     <Card className="flex flex-col flex-1 min-h-[360px] sm:min-h-[400px]">
-      <CardHeader title="Task velocity" sub="Sprint distribution"
+      <CardHeader
+        title="Task Velocity"
+        sub="Weekly distribution"
+        icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 20V10M18 20V4M6 20v-4" strokeLinecap="round" strokeLinejoin="round" /></svg>}
         right={
-          <div className="flex items-center gap-3">
-            {[["Done", "#2EB67D"], ["Active", "#36C5F0"], ["Todo", "#EBEBEB"]].map(([l, c]) => (
-              <div key={l} className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-sm" style={{ background: c }} />
-                <span className="text-[10px] font-semibold text-[#B0B0A8]">{l}</span>
+          <div className="flex items-center flex-nowrap gap-3 sm:gap-4 bg-[#F9F9F8] px-3 py-1.5 rounded-xl border border-[#F4F4F0] min-w-max">
+            {[["Done", "#2EB67D"], ["Active", "#36C5F0"], ["Todo", "#E0E0D8"]].map(([l, c]) => (
+              <div key={l} className="flex items-center gap-1.5 sm:gap-2">
+                <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: c, boxShadow: `0 0 8px ${c}40` }} />
+                <span className="text-[10px] font-[800] text-[#111111] tracking-tight uppercase whitespace-nowrap">{l}</span>
               </div>
             ))}
           </div>
         }
       />
-      <div className="flex-1 px-4 pb-3 pt-2 min-h-0">
+      <div className="flex-1 px-2 sm:px-4 pb-6 pt-2 min-h-0 min-w-0">
         {tasks.length > 0
           ? <Chart options={velOpts} series={velSeries} type="bar" height="100%" />
           : (
             <div className="h-full flex flex-col items-center justify-center">
-              <div className="w-10 h-10 rounded-2xl bg-[#F5F5F2] flex items-center justify-center mb-2 text-[#C8C8C0]">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                  <rect x="3" y="13" width="4" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.8" strokeDasharray="3 2" />
-                  <rect x="10" y="8" width="4" height="13" rx="1.5" stroke="currentColor" strokeWidth="1.8" strokeDasharray="3 2" />
-                  <rect x="17" y="3" width="4" height="18" rx="1.5" stroke="currentColor" strokeWidth="1.8" strokeDasharray="3 2" />
+              <div className="w-14 h-14 rounded-[22px] bg-[#F9F9F8] flex items-center justify-center mb-4 text-[#A0A09B] border border-[#F4F4F0]">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <rect x="3" y="13" width="4" height="8" rx="2" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" />
+                  <rect x="10" y="8" width="4" height="13" rx="2" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" />
+                  <rect x="17" y="3" width="4" height="18" rx="2" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" />
                 </svg>
               </div>
-              <p className="text-[13px] font-black text-[#0D0D0D] mb-1">No velocity data</p>
-              <p className="text-[11px] text-[#B0B0A8] text-center max-w-[180px]">Complete tasks to see sprint velocity here.</p>
+              <p className="text-[15px] font-[800] text-[#111111] mb-1">No velocity data</p>
+              <p className="text-[11px] text-[#A0A09B] text-center max-w-[220px] leading-relaxed">Velocity metrics will appear here once tasks are completed in the selected workspace.</p>
             </div>
           )
         }

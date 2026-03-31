@@ -48,14 +48,17 @@ export default function TasksTableCard({ tasks, tab, onTabChange }: TasksTableCa
 
   return (
     <Card className="min-h-[460px] flex flex-col">
-      <CardHeader title="Tasks"
+      <CardHeader 
+        title="Tasks"
+        sub={`${tasks.length} items total`}
+        icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 11l3 3L22 4" strokeLinecap="round" strokeLinejoin="round" /><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" strokeLinecap="round" /></svg>}
         right={
-          <div className="flex bg-[#F5F5F2] rounded-lg p-0.5 gap-px">
+          <div className="flex bg-[#F9F9F8] rounded-xl p-1 gap-1 border border-[#F4F4F0]">
             {(["all", "mine", "stalled"] as const).map(t => (
               <motion.button key={t} onClick={() => onTabChange(t)}
-                className="relative px-3 py-1 rounded-md text-[10px] font-bold cursor-pointer border-0 capitalize transition-colors"
-                style={{ color: tab === t ? "#0D0D0D" : "#9CA3AF", background: "transparent", fontFamily: "inherit" }}>
-                {tab === t && <motion.div layoutId="ttab" className="absolute inset-0 bg-white rounded-md" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }} />}
+                className="relative px-3.5 py-1.5 rounded-lg text-[10px] font-[800] cursor-pointer border-0 capitalize transition-all"
+                style={{ color: tab === t ? "#111111" : "#A0A09B", background: "transparent", fontFamily: "inherit" }}>
+                {tab === t && <motion.div layoutId="ttab" className="absolute inset-0 bg-white rounded-lg shadow-sm border border-[#F4F4F0]" />}
                 <span className="relative">{t}</span>
               </motion.button>
             ))}
@@ -63,12 +66,12 @@ export default function TasksTableCard({ tasks, tab, onTabChange }: TasksTableCa
         }
       />
       
-      <div className="flex-1 overflow-x-auto min-h-0">
-        <table className="w-full border-collapse">
-          <thead className="sticky top-0 bg-white z-10">
-            <tr className="border-b border-[#F5F5F2]">
+      <div className="flex-1 overflow-x-auto min-h-0 px-2">
+        <table className="w-full border-separate border-spacing-0">
+          <thead className="sticky top-0 z-10">
+            <tr>
               {["Task", "Project", "Assignee", "Status", "Age"].map(h => (
-                <th key={h} className="px-4 py-2 text-left text-[9.5px] font-black uppercase tracking-[0.08em] text-[#B0B0A8]">{h}</th>
+                <th key={h} className="px-5 py-4 text-left text-[10px] font-[800] uppercase tracking-[0.1em] text-[#A0A09B] border-b border-[#F4F4F0]">{h}</th>
               ))}
             </tr>
           </thead>
@@ -77,15 +80,15 @@ export default function TasksTableCard({ tasks, tab, onTabChange }: TasksTableCa
               {tasks.length === 0 ? (
                 <motion.tr key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                   <td colSpan={5}>
-                    <div className="flex flex-col items-center justify-center py-10">
-                      <div className="w-9 h-9 rounded-xl bg-[#F5F5F2] flex items-center justify-center mb-2 text-[#C8C8C0]">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="1.8" strokeDasharray="3 2" /><path d="M9 8h6M9 12h6M9 16h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeDasharray="3 2" /></svg>
+                    <div className="flex flex-col items-center justify-center py-20">
+                      <div className="w-12 h-12 rounded-2xl bg-[#F9F9F8] flex items-center justify-center mb-4 text-[#A0A09B] border border-[#F4F4F0]">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M9 8h6M9 12h6M9 16h4" /></svg>
                       </div>
-                      <p className="text-[12px] font-black text-[#0D0D0D] mb-0.5">
-                        {tab === "mine" ? "No assigned tasks" : tab === "stalled" ? "No stalled tasks" : "No tasks yet"}
+                      <p className="text-[14px] font-[800] text-[#111111] mb-1">
+                        {tab === "mine" ? "No assigned tasks" : tab === "stalled" ? "Clear skies!" : "No tasks found"}
                       </p>
-                      <p className="text-[10.5px] text-[#B0B0A8] text-center max-w-[160px] leading-relaxed">
-                        {tab === "mine" ? "Tasks assigned to you appear here." : tab === "stalled" ? "Everything is moving!" : "Create tasks in your projects."}
+                      <p className="text-[11px] text-[#A0A09B] font-[500] text-center max-w-[200px] leading-relaxed">
+                        {tab === "mine" ? "Relax, you're all caught up for now." : tab === "stalled" ? "Nothing is stuck. Keep up the momentum!" : "Time to create some new goals."}
                       </p>
                     </div>
                   </td>
@@ -100,43 +103,46 @@ export default function TasksTableCard({ tasks, tab, onTabChange }: TasksTableCa
                           const age = Math.floor((new Date().getTime() - new Date(task.created_at).getTime()) / (1000 * 60 * 60 * 24));
                           return (
                             <motion.tr key={task.id}
-                              initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }}
-                              transition={{ delay: i * 0.02, duration: 0.2 }}
-                              whileHover={{ background: "#FAFAF8" }}
-                              className="border-b border-[#F9F9F7] last:border-0 cursor-default">
-                              <td className="px-4 py-2.5">
-                                <div className="flex items-center gap-2">
-                                  <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: task.project_color ?? "#9CA3AF" }} />
-                                  <span className="text-[11.5px] font-semibold text-[#0D0D0D] truncate max-w-[140px]">{task.title}</span>
+                              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: i * 0.03, duration: 0.3 }}
+                              whileHover={{ background: "#FAFAFA" }}
+                              className="group cursor-default">
+                              <td className="px-5 py-4 border-b border-[#F4F4F0] group-last:border-0">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-2 h-2 rounded-full flex-shrink-0 shadow-sm" style={{ background: task.project_color ?? "#9CA3AF" }} />
+                                  <span className="text-[12px] font-[700] text-[#111111] tracking-tight truncate max-w-[150px]">{task.title}</span>
                                   {task.stalled_days >= 5 && (
-                                    <motion.span animate={{ opacity: [1, 0.4, 1] }} transition={{ duration: 1.6, repeat: Infinity }}
-                                      className="text-[8px] font-black bg-[#FFF8EC] text-[#ECB22E] px-1 py-0.5 rounded flex-shrink-0">⚡</motion.span>
+                                    <motion.span animate={{ scale: [1, 1.15, 1], opacity: [1, 0.7, 1] }} transition={{ duration: 2, repeat: Infinity }}
+                                      className="text-[9px] bg-[#FFF8EC] text-[#ECB22E] px-1.5 py-0.5 rounded-md border border-[#FDEBC8] font-[800]">STALLED</motion.span>
                                   )}
                                 </div>
                               </td>
-                              <td className="px-4 py-2.5">
-                                <span className="text-[10.5px] text-[#6B7280] font-medium truncate max-w-[80px] block">{task.project_name ?? "—"}</span>
+                              <td className="px-5 py-4 border-b border-[#F4F4F0] group-last:border-0">
+                                <span className="text-[11px] text-[#8C8C83] font-[600] truncate max-w-[90px] block">{task.project_name ?? "—"}</span>
                               </td>
-                              <td className="px-4 py-2.5">
+                              <td className="px-5 py-4 border-b border-[#F4F4F0] group-last:border-0">
                                 {task.assignee_id ? (
-                                  <div className="flex items-center gap-1.5">
+                                  <div className="flex items-center gap-2">
                                     <Avatar
                                       url={task.assignee_avatar_url}
                                       name={task.assignee_name || "Unknown"}
                                       email={task.assignee_email}
-                                      size={22}
+                                      size={24}
                                       fallbackColor={strColor(task.assignee_id)}
                                     />
-                                    <span className="text-[10.5px] text-[#6B7280] truncate max-w-[55px] font-medium">{task.assignee_name?.split(" ")[0]}</span>
+                                    <span className="text-[11px] text-[#111111] font-[700] truncate max-w-[60px]">{task.assignee_name?.split(" ")[0]}</span>
                                   </div>
-                                ) : <span className="text-[10.5px] text-[#D1D5DB] font-medium">—</span>}
+                                ) : <span className="text-[11px] text-[#D1D5DB]">—</span>}
                               </td>
-                              <td className="px-4 py-2.5">
-                                <span className="text-[9.5px] font-black px-2 py-0.5 rounded-full whitespace-nowrap" style={{ color: s.fg, background: s.bg }}>{s.label}</span>
+                              <td className="px-5 py-4 border-b border-[#F4F4F0] group-last:border-0">
+                                <span className="text-[10px] font-[800] px-2.5 py-1 rounded-md shadow-sm inline-block tracking-tight" 
+                                  style={{ color: s.fg, background: s.bg, border: `1px solid color-mix(in srgb, ${s.fg}, transparent 85%)` }}>
+                                  {s.label.toUpperCase()}
+                                </span>
                               </td>
-                              <td className="px-4 py-2.5 text-[10.5px] font-black whitespace-nowrap"
-                                style={{ color: age >= 5 ? "#ECB22E" : "#B0B0A8" }}>
-                                {age === 0 ? "Today" : `${age}d`}
+                              <td className="px-5 py-4 border-b border-[#F4F4F0] group-last:border-0 text-[11px] font-[800]"
+                                style={{ color: age >= 5 ? "#ECB22E" : "#A0A09B" }}>
+                                {age === 0 ? "TODAY" : `${age}D`}
                               </td>
                             </motion.tr>
                           );
@@ -150,23 +156,23 @@ export default function TasksTableCard({ tasks, tab, onTabChange }: TasksTableCa
           </tbody>
         </table>
       </div>
-
-      <div className="px-5 py-3 border-t border-[#F5F5F2] flex items-center justify-between flex-shrink-0 bg-[#FAFAFA]/50 rounded-b-[22px]">
-        <div className="flex items-center gap-1.5">
-          <span className="text-[10.5px] font-black text-[#0D0D0D]">
+ 
+      <div className="px-6 py-4 border-t border-[#F4F4F0] flex items-center justify-between flex-shrink-0 bg-[#FDFDFD]">
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-[800] text-[#111111]">
             {Math.min(startIdx + 1, tasks.length)}-{Math.min(startIdx + PAGE_SIZE, tasks.length)}
           </span>
-          <span className="text-[10.5px] font-medium text-[#B0B0A8]">of {tasks.length} tasks</span>
+          <span className="text-[11px] font-[600] text-[#A0A09B]">of {tasks.length} items</span>
         </div>
-
+ 
         {totalPages > 1 && (
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             <button 
               onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="w-7 h-7 flex items-center justify-center rounded-lg border-0 bg-white border border-[#EBEBEB] text-[#0D0D0D] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all hover:border-[#36C5F0]"
-              style={{ boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+              className="w-8 h-8 flex items-center justify-center rounded-xl bg-white border border-[#F4F4F0] text-[#111111] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all hover:bg-[#F9F9F8] hover:border-[#E0E0E0] active:scale-95 shadow-sm"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
             </button>
             
             <div className="flex items-center gap-1 px-1">
@@ -174,18 +180,18 @@ export default function TasksTableCard({ tasks, tab, onTabChange }: TasksTableCa
                 <button
                   key={i}
                   onClick={() => setCurrentPage(i + 1)}
-                  className={`min-w-[20px] h-5 rounded-md text-[10px] font-black transition-all border-0 cursor-pointer ${currentPage === i + 1 ? "bg-[#36C5F0] text-white" : "bg-transparent text-[#B0B0A8] hover:text-[#0D0D0D]"}`}>
+                  className={`w-6 h-6 rounded-md text-[11px] font-[800] transition-all border-0 cursor-pointer ${currentPage === i + 1 ? "bg-[#36C5F0] text-white shadow-sm" : "bg-transparent text-[#A0A09B] hover:text-[#111111]"}`}>
                   {i + 1}
                 </button>
               )).slice(Math.max(0, currentPage - 2), Math.min(totalPages, currentPage + 1))}
             </div>
-
+ 
             <button 
               onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="w-7 h-7 flex items-center justify-center rounded-lg border-0 bg-white border border-[#EBEBEB] text-[#0D0D0D] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all hover:border-[#36C5F0]"
-              style={{ boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+              className="w-8 h-8 flex items-center justify-center rounded-xl bg-white border border-[#F4F4F0] text-[#111111] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all hover:bg-[#F9F9F8] hover:border-[#E0E0E0] active:scale-95 shadow-sm"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
             </button>
           </div>
         )}

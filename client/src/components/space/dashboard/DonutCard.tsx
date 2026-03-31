@@ -12,36 +12,66 @@ interface DonutCardProps {
 
 export default function DonutCard({ stats, donutS }: DonutCardProps) {
   const donutOpts: ApexCharts.ApexOptions = {
-    chart: { type: "donut", background: "transparent", fontFamily: "inherit" },
-    colors: ["#2EB67D", "#36C5F0", "#ECB22E", "#E5E7EB"],
-    labels: ["Done", "In Progress", "Review", "To Do"],
-    dataLabels: { enabled: false }, legend: { show: false },
-    plotOptions: { pie: { donut: { size: "68%", labels: { show: true, total: { show: true, label: "Total", fontSize: "11px", fontWeight: "700", color: "#9CA3AF", formatter: () => stats.total.toString() } } } } },
-    stroke: { width: 0 }, tooltip: { theme: "light" },
+    chart: { type: "donut", background: "transparent", fontFamily: "inherit", animations: { enabled: true, speed: 1000 } },
+    colors: ["#2EB67D", "#36C5F0", "#ECB22E", "rgba(0,0,0,0.05)"],
+    labels: ["Done", "Active", "Review", "To Do"],
+    dataLabels: { enabled: false }, 
+    legend: { show: false },
+    plotOptions: { 
+      pie: { 
+        donut: { 
+          size: "75%", 
+          labels: { 
+            show: true, 
+            total: { 
+              show: true, 
+              label: "TOTAL", 
+              fontSize: "10px", 
+              fontWeight: "900", 
+              color: "#A0A09B", 
+              formatter: () => stats.total.toString() 
+            },
+            value: {
+              fontSize: "24px",
+              fontWeight: "900",
+              color: "#111111",
+              offsetY: 2
+            }
+          } 
+        } 
+      } 
+    },
+    stroke: { width: 0 }, 
+    tooltip: { theme: "light", style: { fontSize: "11px", fontFamily: "inherit" } },
+    states: { hover: { filter: { type: "none" } } }
   };
 
   return (
     <Card>
-      <CardHeader title="Status breakdown" sub="Task distribution" />
-      <div className="flex-1 px-4 pb-2 pt-2 min-h-0 flex flex-col">
-        <div className="flex-1 min-h-0">
+      <CardHeader 
+        title="Status Breakdown" 
+        sub="Current distribution" 
+        icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21.21 15.89A10 10 0 118 2.83M22 12A10 10 0 0012 2v10z" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+      />
+      <div className="flex-1 px-5 pb-6 pt-2 min-h-0 flex flex-col">
+        <div className="flex-1 min-h-0 relative">
           {stats.total > 0
             ? <Chart options={donutOpts} series={donutS} type="donut" height="100%" />
-            : <EmptySlot msg="Add tasks to see the status breakdown." />
+            : <EmptySlot msg="No tasks to analyze." />
           }
         </div>
 
-        <div className="grid grid-cols-2 gap-1.5 mt-2 flex-shrink-0">
+        <div className="grid grid-cols-2 gap-2 mt-4 flex-shrink-0">
           {[
             ["Done", donutS[0], "#2EB67D"],
             ["Active", donutS[1], "#36C5F0"],
             ["Review", donutS[2], "#ECB22E"],
-            ["To Do", donutS[3], "#D1D5DB"]
+            ["To Do", donutS[3], "#E0E0D8"]
           ].map(([l, n, c]) => (
-            <div key={l as string} className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-[#F9F9F7]">
-              <div className="w-1.5 h-1.5 rounded-full" style={{ background: c as string }} />
-              <span className="text-[10px] font-semibold text-[#6B7280] flex-1 truncate">{l as string}</span>
-              <span className="text-[11px] font-black text-[#0D0D0D]">{n as number}</span>
+            <div key={l as string} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#F9F9F8] border border-[#F4F4F0]">
+              <div className="w-2 h-2 rounded-full shadow-sm" style={{ background: c as string }} />
+              <span className="text-[10px] font-[800] text-[#A0A09B] flex-1 truncate uppercase tracking-[0.05em]">{l as string}</span>
+              <span className="text-[12px] font-[800] text-[#111111]">{n as number}</span>
             </div>
           ))}
         </div>

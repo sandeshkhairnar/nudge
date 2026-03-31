@@ -21,9 +21,9 @@ export default function BoardsPage() {
     }
   }, [workspace?.id]);
 
-  const loadData = async () => {
+  const loadData = async (isBackgroundRefresh = false) => {
     if (!workspace?.id) return;
-    setLoading(true);
+    if (!isBackgroundRefresh) setLoading(true);
 
     const { projects: visibleProjects } = await getVisibleProjects(workspace.id);
     const validProjects = visibleProjects || [];
@@ -66,7 +66,7 @@ export default function BoardsPage() {
     } else {
       setTasks([]);
     }
-    setLoading(false);
+    if (!isBackgroundRefresh) setLoading(false);
   };
 
   function colorFromString(s: string) {
@@ -83,11 +83,11 @@ export default function BoardsPage() {
   );
 
   return (
-    <div className="flex flex-col h-full bg-[#FAFAF8] p-6 lg:p-8 overflow-hidden">
-      <div className="flex items-start justify-between mb-8 flex-shrink-0">
+    <div className="flex flex-col h-full bg-transparent p-4 sm:p-6 lg:p-8 overflow-hidden">
+      <div className="flex items-start justify-between mb-6 sm:mb-8 flex-shrink-0">
         <div>
-          <h1 className="text-[28px] font-black text-[#0D0D0D] tracking-tight">Boards</h1>
-          <p className="text-[14px] text-gray-500 font-medium mt-1">
+          <h1 className="text-[28px] font-[800] text-[#111111] tracking-[-0.02em]">Boards</h1>
+          <p className="text-[14px] text-[#A0A09B] font-[600] mt-1 tracking-tight">
             {tasks.length} total tasks · {tasks.filter(t => t.status === "in_progress").length} in progress
           </p>
         </div>
@@ -98,7 +98,7 @@ export default function BoardsPage() {
           tasks={tasks} 
           projects={projects} 
           members={members} 
-          onRefresh={loadData} 
+          onRefresh={() => loadData(true)} 
         />
       </div>
     </div>
