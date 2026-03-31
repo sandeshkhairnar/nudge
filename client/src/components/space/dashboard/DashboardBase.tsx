@@ -47,19 +47,23 @@ export function Card({ children, className = "", style }: { children: React.Reac
 
 export function CardHeader({ title, sub, right, icon }: { title: string; sub?: string; right?: React.ReactNode; icon?: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between px-6 py-5 border-b border-[#F4F4F0] flex-shrink-0">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0 px-5 sm:px-6 py-4 border-b border-[#F4F4F0] flex-shrink-0">
       <div className="flex items-center gap-3">
         {icon && (
-          <div className="w-8 h-8 rounded-[10px] bg-[#36C5F0]/10 flex items-center justify-center text-[#36C5F0]">
+          <div className="w-8 h-8 rounded-[10px] bg-[#36C5F0]/10 flex items-center justify-center text-[#36C5F0] flex-shrink-0">
             {icon}
           </div>
         )}
-        <div>
-          <p className="text-[14px] font-[800] text-[#111111] leading-tight tracking-tight">{title}</p>
-          {sub && <p className="text-[12px] text-[#A0A09B] font-[600] tracking-wide mt-0.5">{sub}</p>}
+        <div className="min-w-0">
+          <p className="text-[14px] font-[800] text-[#111111] leading-tight tracking-tight truncate">{title}</p>
+          {sub && <p className="text-[12px] text-[#A0A09B] font-[600] tracking-wide mt-0.5 truncate">{sub}</p>}
         </div>
       </div>
-      {right}
+      {right && (
+        <div className="self-start sm:self-auto max-w-full overflow-x-auto no-scrollbar">
+          {right}
+        </div>
+      )}
     </div>
   );
 }

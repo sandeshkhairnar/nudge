@@ -70,17 +70,17 @@ export default function VelocityCard({ tasks, weekly }: VelocityCardProps) {
         sub="Weekly distribution"
         icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 20V10M18 20V4M6 20v-4" strokeLinecap="round" strokeLinejoin="round" /></svg>}
         right={
-          <div className="flex items-center gap-4 bg-[#F9F9F8] px-3 py-1.5 rounded-xl border border-[#F4F4F0]">
+          <div className="flex items-center flex-nowrap gap-3 sm:gap-4 bg-[#F9F9F8] px-3 py-1.5 rounded-xl border border-[#F4F4F0] min-w-max">
             {[["Done", "#2EB67D"], ["Active", "#36C5F0"], ["Todo", "#E0E0D8"]].map(([l, c]) => (
-              <div key={l} className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full" style={{ background: c, boxShadow: `0 0 8px ${c}40` }} />
-                <span className="text-[10px] font-[800] text-[#111111] tracking-tight uppercase">{l}</span>
+              <div key={l} className="flex items-center gap-1.5 sm:gap-2">
+                <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: c, boxShadow: `0 0 8px ${c}40` }} />
+                <span className="text-[10px] font-[800] text-[#111111] tracking-tight uppercase whitespace-nowrap">{l}</span>
               </div>
             ))}
           </div>
         }
       />
-      <div className="flex-1 px-4 pb-6 pt-2 min-h-0">
+      <div className="flex-1 px-2 sm:px-4 pb-6 pt-2 min-h-0 min-w-0">
         {tasks.length > 0
           ? <Chart options={velOpts} series={velSeries} type="bar" height="100%" />
           : (
