@@ -439,22 +439,22 @@ export function TaskBoard({
                     </div>
                   </div>
                   <div className="col-span-2 bg-[#36C5F0] border-2 border-black p-4 shadow-[4px_4px_0px_#000]">
-                    <p className="text-[12px] font-[900] uppercase tracking-widest text-black/60 mb-3">STATUS</p>
+                    <p className="text-[11px] font-[900] uppercase tracking-widest text-black/60 mb-2">STATUS</p>
                     <select 
                       value={openTask.status}
                       onChange={(e) => handleUpdateStatus(openTask.id, e.target.value as Status)}
-                      className="w-full px-4 py-3 bg-white border-2 border-black text-[16px] font-[900] text-black outline-none cursor-pointer shadow-[2px_2px_0px_#000] hover:shadow-[4px_4px_0px_#000] hover:-translate-y-0.5 hover:-translate-x-0.5 transition-all uppercase appearance-none"
+                      className="w-full px-4 py-3 bg-white border-2 border-black text-[15px] font-[900] text-black outline-none cursor-pointer shadow-[2px_2px_0px_#000] hover:shadow-[4px_4px_0px_#000] hover:-translate-y-0.5 hover:-translate-x-0.5 transition-all uppercase appearance-none"
                     >
                       {COLUMNS.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
                     </select>
                   </div>
                   <div className="col-span-2 bg-white border-2 border-black p-4 shadow-[4px_4px_0px_#000]">
-                    <p className="text-[12px] font-[900] uppercase tracking-widest text-black/50 mb-3">DUE DATE</p>
+                    <p className="text-[11px] font-[900] uppercase tracking-widest text-black/50 mb-2">DUE DATE</p>
                     <input 
                       type="date"
                       value={openTask.dueDate || ""}
                       onChange={(e) => handleUpdateDueDate(openTask.id, e.target.value)}
-                      className="w-full px-4 py-3 bg-white border-2 border-black text-[14px] font-[900] text-black outline-none cursor-pointer shadow-[2px_2px_0px_#000] hover:shadow-[4px_4px_0px_#000] hover:-translate-y-0.5 hover:-translate-x-0.5 transition-all uppercase"
+                      className="w-full px-4 py-3 bg-white border-2 border-black text-[13px] font-[900] text-black outline-none cursor-pointer shadow-[2px_2px_0px_#000] hover:shadow-[4px_4px_0px_#000] hover:-translate-y-0.5 hover:-translate-x-0.5 transition-all uppercase"
                     />
                   </div>
                 </div>
