@@ -1,6 +1,6 @@
 export type TaskStatus = "todo" | "in_progress" | "review" | "done";
 
-export type Tab = "chat" | "tasks" | "team" | "resources" | "settings";
+export type Tab = "chat" | "tasks" | "team" | "resources" | "integrations" | "settings";
 
 export interface Channel {
   id: string;

@@ -23,6 +23,7 @@ import ThreadPanel from "@/components/space/project/ThreadPanel";
 import TasksTab from "@/components/space/project/TasksTab";
 import TeamTab from "@/components/space/project/TeamTab";
 import ResourcesTab from "@/components/space/project/ResourcesTab";
+import IntegrationsTab from "@/components/space/project/IntegrationsTab";
 import SettingsTab from "@/components/space/project/SettingsTab";
 import {
   NewChannelModal,
@@ -811,8 +812,8 @@ export default function SpacePage() {
             )}
             {tab === "team" && <TeamTab team={team} onlineUsers={onlineUsers} />}
             {tab === "resources" && <ResourcesTab resources={resources} onDelete={handleDeleteResource} />}
-            {tab === "settings" && (
-              <SettingsTab
+            {tab === "integrations" && (
+              <IntegrationsTab
                 repoInput={repoInput}
                 integrations={integrations}
                 intLoading={intLoading}
@@ -822,6 +823,16 @@ export default function SpacePage() {
                 onConnectRepo={handleConnectRepo}
                 onDeleteIntegration={handleDeleteIntegration}
                 onIntegrationsChange={refreshIntegrations}
+              />
+            )}
+            {tab === "settings" && (
+              <SettingsTab
+                project={project}
+                teamCount={team.length}
+                taskCount={tasks.length}
+                onProjectUpdate={(updates) => {
+                  if (project) setProject({ ...project, ...updates });
+                }}
               />
             )}
           </motion.div>

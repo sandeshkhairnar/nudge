@@ -136,7 +136,7 @@ export function TaskBoard({
   };
 
   return (
-    <div className="flex flex-col h-full min-h-0 relative">
+    <div className="flex flex-col h-full min-h-0 relative text-black">
       <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: "radial-gradient(#000 1px, transparent 1px)", backgroundSize: "24px 24px", opacity: 0.04 }} />
 
       {/* Filters & Actions */}
@@ -297,56 +297,76 @@ export function TaskBoard({
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowAddModal(false)} className="absolute inset-0 bg-white/60 backdrop-blur-sm" />
             <motion.div 
               initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 20, opacity: 0 }} 
-              className="bg-[#F9F9F7] border-4 border-black p-8 w-full max-w-lg relative shadow-[12px_12px_0px_#000]" 
+              className="bg-[#F9F9F7] border-4 border-black p-7 w-full max-w-lg relative shadow-[10px_10px_0px_#000]" 
               onClick={e => e.stopPropagation()}
             >
-              <h2 className="text-[32px] font-[900] text-black mb-8 uppercase tracking-tighter">NEW TASK</h2>
-              <div className="space-y-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-[24px] font-[900] text-black uppercase tracking-tighter">NEW TASK</h2>
+                <button onClick={() => setShowAddModal(false)} className="bg-transparent border-0 cursor-pointer text-black/40 hover:text-black mt-1">
+                  <X size={20} strokeWidth={3} />
+                </button>
+              </div>
+
+              <div className="space-y-4">
                 <div>
-                  <label className="text-[12px] font-[900] uppercase tracking-widest text-black mb-2 block">Task Title</label>
+                  <label className="text-[11px] font-[900] uppercase tracking-widest text-black mb-1.5 block">Task Title</label>
                   <input 
                     autoFocus
                     value={newTitle}
                     onChange={e => setNewTitle(e.target.value)}
                     placeholder="WHAT NEEDS TO BE DONE?"
-                    className="w-full px-5 py-4 bg-white border-2 border-black text-[14px] font-[900] text-black placeholder:text-black/30 outline-none shadow-[4px_4px_0px_#000] focus:shadow-[6px_6px_0px_#000] focus:-translate-y-0.5 focus:-translate-x-0.5 transition-all uppercase"
+                    className="w-full px-4 py-3 bg-white border-2 border-black text-[13px] font-[900] text-black placeholder:text-black/30 outline-none shadow-[3px_3px_0px_#000] focus:shadow-[5px_5px_0px_#000] focus:-translate-y-0.5 focus:-translate-x-0.5 transition-all uppercase"
                   />
                 </div>
+
                 {!projectId && (
                   <div>
-                    <label className="text-[12px] font-[900] uppercase tracking-widest text-black mb-2 block">Project</label>
+                    <label className="text-[11px] font-[900] uppercase tracking-widest text-black mb-1.5 block">Project</label>
                     <select 
                       value={newProjectId}
                       onChange={e => setNewProjectId(e.target.value)}
-                      className="w-full px-5 py-4 bg-white border-2 border-black text-[14px] font-[900] text-black outline-none cursor-pointer shadow-[4px_4px_0px_#000] hover:shadow-[6px_6px_0px_#000] hover:-translate-y-0.5 hover:-translate-x-0.5 transition-all uppercase appearance-none"
+                      className="w-full px-4 py-3 bg-white border-2 border-black text-[13px] font-[900] text-black outline-none cursor-pointer shadow-[3px_3px_0px_#000] hover:shadow-[5px_5px_0px_#000] hover:-translate-y-0.5 hover:-translate-x-0.5 transition-all uppercase appearance-none"
                     >
                       <option value="">SELECT PROJECT</option>
                       {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                     </select>
                   </div>
                 )}
-                <div>
-                  <label className="text-[12px] font-[900] uppercase tracking-widest text-black mb-2 block">Assign To</label>
-                  <select 
-                    value={newAssigneeId}
-                    onChange={e => setNewAssigneeId(e.target.value)}
-                    className="w-full px-5 py-4 bg-[#FF6B6B] border-2 border-black text-[14px] font-[900] text-black outline-none cursor-pointer shadow-[4px_4px_0px_#000] hover:shadow-[6px_6px_0px_#000] hover:-translate-y-0.5 hover:-translate-x-0.5 transition-all uppercase appearance-none"
-                  >
-                    <option value="">UNASSIGNED</option>
-                    {members.map(m => (
-                      <option key={m.profiles.id} value={m.profiles.id}>
-                        {m.profiles.full_name || m.profiles.email}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="grid grid-cols-2 gap-6">
+
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-[12px] font-[900] uppercase tracking-widest text-black mb-2 block">Priority</label>
+                    <label className="text-[11px] font-[900] uppercase tracking-widest text-black mb-1.5 block">Assign To</label>
+                    <select 
+                      value={newAssigneeId}
+                      onChange={e => setNewAssigneeId(e.target.value)}
+                      className="w-full px-4 py-3 bg-[#FF6B6B] border-2 border-black text-[13px] font-[900] text-black outline-none cursor-pointer shadow-[3px_3px_0px_#000] hover:shadow-[5px_5px_0px_#000] hover:-translate-y-0.5 hover:-translate-x-0.5 transition-all uppercase appearance-none"
+                    >
+                      <option value="">UNASSIGNED</option>
+                      {members.map(m => (
+                        <option key={m.profiles.id} value={m.profiles.id}>
+                          {m.profiles.full_name || m.profiles.email}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-[900] uppercase tracking-widest text-black mb-1.5 block">Due Date</label>
+                    <input 
+                      type="date"
+                      value={newDueDate}
+                      onChange={e => setNewDueDate(e.target.value)}
+                      className="w-full px-4 py-3 bg-white border-2 border-black text-[13px] font-[900] text-black outline-none cursor-pointer shadow-[3px_3px_0px_#000] hover:shadow-[5px_5px_0px_#000] hover:-translate-y-0.5 hover:-translate-x-0.5 transition-all uppercase"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[11px] font-[900] uppercase tracking-widest text-black mb-1.5 block">Priority</label>
                     <select
                       value={newPriority}
                       onChange={e => setNewPriority(e.target.value as Priority)}
-                      className="w-full px-5 py-4 bg-[#ECB22E] border-2 border-black text-[14px] font-[900] text-black outline-none cursor-pointer shadow-[4px_4px_0px_#000] hover:shadow-[6px_6px_0px_#000] hover:-translate-y-0.5 hover:-translate-x-0.5 transition-all uppercase appearance-none"
+                      className="w-full px-4 py-3 bg-[#ECB22E] border-2 border-black text-[13px] font-[900] text-black outline-none cursor-pointer shadow-[3px_3px_0px_#000] hover:shadow-[5px_5px_0px_#000] hover:-translate-y-0.5 hover:-translate-x-0.5 transition-all uppercase appearance-none"
                     >
                       <option value="low">LOW</option>
                       <option value="medium">MEDIUM</option>
@@ -354,26 +374,26 @@ export function TaskBoard({
                     </select>
                   </div>
                   <div>
-                    <label className="text-[12px] font-[900] uppercase tracking-widest text-black mb-2 block">Status</label>
+                    <label className="text-[11px] font-[900] uppercase tracking-widest text-black mb-1.5 block">Status</label>
                     <select 
                       value={addStatus}
                       onChange={e => setAddStatus(e.target.value as Status)}
-                      className="w-full px-5 py-4 bg-[#36C5F0] border-2 border-black text-[14px] font-[900] text-black outline-none cursor-pointer shadow-[4px_4px_0px_#000] hover:shadow-[6px_6px_0px_#000] hover:-translate-y-0.5 hover:-translate-x-0.5 transition-all uppercase appearance-none"
+                      className="w-full px-4 py-3 bg-[#36C5F0] border-2 border-black text-[13px] font-[900] text-black outline-none cursor-pointer shadow-[3px_3px_0px_#000] hover:shadow-[5px_5px_0px_#000] hover:-translate-y-0.5 hover:-translate-x-0.5 transition-all uppercase appearance-none"
                     >
                       {COLUMNS.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
                     </select>
                   </div>
                 </div>
                 
-                <div className="flex gap-4 pt-4">
+                <div className="flex gap-3 pt-3">
                   <button 
                     disabled={submitting || !newTitle.trim() || !newProjectId}
                     onClick={handleCreateTask}
-                    className="flex-1 py-4 bg-black text-white border-2 border-black text-[14px] font-[900] cursor-pointer disabled:opacity-50 shadow-[4px_4px_0px_#A259FF] hover:shadow-[6px_6px_0px_#A259FF] hover:-translate-y-0.5 hover:-translate-x-0.5 active:translate-y-0 active:translate-x-0 active:shadow-[0px_0px_0px_#A259FF] transition-all uppercase"
+                    className="flex-1 py-3.5 bg-black text-white border-2 border-black text-[14px] font-[900] cursor-pointer disabled:opacity-50 shadow-[4px_4px_0px_#A259FF] hover:shadow-[6px_6px_0px_#A259FF] hover:-translate-y-0.5 hover:-translate-x-0.5 active:translate-y-0 active:translate-x-0 active:shadow-[0px_0px_0px_#A259FF] transition-all uppercase"
                   >
                     {submitting ? "CREATING..." : "CREATE TASK"}
                   </button>
-                  <button onClick={() => setShowAddModal(false)} className="px-8 py-4 bg-white text-black border-2 border-black text-[14px] font-[900] cursor-pointer shadow-[4px_4px_0px_#000] hover:shadow-[6px_6px_0px_#000] hover:-translate-y-0.5 hover:-translate-x-0.5 active:translate-y-0 active:translate-x-0 active:shadow-[0px_0px_0px_#000] transition-all uppercase">CANCEL</button>
+                  <button onClick={() => setShowAddModal(false)} className="px-6 py-3.5 bg-white text-black border-2 border-black text-[14px] font-[900] cursor-pointer shadow-[3px_3px_0px_#000] hover:shadow-[5px_5px_0px_#000] hover:-translate-y-0.5 hover:-translate-x-0.5 active:translate-y-0 active:translate-x-0 active:shadow-[0px_0px_0px_#000] transition-all uppercase text-[12px]">CANCEL</button>
                 </div>
               </div>
             </motion.div>
@@ -394,28 +414,28 @@ export function TaskBoard({
                 </button>
               </div>
               
-              <div className="flex-1 overflow-y-auto px-8 py-10 space-y-10">
-                <h2 className="text-[36px] font-[900] text-black leading-[1.1] tracking-tighter uppercase">{openTask.title}</h2>
+              <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
+                <h2 className="text-[28px] font-[900] text-black leading-[1.1] tracking-tighter uppercase">{openTask.title}</h2>
                 
-                <div className="grid grid-cols-2 gap-x-6 gap-y-8">
+                <div className="grid grid-cols-2 gap-4">
                   <div className="bg-white border-2 border-black p-4 shadow-[4px_4px_0px_#000]">
-                    <p className="text-[12px] font-[900] uppercase tracking-widest text-black/50 mb-3">PRIORITY</p>
-                    <div className="inline-flex items-center gap-2 text-[14px] font-[900] px-4 py-2 border-2 border-black" style={{ background: PRIORITY_CONFIG[openTask.priority]?.bg, color: PRIORITY_CONFIG[openTask.priority]?.color }}>
+                    <p className="text-[11px] font-[900] uppercase tracking-widest text-black/50 mb-2">PRIORITY</p>
+                    <div className="inline-flex items-center gap-2 text-[13px] font-[900] px-3 py-1.5 border-2 border-black" style={{ background: PRIORITY_CONFIG[openTask.priority]?.bg, color: PRIORITY_CONFIG[openTask.priority]?.color }}>
                       {PRIORITY_CONFIG[openTask.priority]?.icon} {PRIORITY_CONFIG[openTask.priority]?.label.toUpperCase()}
                     </div>
                   </div>
                   <div className="bg-[#A259FF] border-2 border-black p-4 shadow-[4px_4px_0px_#000]">
-                    <p className="text-[12px] font-[900] uppercase tracking-widest text-white/70 mb-3">ASSIGNEE</p>
+                    <p className="text-[11px] font-[900] uppercase tracking-widest text-white/70 mb-2">ASSIGNEE</p>
                     <div className="flex items-center gap-3">
                       <Avatar 
                         url={openTask.avatar_url} 
                         name={openTask.assignee} 
                         email={openTask.email}
-                        size={36} 
+                        size={32} 
                         fallbackColor={openTask.assigneeColor} 
                         className="border-2 border-black bg-white shadow-[2px_2px_0px_#000]"
                       />
-                      <span className="text-[16px] font-[900] text-white uppercase">{openTask.assignee}</span>
+                      <span className="text-[14px] font-[900] text-white uppercase">{openTask.assignee}</span>
                     </div>
                   </div>
                   <div className="col-span-2 bg-[#36C5F0] border-2 border-black p-4 shadow-[4px_4px_0px_#000]">
@@ -427,6 +447,15 @@ export function TaskBoard({
                     >
                       {COLUMNS.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
                     </select>
+                  </div>
+                  <div className="col-span-2 bg-white border-2 border-black p-4 shadow-[4px_4px_0px_#000]">
+                    <p className="text-[12px] font-[900] uppercase tracking-widest text-black/50 mb-3">DUE DATE</p>
+                    <input 
+                      type="date"
+                      value={openTask.dueDate || ""}
+                      onChange={(e) => handleUpdateDueDate(openTask.id, e.target.value)}
+                      className="w-full px-4 py-3 bg-white border-2 border-black text-[14px] font-[900] text-black outline-none cursor-pointer shadow-[2px_2px_0px_#000] hover:shadow-[4px_4px_0px_#000] hover:-translate-y-0.5 hover:-translate-x-0.5 transition-all uppercase"
+                    />
                   </div>
                 </div>
 

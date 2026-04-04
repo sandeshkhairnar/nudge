@@ -90,6 +90,31 @@ export async function updateProject(
 export async function deleteProject(projectId: string) {
   const supabase = await createClient();
 
+  // 1. Delete integrations
+  await supabase.from("integrations").delete().eq("project_id", projectId);
+
+  // 2. Delete tasks
+  await supabase.from("tasks").delete().eq("project_id", projectId);
+
+  // 3. Delete resources
+  await supabase.from("resources").delete().eq("project_id", projectId);
+
+  // 4. Delete channels and related (messages, members)
+  const { data: channels } = await supabase.from("channels").select("id").eq("project_id", projectId);
+  if (channels && channels.length > 0) {
+    const channelIds = channels.map(c => c.id);
+    await supabase.from("messages").delete().in("channel_id", channelIds);
+    await supabase.from("channel_members").delete().in("channel_id", channelIds);
+    await supabase.from("channels").delete().in("id", channelIds);
+  }
+
+  // 5. Delete project members
+  await supabase.from("project_members").delete().eq("project_id", projectId);
+
+  // 6. Delete invitations
+  await supabase.from("invitations").delete().eq("project_id", projectId);
+
+  // 7. Finally delete the project
   const { error } = await supabase
     .from("projects")
     .delete()

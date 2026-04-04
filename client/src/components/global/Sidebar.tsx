@@ -181,7 +181,6 @@ function Tooltip({ label, children }: { label: string; children: React.ReactNode
               }}
             >
               {label}
-              {/* Arrow */}
               <div
                 className="absolute right-full top-1/2 -translate-y-1/2"
                 style={{
@@ -197,8 +196,6 @@ function Tooltip({ label, children }: { label: string; children: React.ReactNode
     </div>
   );
 }
-
-// ─── NavItem ─────────────────────────────────────────────────────────────────
 
 function NavItem({
   item,
@@ -235,7 +232,6 @@ function NavItem({
           }
         }}
       >
-        {/* Active left pill */}
         {active && (
           <motion.div
             layoutId="nav-pill"
@@ -245,7 +241,6 @@ function NavItem({
           />
         )}
 
-        {/* Icon */}
         <span
           className="flex-shrink-0 transition-all duration-150"
           style={{
@@ -255,7 +250,6 @@ function NavItem({
           {icons[item.icon]}
         </span>
 
-        {/* Label */}
         <AnimatePresence>
           {!collapsed && (
             <motion.span
@@ -276,7 +270,6 @@ function NavItem({
           )}
         </AnimatePresence>
 
-        {/* Badge */}
         <AnimatePresence>
           {item.badge !== undefined && item.badge > 0 && (
             <motion.span
@@ -312,7 +305,6 @@ function NavItem({
   return inner;
 }
 
-// ─── Project Row ─────────────────────────────────────────────────────────────
 
 function ProjectRow({
   project,
@@ -354,12 +346,11 @@ function ProjectRow({
             (e.currentTarget as HTMLElement).style.background = "transparent";
         }}
       >
-        {/* Avatar or Color dot */}
         <div className="relative flex-shrink-0 w-5 h-5 flex items-center justify-center">
           {project.avatar_url ? (
-            <img 
-              src={project.avatar_url} 
-              alt="" 
+            <img
+              src={project.avatar_url}
+              alt=""
               className="w-full h-full rounded-md object-cover ring-1 ring-white/10 border border-white/5"
             />
           ) : (
@@ -387,7 +378,6 @@ function ProjectRow({
               {project.name}
             </span>
 
-            {/* Progress bar */}
             <div
               className="rounded-full overflow-hidden flex-shrink-0"
               style={{ width: 32, height: 3, background: "rgba(255,255,255,0.07)" }}
@@ -401,7 +391,6 @@ function ProjectRow({
               />
             </div>
 
-            {/* Percent */}
             <span
               className="text-[10px] font-bold tabular-nums flex-shrink-0"
               style={{ color: "rgba(255,255,255,0.2)", minWidth: 24, textAlign: "right" }}
@@ -417,8 +406,6 @@ function ProjectRow({
   if (collapsed) return <Tooltip label={project.name}>{inner}</Tooltip>;
   return inner;
 }
-
-// ─── Sidebar ─────────────────────────────────────────────────────────────────
 
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
@@ -448,7 +435,6 @@ export default function Sidebar() {
       : item
   );
 
-  // Mobile detection
   useEffect(() => {
     const checkMobile = () => {
       const mobile = window.innerWidth < 768;
@@ -460,7 +446,6 @@ export default function Sidebar() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Scroll overflow detection — shows bottom chevron hint when nav overflows
   const checkScroll = useCallback(() => {
     const el = navRef.current;
     if (!el) return;
@@ -480,7 +465,6 @@ export default function Sidebar() {
     };
   }, [checkScroll, projects, collapsed]);
 
-  // Auth + profile
   useEffect(() => {
     const loadData = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -504,28 +488,27 @@ export default function Sidebar() {
     loadData();
   }, []);
 
-  // Projects
-  useEffect(() => {
-    const loadProjects = async () => {
-      if (!workspace || !currentUserId) return;
-      const { data, error } = await supabase
-        .from("project_members")
-        .select("project_id, projects!project_members_project_id_fkey(id, name, color, progress, workspace_id, avatar_url)")
-        .eq("user_id", currentUserId);
-      if (error || !data) return;
-      const filtered: Project[] = (data as any[])
-        .map((row) => row.projects)
-        .filter((p) => p && p.workspace_id === workspace.id)
-        .map((p) => ({ 
-          id: p.id, 
-          name: p.name, 
-          color: p.color, 
-          progress: p.progress,
-          avatar_url: p.avatar_url
-        }));
-      setStoreProjects(filtered, workspace.id);
-    };
+  const loadProjects = useCallback(async () => {
+    if (!workspace || !currentUserId) return;
+    const { data, error } = await supabase
+      .from("project_members")
+      .select("project_id, projects!project_members_project_id_fkey(id, name, color, progress, workspace_id, avatar_url)")
+      .eq("user_id", currentUserId);
+    if (error || !data) return;
+    const filtered: Project[] = (data as any[])
+      .map((row) => row.projects)
+      .filter((p) => p && p.workspace_id === workspace.id)
+      .map((p) => ({
+        id: p.id,
+        name: p.name,
+        color: p.color,
+        progress: p.progress,
+        avatar_url: p.avatar_url,
+      }));
+    setStoreProjects(filtered, workspace.id);
+  }, [workspace?.id, currentUserId]);
 
+  useEffect(() => {
     loadProjects();
     const channel = supabase
       .channel(`sidebar-projects:${workspace?.id}:${currentUserId}`)
@@ -533,7 +516,28 @@ export default function Sidebar() {
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "projects" }, () => loadProjects())
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [workspace?.id, currentUserId]);
+  }, [workspace?.id, currentUserId, loadProjects]);
+
+  useEffect(() => {
+    if (!currentUserId) return;
+    const wsChannel = supabase
+      .channel(`sidebar-workspaces:${currentUserId}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "workspace_members", filter: `user_id=eq.${currentUserId}` },
+        async () => {
+          const workspaces = await getUserWorkspaces(currentUserId);
+          if (workspaces.length > 0) {
+            setWorkspaces(workspaces);
+            const lastWorkspaceId = localStorage.getItem("lastWorkspaceId");
+            const last = workspaces.find((w: any) => w?.id === lastWorkspaceId);
+            setWorkspace(last || workspaces[0]);
+          }
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(wsChannel); };
+  }, [currentUserId]);
 
   const signOut = async () => {
     await supabase.auth.signOut();
@@ -543,7 +547,6 @@ export default function Sidebar() {
   const COLLAPSED_W = 64;
   const EXPANDED_W = 236;
 
-  // ── Sidebar body ────────────────────────────────────────────────────────────
   const sidebarContent = (
     <motion.aside
       animate={{ width: isMobile ? EXPANDED_W : (collapsed ? COLLAPSED_W : EXPANDED_W) }}
@@ -554,7 +557,6 @@ export default function Sidebar() {
         borderRight: "1px solid rgba(255,255,255,0.05)",
       }}
     >
-      {/* Subtle dot-grid texture */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
@@ -563,7 +565,6 @@ export default function Sidebar() {
         }}
       />
 
-      {/* Top glow accent */}
       <div
         className="absolute -top-16 left-1/2 -translate-x-1/2 w-48 h-48 rounded-full pointer-events-none"
         style={{
@@ -572,7 +573,6 @@ export default function Sidebar() {
         }}
       />
 
-      {/* ── Header ──────────────────────────────────────────────────────────── */}
       <div
         className="flex items-center justify-between flex-shrink-0 relative"
         style={{
@@ -583,7 +583,6 @@ export default function Sidebar() {
       >
         <NudgeLogo collapsed={collapsed && !isMobile} />
 
-        {/* Collapse toggle */}
         {!isMobile && (
           <motion.button
             whileHover={{ scale: 1.12 }}
@@ -619,7 +618,6 @@ export default function Sidebar() {
           </motion.button>
         )}
 
-        {/* Mobile close */}
         {isMobile && (
           <motion.button
             whileHover={{ scale: 1.1 }}
@@ -641,15 +639,12 @@ export default function Sidebar() {
         )}
       </div>
 
-      {/* Workspace Switcher */}
       {workspace && (
         <div style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
           <WorkspaceSwitcher collapsed={collapsed && !isMobile} />
         </div>
       )}
 
-      {/* ── Nav ─────────────────────────────────────────────────────────────── */}
-      {/* Wrapper is relative so the chevron overlay can be positioned inside it */}
       <div className="flex-1 relative min-h-0">
         <nav
           ref={navRef}
@@ -660,7 +655,6 @@ export default function Sidebar() {
             scrollbarWidth: "none",
           }}
         >
-          {/* Main nav items */}
           <div className="flex flex-col gap-0.5">
             {navItems.map((item) => (
               <NavItem
@@ -677,7 +671,6 @@ export default function Sidebar() {
             ))}
           </div>
 
-          {/* Projects section */}
           <AnimatePresence>
             {!(collapsed && !isMobile) && projects.length > 0 && (
               <motion.div
@@ -687,7 +680,6 @@ export default function Sidebar() {
                 transition={{ duration: 0.22 }}
                 className="mt-5"
               >
-                {/* Section heading */}
                 <div className="flex items-center justify-between px-2 mb-1.5">
                   <span
                     className="text-[9.5px] font-black uppercase tracking-[0.16em]"
@@ -724,7 +716,6 @@ export default function Sidebar() {
             )}
           </AnimatePresence>
 
-          {/* Collapsed projects dots */}
           {(collapsed && !isMobile) && projects.length > 0 && (
             <div className="mt-4 flex flex-col gap-1 items-center">
               <div
@@ -745,7 +736,6 @@ export default function Sidebar() {
           )}
         </nav>
 
-        {/* ── Scroll-more chevron indicator ──────────────────────────────────── */}
         <AnimatePresence>
           {canScrollDown && (
             <motion.div
@@ -760,7 +750,6 @@ export default function Sidebar() {
                 background: "linear-gradient(to bottom, transparent, rgba(10,10,10,0.92) 70%)",
               }}
             >
-              {/* Two stacked chevrons bouncing downward */}
               <div className="flex flex-col items-center pb-1.5" style={{ gap: 0 }}>
                 <motion.svg
                   width="20" height="8" viewBox="0 0 14 8" fill="none"
@@ -783,7 +772,6 @@ export default function Sidebar() {
         </AnimatePresence>
       </div>
 
-      {/* ── Footer ──────────────────────────────────────────────────────────── */}
       <div
         className="flex-shrink-0 relative"
         style={{
@@ -791,7 +779,6 @@ export default function Sidebar() {
           borderTop: "1px solid rgba(255,255,255,0.04)",
         }}
       >
-        {/* Settings */}
         {bottomItems.map((item) => (
           <NavItem
             key={item.href}
@@ -802,7 +789,6 @@ export default function Sidebar() {
           />
         ))}
 
-        {/* User profile card */}
         <div
           className="mt-2 rounded-xl overflow-hidden transition-all"
           style={{
@@ -812,7 +798,6 @@ export default function Sidebar() {
           }}
         >
           <div className="flex items-center gap-2.5">
-            {/* Avatar */}
             <div className="relative flex-shrink-0">
               <Avatar
                 url={profile?.avatar_url}
@@ -822,7 +807,6 @@ export default function Sidebar() {
                 size={30}
                 fallbackColor="#36C5F0"
               />
-              {/* Online indicator */}
               <div
                 className="absolute bottom-0 right-0 w-2 h-2 rounded-full border-[1.5px]"
                 style={{
@@ -832,7 +816,6 @@ export default function Sidebar() {
               />
             </div>
 
-            {/* Name / email */}
             <AnimatePresence>
               {!(collapsed && !isMobile) && profile && (
                 <motion.div
@@ -858,7 +841,6 @@ export default function Sidebar() {
               )}
             </AnimatePresence>
 
-            {/* Sign out */}
             <AnimatePresence>
               {!(collapsed && !isMobile) && (
                 <motion.button
@@ -897,11 +879,9 @@ export default function Sidebar() {
     </motion.aside>
   );
 
-  // ── Mobile wrapper ──────────────────────────────────────────────────────────
   if (isMobile) {
     return (
       <>
-        {/* Hamburger trigger */}
         <motion.button
           whileTap={{ scale: 0.93 }}
           onClick={() => setMobileOpen(true)}
