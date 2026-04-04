@@ -5,7 +5,7 @@ import { motion, AnimatePresence, useMotionValue, useSpring } from "framer-motio
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signUp, signInWithGoogle } from "@/lib/auth";
-import { getInvitationByToken, acceptInvitation } from "@/lib/project-members";
+import { getInvitationByToken } from "@/lib/project-members";
 import { Building2, ChevronRight } from "lucide-react";
 
 type InviteData = {
@@ -75,10 +75,10 @@ function Field({ label, type = "text", placeholder, value, onChange, error, hint
           boxShadow: error
             ? "0 0 0 2px #E01E5A40"
             : focused
-            ? "0 0 0 2px #2EB67D50"
-            : readOnly
-            ? "0 0 0 1px #E8E8E2"
-            : "0 0 0 1px #E8E8E2",
+              ? "0 0 0 2px #2EB67D50"
+              : readOnly
+                ? "0 0 0 1px #E8E8E2"
+                : "0 0 0 1px #E8E8E2",
         }}
         className="rounded-xl bg-white"
         transition={{ duration: 0.2 }}
@@ -107,9 +107,9 @@ function Field({ label, type = "text", placeholder, value, onChange, error, hint
 function PasswordStrength({ password }: { password: string }) {
   const s = password.length === 0 ? 0
     : password.length < 6 ? 1
-    : password.length < 10 ? 2
-    : /[A-Z]/.test(password) && /[0-9]/.test(password) ? 4
-    : 3;
+      : password.length < 10 ? 2
+        : /[A-Z]/.test(password) && /[0-9]/.test(password) ? 4
+          : 3;
   const labels = ["", "Weak", "Fair", "Good", "Strong"];
   const colors = ["", "#E01E5A", "#ECB22E", "#36C5F0", "#2EB67D"];
   return (
@@ -208,7 +208,7 @@ const perks = [
   { icon: "🔗", text: "Connects to Slack, GitHub, Figma" },
 ];
 
-const roles = ["Engineer", "Product", "Design", "Marketing", "Operations", "Other"];
+const roles = ["Ship faster", "Reduce blockers", "Stay aligned", "Cut meetings", "Focus deep work", "Other"];
 const teamSizes = ["Just me", "2–5", "6–20", "20+"];
 
 function SignupInner() {
@@ -272,19 +272,19 @@ function SignupInner() {
       if (invite) {
         setLoading(true);
         setServerError("");
+
         const result = await signUp({
           fullName: form.name, email: form.email,
-          password: form.password, workspaceName: "", role: "",
+          password: form.password, workspaceName: "",
+          invitationId: inviteId!,
         });
-        if (result?.error) { setServerError(result.error); setLoading(false); return; }
-        const accepted = await acceptInvitation(inviteId!);
+
         setLoading(false);
-        if (accepted.success && accepted.projectId) {
-          router.replace(`/space/${accepted.projectId}`);
-          return;
-        }
+
+        if (result?.error) { setServerError(result.error); return; }
+
         setStep(2);
-        setTimeout(() => router.push("/"), 2400);
+        setTimeout(() => router.replace("/sign-in"), 2400);
       } else {
         setStep(1);
       }
@@ -296,7 +296,8 @@ function SignupInner() {
       setServerError("");
       const result = await signUp({
         fullName: form.name, email: form.email,
-        password: form.password, workspaceName: form.workspace, role: form.role,
+        password: form.password, workspaceName: form.workspace,
+        purpose: form.role, teamSize: form.teamSize,
       });
       setLoading(false);
       if (result?.error) { setServerError(result.error); return; }
@@ -559,7 +560,7 @@ function SignupInner() {
 
                     <div className="flex flex-col gap-2">
                       <label className="text-[11px] font-black text-gray-400 tracking-widest uppercase">
-                        Your role{" "}
+                        Your purpose{" "}
                         <span className="text-gray-300 font-normal normal-case tracking-normal">(optional)</span>
                       </label>
                       <div className="flex flex-wrap gap-2">

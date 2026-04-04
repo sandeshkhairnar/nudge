@@ -155,13 +155,15 @@ export async function acceptInvitation(invitationId: string) {
   const user = await getCurrentUser();
   if (!user) return { error: "Not authenticated" };
 
-  const { data: userProfile } = await supabase
+  const admin = getAdminClient();
+
+  const { data: userProfile } = await admin
     .from("profiles")
     .select("email")
     .eq("id", user.id)
-    .single();
+    .maybeSingle();
 
-  const { data: invitation, error: fetchErr } = await supabase
+  const { data: invitation, error: fetchErr } = await admin
     .from("invitations")
     .select("*")
     .eq("id", invitationId)
@@ -171,18 +173,16 @@ export async function acceptInvitation(invitationId: string) {
   if (fetchErr || !invitation) return { error: "Invitation not found or already used" };
 
   const emailMatch =
-    invitation.invitee_email === userProfile?.email?.toLowerCase().trim();
+    invitation.invitee_email?.toLowerCase().trim() ===
+    userProfile?.email?.toLowerCase().trim();
   const idMatch = invitation.invitee_id === user.id;
 
   if (!emailMatch && !idMatch) return { error: "This invitation is not for you" };
 
   if (new Date(invitation.expires_at) < new Date()) {
-    await supabase.from("invitations").update({ status: "declined" }).eq("id", invitationId);
+    await admin.from("invitations").update({ status: "declined" }).eq("id", invitationId);
     return { error: "Invitation has expired" };
   }
-
-  // Use service role to bypass RLS — the invitation itself is the auth proof
-  const admin = getAdminClient();
 
   const { error: wsError } = await admin
     .from("workspace_members")
@@ -275,7 +275,6 @@ export async function getInvitationByToken(invitationId: string) {
 
 export async function getPendingInvitations(userId: string) {
   const supabase = await createClient();
-  // Use admin client so RLS on workspaces/projects never silently returns null
   const admin = getAdminClient();
 
   const { data: profile } = await supabase
@@ -288,7 +287,6 @@ export async function getPendingInvitations(userId: string) {
 
   const normalizedEmail = profile.email.toLowerCase().trim();
 
-  // Step 1: fetch the raw invitations (no joins — avoid ambiguous FK resolution)
   const { data: rows, error } = await supabase
     .from("invitations")
     .select("id, role, created_at, expires_at, invitee_email, workspace_id, project_id, inviter_id")
@@ -304,33 +302,29 @@ export async function getPendingInvitations(userId: string) {
 
   if (!rows || rows.length === 0) return { invitations: [] };
 
-  // Step 2: collect unique IDs for batch lookups
   const workspaceIds = [...new Set(rows.map((r: any) => r.workspace_id).filter(Boolean))];
-  const projectIds   = [...new Set(rows.map((r: any) => r.project_id).filter(Boolean))];
-  const inviterIds   = [...new Set(rows.map((r: any) => r.inviter_id).filter(Boolean))];
+  const projectIds = [...new Set(rows.map((r: any) => r.project_id).filter(Boolean))];
+  const inviterIds = [...new Set(rows.map((r: any) => r.inviter_id).filter(Boolean))];
 
-  // Step 3: batch fetch related records using admin client (bypasses RLS)
   const [{ data: workspaces }, { data: projects }, { data: profiles }] = await Promise.all([
     admin.from("workspaces").select("id, name, slug").in("id", workspaceIds),
     admin.from("projects").select("id, name, color").in("id", projectIds),
     admin.from("profiles").select("id, full_name, email, avatar_url").in("id", inviterIds),
   ]);
 
-  // Step 4: build lookup maps
-  const wsMap  = Object.fromEntries((workspaces ?? []).map((w: any) => [w.id, w]));
-  const prMap  = Object.fromEntries((projects   ?? []).map((p: any) => [p.id, p]));
-  const prfMap = Object.fromEntries((profiles   ?? []).map((p: any) => [p.id, p]));
+  const wsMap = Object.fromEntries((workspaces ?? []).map((w: any) => [w.id, w]));
+  const prMap = Object.fromEntries((projects ?? []).map((p: any) => [p.id, p]));
+  const prfMap = Object.fromEntries((profiles ?? []).map((p: any) => [p.id, p]));
 
-  // Step 5: hydrate
   const invitations = rows.map((r: any) => ({
-    id:            r.id,
-    role:          r.role,
-    created_at:    r.created_at,
-    expires_at:    r.expires_at,
+    id: r.id,
+    role: r.role,
+    created_at: r.created_at,
+    expires_at: r.expires_at,
     invitee_email: r.invitee_email,
-    workspaces:    wsMap[r.workspace_id]  ?? null,
-    projects:      prMap[r.project_id]    ?? null,
-    profiles:      prfMap[r.inviter_id]   ?? null,
+    workspaces: wsMap[r.workspace_id] ?? null,
+    projects: prMap[r.project_id] ?? null,
+    profiles: prfMap[r.inviter_id] ?? null,
   }));
 
   console.log("Fetched invitations:", invitations);
@@ -364,8 +358,6 @@ export async function getWorkspaceInvitations(workspaceId: string) {
   const user = await getCurrentUser();
   if (!user) return { invitations: [] };
 
-  // Use admin client to ensure we can see invitations even if RLS is restrictive
-  // But we must verify the user is an admin or owner of the workspace
   const { data: wsMembership } = await supabase
     .from("workspace_members")
     .select("role")
@@ -374,17 +366,16 @@ export async function getWorkspaceInvitations(workspaceId: string) {
     .maybeSingle();
 
   const isAdmin = wsMembership?.role === "admin";
-  
+
   const { data: workspace } = await supabase
     .from("workspaces")
     .select("owner_id")
     .eq("id", workspaceId)
     .single();
-    
+
   const isOwner = workspace?.owner_id === user.id;
 
   if (!isAdmin && !isOwner) {
-    // Non-admins can only see invitations they sent
     const { data: invs, error } = await supabase
       .from("invitations")
       .select(`
@@ -400,7 +391,6 @@ export async function getWorkspaceInvitations(workspaceId: string) {
     return { invitations: invs || [] };
   }
 
-  // Admins see everything in the workspace
   const admin = getAdminClient();
   const { data: invs, error } = await admin
     .from("invitations")
@@ -449,7 +439,7 @@ export async function revokeInvitation(invitationId: string) {
     .eq("id", invitationId);
 
   if (error) return { error: error.message };
-  
+
   revalidatePath("/space/team");
   return { success: true };
 }

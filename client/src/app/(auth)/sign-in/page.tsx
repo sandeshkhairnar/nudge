@@ -72,8 +72,8 @@ function Field({ label, type = "text", placeholder, value, onChange, error, read
           boxShadow: error
             ? "0 0 0 2px #E01E5A40"
             : focused
-            ? "0 0 0 2px #36C5F050"
-            : "0 0 0 1px #E8E8E2",
+              ? "0 0 0 2px #36C5F050"
+              : "0 0 0 1px #E8E8E2",
         }}
         className="rounded-xl overflow-hidden bg-white"
         transition={{ duration: 0.2 }}
@@ -233,19 +233,34 @@ function LoginInner() {
     setLoading(true);
     setServerError("");
 
-    const result = await signIn({ email, password });
-    if (result?.error) { setServerError(result.error); setLoading(false); return; }
-
     if (inviteId) {
-      const accepted = await acceptInvitation(inviteId);
+      const result = await signIn({ email, password, skipRedirect: true });
+      if (result?.error) { setServerError(result.error); setLoading(false); return; }
+
+      const accepted = await acceptInvitation(inviteId).catch((err: any) => ({
+        error: err?.message ?? "Failed to accept invitation. Please try again.",
+        success: false as const,
+        projectId: null as string | null,
+      }));
+
       setLoading(false);
-      if (accepted.success && accepted.projectId) {
-        router.replace(`/space/${accepted.projectId}`);
+
+      if ("error" in accepted && accepted.error) {
+        setServerError(accepted.error);
         return;
       }
-      router.replace("/inbox");
+
+      setDone(true);
+      if (accepted.projectId) {
+        setTimeout(() => router.replace(`/space/${accepted.projectId}`), 1600);
+      } else {
+        setTimeout(() => router.replace("/space"), 1600);
+      }
       return;
     }
+
+    const result = await signIn({ email, password });
+    if (result?.error) { setServerError(result.error); setLoading(false); return; }
 
     setLoading(false);
     setDone(true);
@@ -418,7 +433,7 @@ function LoginInner() {
                       <div className="flex flex-col gap-2.5 mb-6">
                         {[
                           { icon: "G", label: "Continue with Google", action: () => signInWithGoogle(typeof window !== 'undefined' && 'electronAPI' in window) },
-                          { icon: "⌘", label: "Continue with SSO", action: () => {} },
+                          { icon: "⌘", label: "Continue with SSO", action: () => { } },
                         ].map((btn, i) => (
                           <motion.button
                             key={i} onClick={btn.action}
