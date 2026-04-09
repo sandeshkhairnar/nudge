@@ -195,7 +195,7 @@ async def update_stalled_days_job():
         print("\033[94m[Nudge Engine]\033[0m Starting automated stalled_days update...")
         supabase = get_supabase()
         
-        # 1. Fetch all non-done tasks
+        # 1. Fetch all active (non-done) tasks to update their stall age
         res = (
             supabase.table("tasks")
             .select("id, created_at, status, stalled_days")
@@ -230,6 +230,10 @@ async def update_stalled_days_job():
                 print(f"\033[91m[Nudge Engine]\033[0m Error processing task {task['id']}: {e}")
 
         print(f"\033[92m[Nudge Engine]\033[0m Successfully updated stalled_days for {updated_count} tasks.")
+
+        # 2. Cleanup: Reset stalled_days to 0 for any task that is now 'done'
+        # This keeps analytics clean.
+        supabase.table("tasks").update({"stalled_days": 0}).eq("status", "done").neq("stalled_days", 0).execute()
             
     except Exception as e:
         print(f"\033[91m[Nudge Engine]\033[0m Error in update_stalled_days_job: {e}")

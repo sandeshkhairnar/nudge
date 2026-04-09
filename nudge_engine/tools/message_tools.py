@@ -1,6 +1,14 @@
 import json
+import uuid
 from langchain_core.tools import tool
 from database.supabase_client import get_supabase
+
+def is_valid_uuid(val: str) -> bool:
+    try:
+        uuid.UUID(str(val))
+        return True
+    except ValueError:
+        return False
 
 @tool
 def create_ai_message(
@@ -11,6 +19,11 @@ def create_ai_message(
     """
     Post a message back to a chat channel from the AI.
     """
+    if not is_valid_uuid(channel_id):
+        return f"Error: '{channel_id}' is not a valid Channel ID UUID."
+    if not is_valid_uuid(user_id):
+        return f"Error: '{user_id}' is not a valid User ID UUID."
+
     supabase = get_supabase()
     data = {
         "channel_id": channel_id,
@@ -32,6 +45,9 @@ async def create_system_message(
     Useful for automated alerts, task stalls, or project health updates.
     The message will be formatted as a JSON string for the frontend.
     """
+    if not is_valid_uuid(project_id):
+        return f"Error: '{project_id}' is not a valid Project ID UUID."
+
     supabase = get_supabase()
     
     # 1. Find the first channel for the project
@@ -86,11 +102,24 @@ def analyze_message_context(message_id: str) -> str:
     Fetch additional context around a specific message (e.g. recent conversation)
     to help the AI make better decisions.
     """
+    # 1. Validate UUID
+    try:
+        uuid.UUID(str(message_id))
+    except ValueError:
+        return f"Error: '{message_id}' is not a valid UUID. Please ensure you are passing a real Message ID."
+
     supabase = get_supabase()
-    # Fetch last 5 messages in the same channel
-    msg = supabase.table("messages").select("channel_id").eq("id", message_id).single().execute()
-    if not msg.data:
-        return "Message not found."
-    
-    history = supabase.table("messages").select("*").eq("channel_id", msg.data["channel_id"]).order("created_at", desc=True).limit(5).execute()
-    return str(history.data)
+    # 2. Use maybe_single() to avoid PGRST116 error if message not found
+    try:
+        msg_res = supabase.table("messages").select("channel_id").eq("id", message_id).maybe_single().execute()
+        
+        if not msg_res.data:
+            return f"Message with ID {message_id} not found."
+        
+        channel_id = msg_res.data["channel_id"]
+        
+        # Fetch last 5 messages in the same channel
+        history = supabase.table("messages").select("*").eq("channel_id", channel_id).order("created_at", desc=True).limit(5).execute()
+        return str(history.data)
+    except Exception as e:
+        return f"Error fetching message context: {str(e)}"
