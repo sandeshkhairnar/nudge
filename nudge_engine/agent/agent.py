@@ -70,15 +70,22 @@ async def run_agent(event: Dict[str, Any]) -> str:
         handle_parsing_errors=True
     )
 
-    # 4. Prepare Input based on event type
-    # Inject IDs into the prompt to prevent hallucination
+def prepare_agent_input(event: Dict[str, Any]) -> str:
+    """
+    Constructs a consistent, context-rich prompt for the agent.
+    """
+    workspace_id = event.get("workspace_id")
+    project_id = event.get("project_id")
+    event_type = event.get("event_type")
+    payload = event.get("payload", {})
+    
     context_prefix = f"CONTEXT: Workspace ID: {workspace_id}, Project ID: {project_id or 'N/A'}. Use these IDs for all tool calls.\n"
-
+    
     if event_type == "message":
         user_msg = payload.get("content", "")
-        input_text = context_prefix + f"A user sent a message in channel {payload.get('channel_id')}: '{user_msg}'. Analyze if this is a task request or needs a reply."
+        return context_prefix + f"A user sent a message in channel {payload.get('channel_id')}: '{user_msg}'. Analyze if this is a task request or needs a reply."
     elif event_type == "stall":
-        input_text = context_prefix + (
+        return context_prefix + (
             f"STALL ALERT: Task '{payload.get('task_title')}' (ID: {payload.get('task_id')}) "
             "has been stalled for 8 days. "
             "1. Generate a premium, context-aware nudge using 'generate_nudge' for the dashboard. "
@@ -86,10 +93,10 @@ async def run_agent(event: Dict[str, Any]) -> str:
             "Be encouraging but firm about project velocity."
         )
     elif event_type == "github":
-        input_text = context_prefix + f"GitHub event {payload.get('event_name')} received for repo {payload.get('repository')}. Details: {payload.get('data')}. Process this update."
+        return context_prefix + f"GitHub event {payload.get('event_name')} received for repo {payload.get('repository')}. Details: {payload.get('data')}. Process this update."
     elif event_type == "mom_generation":
         project_name = payload.get("project_name", payload.get("room_name"))
-        input_text = context_prefix + (
+        return context_prefix + (
             f"MEETING ENDED: The meeting for project/room '{project_name}' has ended. "
             f"Here is the continuous raw transcript and chat log:\n---\n{payload.get('transcript')}\n---\n"
             "Please analyze this transcript text. Synthesize it into a structured 'Minute of Meeting' (MOM) "
@@ -98,8 +105,45 @@ async def run_agent(event: Dict[str, Any]) -> str:
             "IMPORTANT: When calling create_system_message, use the argument `system_type='system_mom'`. "
             "Format the text beautifully with Markdown and emojis for readability."
         )
+    elif event_type == "chat":
+        user_query = payload.get("message", payload.get("content", ""))
+        return context_prefix + f"DASHBOARD CHAT: The user says: '{user_query}'. Answer their question about their workspace or projects using available tools."
     else:
-        input_text = context_prefix + str(payload)
+        return context_prefix + f"INPUT: {str(payload)}"
+
+async def run_agent(event: Dict[str, Any]) -> str:
+    """
+    Main entry point for the AI agent.
+    Takes an event (Dict), constructs the agent, runs it, and returns the result.
+    """
+    workspace_id = event.get("workspace_id")
+    event_type = event.get("event_type")
+
+    if not workspace_id:
+        return "Error: No workspace_id provided in event."
+
+    logger.info(f"Running agent for event: {event_type} (Workspace: {workspace_id})")
+
+    # 1. Initialize LLM
+    llm = get_llm()
+
+    # 2. Setup Memory
+    memory = await get_langchain_memory(workspace_id)
+
+    # 3. Create Agent
+    agent = create_tool_calling_agent(llm, TOOLS, AGENT_PROMPT)
+    
+    agent_executor = AgentExecutor(
+        agent=agent,
+        tools=TOOLS,
+        memory=memory,
+        verbose=True,
+        max_iterations=5,
+        handle_parsing_errors=True
+    )
+
+    # 4. Prepare Input
+    input_text = prepare_agent_input(event)
 
     # 5. Execute Agent
     try:
@@ -145,7 +189,7 @@ async def run_agent_stream(event: Dict[str, Any]) -> AsyncGenerator[str, None]:
     )
 
     # 4. Input
-    input_text = str(payload) if event_type == "chat" else str(payload)
+    input_text = prepare_agent_input(event)
 
     # 5. Stream
     try:
