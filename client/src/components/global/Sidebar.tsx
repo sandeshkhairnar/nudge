@@ -478,8 +478,8 @@ export default function Sidebar() {
       if (profileData) setProfile(profileData as Profile);
 
       const workspaces = await getUserWorkspaces(user.id);
+      setWorkspaces(workspaces);
       if (workspaces.length > 0) {
-        setWorkspaces(workspaces);
         const lastWorkspaceId = localStorage.getItem("lastWorkspaceId");
         const last = workspaces.find((w: any) => w?.id === lastWorkspaceId);
         setWorkspace(last || workspaces[0]);
@@ -803,16 +803,11 @@ export default function Sidebar() {
                 url={profile?.avatar_url}
                 name={profile?.full_name}
                 email={profile?.email}
+                userId={currentUserId || undefined}
+                showStatus={true}
                 role="You"
                 size={30}
                 fallbackColor="#36C5F0"
-              />
-              <div
-                className="absolute bottom-0 right-0 w-2 h-2 rounded-full border-[1.5px]"
-                style={{
-                  background: "#2EB67D",
-                  borderColor: "#0A0A0A",
-                }}
               />
             </div>
 

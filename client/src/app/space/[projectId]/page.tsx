@@ -13,6 +13,7 @@ import { getProjectIntegrations, upsertGitHubIntegration, deleteIntegration, Int
 import { useParams } from "next/navigation";
 import { Hash, Menu, Mail, Plus, Video, Loader2, X, Camera } from "lucide-react";
 import { useProjectsStore } from "@/store/projects-store";
+import { usePresenceStore } from "@/store/presence-store";
 
 import { Task as BoardTask } from "@/components/workspace/TaskBoard";
 import GlobalAvatar from "@/components/global/Avatar";
@@ -61,7 +62,17 @@ export default function SpacePage() {
   const [isConnected, setIsConnected] = useState(false);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [team, setTeam] = useState<TeamMember[]>([]);
-  const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
+  const isUserOnline = usePresenceStore((s) => s.isUserOnline);
+  
+  // Derived online users from team list and global presence store
+  const onlineUsers: OnlineUser[] = team
+    .filter((m) => m.profiles && isUserOnline(m.profiles.id))
+    .map((m) => ({
+      id: m.profiles!.id,
+      full_name: m.profiles!.full_name,
+      avatar_url: m.profiles!.avatar_url,
+      email: m.profiles!.email,
+    }));
   const [resources, setResources] = useState<Resource[]>([]);
   const [project, setProject] = useState<Project | null>(null);
   const [currentUser, setCurrentUser] = useState<{ id: string; full_name: string | null; avatar_url: string | null } | null>(null);
@@ -248,69 +259,59 @@ export default function SpacePage() {
 
   useEffect(() => {
     if (!activeChannel?.id) return;
-    const ch = supabase.channel(`project_chat:${activeChannel.id}`)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `channel_id=eq.${activeChannel.id}` },
-        async (payload) => {
-          const { data } = await supabase.from("messages")
+    const channelName = `project_chat:${activeChannel.id}`;
+    
+    // Hardened chat subscription logic
+    const ch = supabase.channel(channelName)
+      .on("postgres_changes", { 
+        event: "INSERT", 
+        schema: "public", 
+        table: "messages", 
+        filter: `channel_id=eq.${activeChannel.id}` 
+      }, async (payload) => {
+          const { data, error } = await supabase.from("messages")
             .select("id,content,is_ai,created_at,edited_at,user_id,parent_id,profiles!messages_user_id_fkey(id,full_name,avatar_url,email)")
             .eq("id", payload.new.id).single();
-          if (data) {
+          
+          if (!error && data) {
             const raw = data as typeof data & { profiles: MessageProfile | MessageProfile[] | null; parent_id?: string | null };
             const message: Message = { ...raw, profiles: Array.isArray(raw.profiles) ? raw.profiles[0] : raw.profiles };
+            
             if (message.parent_id) {
               if (message.parent_id === activeThreadId) {
                 setThreadMessages((prev) => prev.some((m) => m.id === message.id) ? prev : [...prev, message]);
               }
               setReplyCounts((prev) => ({ ...prev, [message.parent_id!]: (prev[message.parent_id!] ?? 0) + 1 }));
             } else {
-              // Add to FRONT for column-reverse
               setMessages((prev) => prev.some((m) => m.id === message.id) ? prev : [message, ...prev]);
             }
           }
-        })
-      .on("postgres_changes", { event: "DELETE", schema: "public", table: "messages" },
-        (payload) => {
+      })
+      .on("postgres_changes", { 
+        event: "DELETE", 
+        schema: "public", 
+        table: "messages"
+      }, (payload) => {
           const deletedId = (payload.old as { id: string }).id;
           setMessages((prev) => prev.filter((m) => m.id !== deletedId));
           setThreadMessages((prev) => prev.filter((m) => m.id !== deletedId));
           if (activeThreadId === deletedId) setActiveThreadId(null);
-        })
-      .on("postgres_changes", { event: "*", schema: "public", table: "message_reactions" },
-        (payload) => {
+      })
+      .on("postgres_changes", { 
+        event: "*", 
+        schema: "public", 
+        table: "message_reactions" 
+      }, (payload) => {
           const msgId = (payload.new as { message_id?: string })?.message_id || (payload.old as { message_id?: string })?.message_id;
           if (msgId) fetchReactions([msgId]);
-        })
+      })
       .subscribe((s) => setIsConnected(s === "SUBSCRIBED"));
-    return () => { supabase.removeChannel(ch); setIsConnected(false); };
-  }, [activeChannel?.id, activeThreadId, fetchReactions]);
 
-  useEffect(() => {
-    if (activeThreadId) {
-      fetchThreadMessages(activeThreadId);
-      const msg = messages.find((m) => m.id === activeThreadId);
-      if (msg) setActiveThreadMsg(msg);
-    } else {
-      setThreadMessages([]);
-      setActiveThreadMsg(null);
-    }
-  }, [activeThreadId, fetchThreadMessages]);
-
-  useEffect(() => {
-    if (!activeChannel?.id || !currentUser?.id) return;
-    const pch = supabase.channel(`presence:${activeChannel.id}`, { config: { presence: { key: currentUser.id } } });
-    pch.on("presence", { event: "sync" }, () => {
-      const state = pch.presenceState();
-      setOnlineUsers(Object.entries(state).map(([id, p]) => ({
-        id,
-        full_name: (p[0] as { full_name?: string })?.full_name ?? null,
-        avatar_url: (p[0] as { avatar_url?: string })?.avatar_url ?? null,
-        email: (p[0] as { email?: string })?.email ?? null,
-      })));
-    }).subscribe(async (s) => {
-      if (s === "SUBSCRIBED") await pch.track({ full_name: currentUser.full_name, avatar_url: currentUser.avatar_url });
-    });
-    return () => { supabase.removeChannel(pch); };
-  }, [activeChannel?.id, currentUser?.id]);
+    return () => { 
+      supabase.removeChannel(ch); 
+      setIsConnected(false); 
+    };
+  }, [activeChannel?.id, activeThreadId, fetchReactions, supabase]);
 
   const resizeTextarea = (ref: React.RefObject<HTMLTextAreaElement | null>) => {
     const ta = ref.current;

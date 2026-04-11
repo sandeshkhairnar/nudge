@@ -21,7 +21,6 @@ export async function getUserWorkspace(userId: string) {
     .from("workspace_members")
     .select("workspace_id, workspaces(*)")
     .eq("user_id", userId)
-    .eq("role", "owner")
     .limit(1)
     .single();
 
@@ -45,8 +44,7 @@ export async function getUserWorkspaces(userId: string): Promise<Workspace[]> {
   const { data, error } = await supabase
     .from("workspace_members")
     .select("workspace_id, workspaces(*)")
-    .eq("user_id", userId)
-    .eq("role", "owner");
+    .eq("user_id", userId);
 
   if (error) {
     console.error("Workspaces fetch error:", error);
