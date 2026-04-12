@@ -23,17 +23,22 @@ export interface Notification {
 interface NotificationStore {
   notifications: Notification[];
   unreadCount: number;
+  activeProjectId: string | null;
+  activeChannelId: string | null;
   setNotifications: (notifications: Notification[]) => void;
   prependNotification: (notification: Notification) => void;
   markRead: (id: string) => void;
   markAllRead: () => void;
   removeNotification: (id: string) => void;
   updateNotification: (id: string, partial: Partial<Notification>) => void;
+  setActiveContext: (projectId: string | null, channelId: string | null) => void;
 }
 
 export const useNotificationStore = create<NotificationStore>((set) => ({
   notifications: [],
   unreadCount: 0,
+  activeProjectId: null,
+  activeChannelId: null,
 
   setNotifications: (notifications) =>
     set({
@@ -77,4 +82,7 @@ export const useNotificationStore = create<NotificationStore>((set) => ({
       );
       return { notifications, unreadCount: notifications.filter((n) => !n.read).length };
     }),
+
+  setActiveContext: (projectId, channelId) =>
+    set({ activeProjectId: projectId, activeChannelId: channelId }),
 }));

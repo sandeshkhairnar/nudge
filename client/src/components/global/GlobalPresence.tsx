@@ -1,42 +1,58 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { usePresence } from "@/hooks/use-presence";
 import { usePresenceStore } from "@/store/presence-store";
 
 export function GlobalPresence() {
-  const supabase = createClient();
+  const supabaseRef = useRef(createClient());
+  const supabase = supabaseRef.current;
   const setOnlineUsers = usePresenceStore((s) => s.setOnlineUsers);
-  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    async function getSession() {
+    let userId: string | null = null;
+
+    const init = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (user) setUserId(user.id);
-    }
-    getSession();
-  }, [supabase]);
+      if (!user) return;
+      userId = user.id;
 
-  // Use the existing presence hook on a global channel
-  const presenceState = usePresence("nudge-global-presence", userId || "", {
-    online_at: new Date().toISOString(),
-  }, !!userId);
+      const channel = supabase.channel("nudge-global-presence", {
+        config: { presence: { key: userId } },
+      });
 
-  useEffect(() => {
-    // presenceState is Record<string, any[]> from Supabase
-    // We flatten it for the store
-    const flattened: Record<string, { id: string; online_at: string }> = {};
-    Object.entries(presenceState).forEach(([id, metadatas]) => {
-      if (metadatas && metadatas[0]) {
-        flattened[id] = {
-          id,
-          online_at: (metadatas[0] as any).online_at || new Date().toISOString()
-        };
-      }
-    });
-    setOnlineUsers(flattened);
-  }, [presenceState, setOnlineUsers]);
+      const syncStore = () => {
+        const state = channel.presenceState();
+        const flattened: Record<string, { id: string; online_at: string }> = {};
+        Object.entries(state).forEach(([key, metadatas]) => {
+          const meta = (metadatas as any[])[0];
+          if (meta) {
+            flattened[key] = {
+              id: key,
+              online_at: meta.online_at ?? new Date().toISOString(),
+            };
+          }
+        });
+        setOnlineUsers(flattened);
+      };
 
-  return null; // This component is just a logic provider
+      channel
+        .on("presence", { event: "sync" }, syncStore)
+        .on("presence", { event: "join" }, syncStore)
+        .on("presence", { event: "leave" }, syncStore)
+        .subscribe(async (status) => {
+          if (status === "SUBSCRIBED") {
+            await channel.track({ userId, online_at: new Date().toISOString() });
+          }
+        });
+    };
+
+    init();
+
+    return () => {
+      supabase.removeAllChannels();
+    };
+  }, []);
+
+  return null;
 }

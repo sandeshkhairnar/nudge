@@ -14,6 +14,7 @@ import { useParams } from "next/navigation";
 import { Hash, Menu, Mail, Plus, Video, Loader2, X, Camera } from "lucide-react";
 import { useProjectsStore } from "@/store/projects-store";
 import { usePresenceStore } from "@/store/presence-store";
+import { useNotificationStore } from "@/store/notification-store";
 
 import { Task as BoardTask } from "@/components/workspace/TaskBoard";
 import GlobalAvatar from "@/components/global/Avatar";
@@ -40,7 +41,8 @@ import {
 } from "@/types";
 
 export default function SpacePage() {
-  const supabase = createClient();
+  const supabaseRef = useRef(createClient());
+  const supabase = supabaseRef.current;
   const endRef = useRef<HTMLDivElement>(null);
   const threadEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -64,7 +66,6 @@ export default function SpacePage() {
   const [team, setTeam] = useState<TeamMember[]>([]);
   const isUserOnline = usePresenceStore((s) => s.isUserOnline);
   
-  // Derived online users from team list and global presence store
   const onlineUsers: OnlineUser[] = team
     .filter((m) => m.profiles && isUserOnline(m.profiles.id))
     .map((m) => ({
@@ -154,6 +155,15 @@ export default function SpacePage() {
     };
     load();
   }, [projectId]);
+
+  const setActiveContext = useNotificationStore((s) => s.setActiveContext);
+
+  useEffect(() => {
+    setActiveContext(projectId, activeChannel?.id || null);
+    return () => setActiveContext(null, null);
+  }, [projectId, activeChannel?.id, setActiveContext]);
+
+
 
   const fetchReactions = useCallback(async (msgIds: string[]) => {
     if (!msgIds.length) return;
@@ -257,61 +267,62 @@ export default function SpacePage() {
 
   useEffect(() => { if (activeChannel?.id) fetchMessages(activeChannel.id); }, [activeChannel?.id, fetchMessages]);
 
+  const fetchReactionsRef = useRef(fetchReactions);
+  useEffect(() => { fetchReactionsRef.current = fetchReactions; }, [fetchReactions]);
+
+  const chatChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+
   useEffect(() => {
     if (!activeChannel?.id) return;
-    const channelName = `project_chat:${activeChannel.id}`;
-    
-    // Hardened chat subscription logic
-    const ch = supabase.channel(channelName)
-      .on("postgres_changes", { 
-        event: "INSERT", 
-        schema: "public", 
-        table: "messages", 
-        filter: `channel_id=eq.${activeChannel.id}` 
-      }, async (payload) => {
-          const { data, error } = await supabase.from("messages")
-            .select("id,content,is_ai,created_at,edited_at,user_id,parent_id,profiles!messages_user_id_fkey(id,full_name,avatar_url,email)")
-            .eq("id", payload.new.id).single();
-          
-          if (!error && data) {
-            const raw = data as typeof data & { profiles: MessageProfile | MessageProfile[] | null; parent_id?: string | null };
-            const message: Message = { ...raw, profiles: Array.isArray(raw.profiles) ? raw.profiles[0] : raw.profiles };
-            
-            if (message.parent_id) {
-              if (message.parent_id === activeThreadId) {
-                setThreadMessages((prev) => prev.some((m) => m.id === message.id) ? prev : [...prev, message]);
-              }
-              setReplyCounts((prev) => ({ ...prev, [message.parent_id!]: (prev[message.parent_id!] ?? 0) + 1 }));
-            } else {
-              setMessages((prev) => prev.some((m) => m.id === message.id) ? prev : [message, ...prev]);
-            }
-          }
-      })
-      .on("postgres_changes", { 
-        event: "DELETE", 
-        schema: "public", 
-        table: "messages"
-      }, (payload) => {
-          const deletedId = (payload.old as { id: string }).id;
-          setMessages((prev) => prev.filter((m) => m.id !== deletedId));
-          setThreadMessages((prev) => prev.filter((m) => m.id !== deletedId));
-          if (activeThreadId === deletedId) setActiveThreadId(null);
-      })
-      .on("postgres_changes", { 
-        event: "*", 
-        schema: "public", 
-        table: "message_reactions" 
-      }, (payload) => {
-          const msgId = (payload.new as { message_id?: string })?.message_id || (payload.old as { message_id?: string })?.message_id;
-          if (msgId) fetchReactions([msgId]);
-      })
-      .subscribe((s) => setIsConnected(s === "SUBSCRIBED"));
+    const channelId = activeChannel.id;
+    const channelName = `project_chat:${channelId}`;
 
-    return () => { 
-      supabase.removeChannel(ch); 
-      setIsConnected(false); 
+    const ch = supabase.channel(channelName, {
+      config: { broadcast: { self: false } },
+    })
+      .on("broadcast", { event: "new_message" }, ({ payload }) => {
+        const message = payload as Message;
+        setMessages((prev) => prev.some((m) => m.id === message.id) ? prev : [message, ...prev]);
+      })
+      .on("broadcast", { event: "new_reply" }, ({ payload }) => {
+        const message = payload as Message;
+        setReplyCounts((prev) => ({
+          ...prev,
+          [message.parent_id!]: (prev[message.parent_id!] ?? 0) + 1,
+        }));
+        // Add to thread panel if the right thread is open
+        setThreadMessages((prev) => {
+          if (!prev.length || prev[0]?.parent_id !== message.parent_id) return prev;
+          return prev.some((m) => m.id === message.id) ? prev : [...prev, message];
+        });
+      })
+      .on("broadcast", { event: "delete_message" }, ({ payload }) => {
+        const { id } = payload as { id: string };
+        setMessages((prev) => prev.filter((m) => m.id !== id));
+        setThreadMessages((prev) => prev.filter((m) => m.id !== id));
+        setActiveThreadId((prev) => prev === id ? null : prev);
+      })
+      .on("broadcast", { event: "edit_message" }, ({ payload }) => {
+        const { id, content, edited_at, parent_id } = payload as { id: string; content: string; edited_at: string; parent_id?: string | null };
+        if (parent_id) {
+          setThreadMessages((prev) => prev.map((m) => m.id === id ? { ...m, content, edited_at } : m));
+        } else {
+          setMessages((prev) => prev.map((m) => m.id === id ? { ...m, content, edited_at } : m));
+        }
+      })
+      .subscribe((status) => {
+        setIsConnected(status === "SUBSCRIBED");
+      });
+
+    chatChannelRef.current = ch;
+
+    return () => {
+      supabase.removeChannel(ch);
+      chatChannelRef.current = null;
+      setIsConnected(false);
     };
-  }, [activeChannel?.id, activeThreadId, fetchReactions, supabase]);
+  }, [activeChannel?.id]);
+
 
   const resizeTextarea = (ref: React.RefObject<HTMLTextAreaElement | null>) => {
     const ta = ref.current;
@@ -402,19 +413,16 @@ export default function SpacePage() {
     const path = `${projectId}/avatar-${Date.now()}.${ext}`;
 
     try {
-      // 1. Upload to bucket
       const { error: uploadError } = await supabase.storage
         .from("project-avatars")
         .upload(path, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
-      // 2. Get Public URL
       const { data: { publicUrl } } = supabase.storage
         .from("project-avatars")
         .getPublicUrl(path);
 
-      // 3. Update DB
       const { error: dbError } = await supabase
         .from("projects")
         .update({ avatar_url: publicUrl })
@@ -422,10 +430,8 @@ export default function SpacePage() {
 
       if (dbError) throw dbError;
 
-      // 4. Update local state
       if (project) setProject({ ...project, avatar_url: publicUrl });
       
-      // 5. Update global store
       updateProjectStore(projectId, { avatar_url: publicUrl });
       
       toast.success("Project avatar updated", { id: toastId });
@@ -469,7 +475,6 @@ export default function SpacePage() {
       profiles: { id: currentUser.id, full_name: currentUser.full_name, avatar_url: currentUser.avatar_url },
       attachments: attachments.length ? attachments : undefined,
     };
-    // Add to FRONT for column-reverse
     setMessages((prev) => [optimistic, ...prev]);
     const { data, error } = await supabase.from("messages")
       .insert({ channel_id: activeChannel.id, user_id: currentUser.id, content: contentPayload, is_ai: false })
@@ -477,7 +482,17 @@ export default function SpacePage() {
       .single();
     if (!error && data) {
       const raw = data as typeof data & { profiles: MessageProfile | MessageProfile[] | null };
-      setMessages((prev) => prev.map((m) => m.id === optimistic.id ? { ...raw, profiles: Array.isArray(raw.profiles) ? raw.profiles[0] : raw.profiles, attachments: attachments.length ? attachments : undefined } as Message : m));
+      const realMsg: Message = {
+        ...raw,
+        profiles: Array.isArray(raw.profiles) ? raw.profiles[0] : raw.profiles,
+        attachments: attachments.length ? attachments : undefined,
+      } as Message;
+      setMessages((prev) => prev.map((m) => m.id === optimistic.id ? realMsg : m));
+      chatChannelRef.current?.send({
+        type: "broadcast",
+        event: "new_message",
+        payload: realMsg,
+      });
     }
   };
 
@@ -502,8 +517,17 @@ export default function SpacePage() {
       .single();
     if (!error && data) {
       const raw = data as typeof data & { profiles: MessageProfile | MessageProfile[] | null };
-      setThreadMessages((prev) => prev.map((m) => m.id === optimistic.id ? { ...raw, profiles: Array.isArray(raw.profiles) ? raw.profiles[0] : raw.profiles } as Message : m));
+      const realMsg: Message = {
+        ...raw,
+        profiles: Array.isArray(raw.profiles) ? raw.profiles[0] : raw.profiles,
+      } as Message;
+      setThreadMessages((prev) => prev.map((m) => m.id === optimistic.id ? realMsg : m));
       setReplyCounts((prev) => ({ ...prev, [activeThreadId]: (prev[activeThreadId] ?? 0) + 1 }));
+      chatChannelRef.current?.send({
+        type: "broadcast",
+        event: "new_reply",
+        payload: realMsg,
+      });
     }
   };
 
@@ -601,7 +625,7 @@ export default function SpacePage() {
       }
     } else if (newResourceType === "credential") {
       metadata = { value: newResourceCredentialValue };
-      finalUrl = ""; // No URL for credentials
+      finalUrl = "";
     }
 
     const { resource, error } = await addResource({
