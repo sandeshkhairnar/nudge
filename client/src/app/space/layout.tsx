@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { usePathname } from "next/navigation";
+import { useState, useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import Sidebar from "@/components/global/Sidebar";
 import Topbar from "@/components/global/Topbar";
 import CreateProjectModal from "@/components/space/CreateProjectModal";
@@ -25,9 +25,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [open, setOpen] = useState(false);
 
   const pathname = usePathname();
+  const router = useRouter();
   const workspace = useWorkspaceStore((s) => s.workspace);
+  const workspaces = useWorkspaceStore((s) => s.workspaces);
+  const workspacesLoaded = useWorkspaceStore((s) => s.workspacesLoaded);
   const projects = useProjectsStore((s) => s.projects);
   const addProject = useProjectsStore((s) => s.addProject);
+
+  // ── Redirect logic ────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (workspacesLoaded && workspaces.length === 0 && pathname !== "/space/settings") {
+      router.push("/space/settings");
+    }
+  }, [workspacesLoaded, workspaces.length, pathname, router]);
 
   // ── Resolve title + projectColor from the current path ──────────────────
   const segments = pathname.split("/").filter(Boolean);

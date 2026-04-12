@@ -179,10 +179,11 @@ export default function ProjectSidebar({
                   url={u.avatar_url}
                   name={u.full_name}
                   email={u.email}
+                  userId={u.id}
+                  showStatus={true}
                   size={22}
                   fallbackColor={strColor(u.id)}
                 />
-                <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-white bg-emerald-400" />
               </div>
             ))
           )}

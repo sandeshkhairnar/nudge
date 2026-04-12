@@ -123,19 +123,30 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
               channel_name: (data as any).channel?.name ?? null,
             };
 
+            const store = useNotificationStore.getState();
+            const isRead = shaped.read || 
+              (shaped.project_id === store.activeProjectId && 
+               (!shaped.channel_id || shaped.channel_id === store.activeChannelId));
+
+            if (isRead) {
+              shaped.read = true;
+              supabase.from("notifications").update({ read: true }).eq("id", shaped.id).then();
+            }
+
             prependNotification(shaped);
 
-            // Incoming call — show the dedicated modal instead of a toast
+            if (isRead) return;
+
             if (shaped.type === "call") {
               playSound("call");
               setIncomingCall({
                 id: shaped.id,
-                room: shaped.content,          // content holds the room name
+                room: shaped.content,
                 callerName: shaped.sender?.full_name ?? "Someone",
                 callerAvatarUrl: shaped.sender?.avatar_url ?? null,
                 callerEmail: null,
               });
-              return; // don't show a regular toast for calls
+              return;
             }
 
             playSound(shaped.type);
@@ -150,7 +161,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
                 channelName: shaped.channel_name ?? undefined,
                 onClose: (id) => setToasts((prev) => prev.filter((t) => t.id !== id)),
                 onClick: () => {
-                  window.location.href = "/space/inbox";
+                  router.push("/space/inbox");
                 },
               };
               setToasts((prev) => [toast, ...prev].slice(0, 5));
@@ -221,7 +232,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     <NotificationContext.Provider value={{ markAsRead, markAllAsRead, archiveNotification }}>
       {children}
 
-      {/* Incoming call modal — shown above everything */}
       <IncomingCallModal
         call={incomingCall}
         onAccept={handleAcceptCall}

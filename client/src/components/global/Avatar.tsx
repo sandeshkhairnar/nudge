@@ -12,7 +12,11 @@ interface AvatarProps {
   size?: number;
   className?: string;
   fallbackColor?: string;
+  userId?: string;
+  showStatus?: boolean;
 }
+
+import { usePresenceStore } from "@/store/presence-store";
 
 export default function Avatar({ 
   url, 
@@ -21,8 +25,11 @@ export default function Avatar({
   role,
   size = 40, 
   className = "",
-  fallbackColor = "#36C5F0"
+  fallbackColor = "#36C5F0",
+  userId,
+  showStatus = false
 }: AvatarProps) {
+  const isOnline = usePresenceStore((s) => userId ? s.isUserOnline(userId) : false);
   const [error, setError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [coords, setCoords] = useState({ top: 0, left: 0 });
@@ -92,6 +99,26 @@ export default function Avatar({
           )}
         </AnimatePresence>
       </div>
+
+      {showStatus && userId && (
+        <div 
+          className="absolute bottom-0 right-0 z-10 rounded-full border-2 border-white shadow-sm"
+          style={{ 
+            width: Math.max(8, size * 0.25), 
+            height: Math.max(8, size * 0.25),
+            backgroundColor: isOnline ? "#10B981" : "#9CA3AF" 
+          }}
+        >
+          {isOnline && (
+            <motion.div 
+              initial={{ scale: 0.8, opacity: 0.5 }}
+              animate={{ scale: 1.5, opacity: 0 }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: "easeOut" }}
+              className="absolute inset-0 rounded-full bg-[#10B981]"
+            />
+          )}
+        </div>
+      )}
 
       <AnimatePresence>
         {isHovered && (name || email || role) && (

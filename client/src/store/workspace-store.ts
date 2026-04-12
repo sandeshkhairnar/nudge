@@ -17,6 +17,7 @@ interface Workspace {
 interface WorkspaceStore {
   workspace: Workspace | null;
   workspaces: Workspace[]; // Add list of available workspaces
+  workspacesLoaded: boolean;
   setWorkspace: (workspace: Workspace) => void;
   setWorkspaces: (workspaces: Workspace[]) => void; // New method
   clearWorkspace: () => void;
@@ -25,6 +26,7 @@ interface WorkspaceStore {
 export const useWorkspaceStore = create<WorkspaceStore>((set) => ({
   workspace: null,
   workspaces: [], // Initialize empty array
+  workspacesLoaded: false,
 
   setWorkspace: (workspace) =>
     set(() => ({
@@ -34,11 +36,13 @@ export const useWorkspaceStore = create<WorkspaceStore>((set) => ({
   setWorkspaces: (workspaces) =>
     set(() => ({
       workspaces,
+      workspacesLoaded: true,
     })),
 
   clearWorkspace: () =>
     set(() => ({
       workspace: null,
       workspaces: [],
+      workspacesLoaded: false,
     })),
 }));
