@@ -167,7 +167,7 @@ export async function signInWithGoogle(isDesktop?: boolean) {
 
   const redirectTo = isDesktop
     ? "nudge://auth/callback"
-    : `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`;
+    : "https://nudgemanager.vercel.app/auth/callback";
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
