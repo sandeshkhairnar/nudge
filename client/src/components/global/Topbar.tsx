@@ -113,7 +113,7 @@ function SearchBar() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [loading, setLoading] = useState(false);
-  
+
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -123,7 +123,7 @@ function SearchBar() {
   // 1. Hotkey support (Ctrl+K)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
         e.preventDefault();
         inputRef.current?.focus();
       }
@@ -207,20 +207,20 @@ function SearchBar() {
     <div className="relative group">
       <motion.div
         animate={{
-          width: focused ? 280 : 180,
+          width: focused ? 280 : 200,
           boxShadow: focused
-            ? "0 0 0 2px rgba(54,197,240,0.2), 0 8px 24px rgba(0,0,0,0.08)"
-            : "0 0 0 1px #EBEBEB",
+            ? "0 0 0 2px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06)"
+            : "0 0 0 1px #e4e4e7",
         }}
         transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-        className="hidden sm:flex rounded-[12px] bg-[#F9F9F7] items-center gap-2 px-3 h-10 overflow-hidden flex-shrink-0 relative z-[101]"
+        className="hidden sm:flex rounded-xl bg-[#f9f9fb] items-center gap-2 px-3 h-10 overflow-hidden flex-shrink-0 relative z-[101]"
       >
         {loading ? (
-          <div className="w-4 h-4 rounded-full border-2 border-[#36C5F0] border-t-transparent animate-spin flex-shrink-0" />
+          <div className="w-4 h-4 rounded-full border-2 border-gray-400 border-t-transparent animate-spin flex-shrink-0" />
         ) : (
-          <Search size={15} className="text-[#9CA3AF] flex-shrink-0" />
+          <Search size={14} className="text-[#a1a1aa] flex-shrink-0" />
         )}
-        
+
         <input
           ref={inputRef}
           value={search}
@@ -230,8 +230,8 @@ function SearchBar() {
             setActiveIndex(0);
           }}
           onKeyDown={handleKeyDown}
-          placeholder="Search projects, tasks..."
-          className="bg-transparent border-none outline-none text-[13.5px] font-medium text-[#0D0D0D] w-full placeholder-[#B0B0A8]"
+          placeholder="Search"
+          className="bg-transparent border-none outline-none text-[13px] font-medium text-gray-800 w-full placeholder-[#a1a1aa]"
         />
 
         <AnimatePresence>
@@ -240,10 +240,10 @@ function SearchBar() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-white border border-[#EBEBEB] text-[10px] font-bold text-[#9CA3AF] absolute right-2"
+              className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-white border border-[#e4e4e7] text-[10px] font-bold text-[#a1a1aa] absolute right-2 whitespace-nowrap"
             >
               <Command size={9} />
-              <span>K</span>
+              <span>S</span>
             </motion.div>
           )}
           {search && (
@@ -302,7 +302,7 @@ function SearchBar() {
                         }}
                         className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all ${isSelected ? 'bg-[#F4F4F1]' : 'hover:bg-[#F9F9F7]'}`}
                       >
-                        <div 
+                        <div
                           className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                           style={{
                             background: res.color ? `${res.color}15` : '#F4F4F1',
@@ -391,32 +391,23 @@ function NotificationBell() {
         whileHover={{ scale: 1.06 }}
         whileTap={{ scale: 0.93 }}
         onClick={() => setOpen((o) => !o)}
-        className="w-9 h-9 rounded-[10px] bg-[#F9F9F7] border border-[#EBEBEB] flex items-center justify-center relative cursor-pointer"
+        className="w-9 h-9 rounded-xl bg-[#f9f9fb] border border-[#e4e4e7] flex items-center justify-center relative cursor-pointer"
       >
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
           <path
             d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"
-            stroke="#374151"
+            stroke="#3f3f46"
             strokeWidth="1.8"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
         </svg>
-        <AnimatePresence>
-          {unreadCount > 0 && (
-            <motion.span
-              key="badge"
-              initial={{ scale: 0 }}
-              animate={{ scale: [1, 1.3, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-[#E01E5A] border-2 border-white flex items-center justify-center"
-            >
-              <span className="text-[9px] font-black text-white leading-none">
-                {unreadCount > 9 ? "9+" : unreadCount}
-              </span>
-            </motion.span>
-          )}
-        </AnimatePresence>
+        {unreadCount > 0 && (
+          <span
+            className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full"
+            style={{ background: "#f97316" }}
+          />
+        )}
       </motion.button>
 
       {/* Dropdown panel */}
@@ -593,10 +584,10 @@ function NotificationBell() {
 
 /** Map URL segments → human-readable labels */
 const BREADCRUMB_LABELS: Record<string, string> = {
-  space: "Home",
+  space: "Dashboard",
   boards: "Boards",
   inbox: "Inbox",
-  nudges: "My Nudges",
+  nudges: "My Tasks",
   team: "Team",
   analytics: "Analytics",
   "video-call": "Video Call",
@@ -731,7 +722,7 @@ function Breadcrumb({ overrideLabel, projectColor }: BreadcrumbProps) {
                 initial={{ opacity: 0, y: 3 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.18 }}
-                className="text-[14px] font-black text-[#0D0D0D] tracking-[-0.02em] truncate"
+                className="text-[20px] font-black text-gray-900 tracking-[-0.03em] truncate"
               >
                 {crumb.label}
               </motion.span>
@@ -771,29 +762,32 @@ interface TopbarProps {
 export default function Topbar({ title, projectColor, onOpenCreate }: TopbarProps) {
   return (
     <header
-      className="h-[60px] border-b border-[#EBEBEB] flex items-center px-4 md:px-7 gap-3 md:gap-4 bg-white shrink-0 sticky top-0 z-40"
-      style={{ boxShadow: "0 1px 0 #F5F5F2" }}
+      className="h-[60px] border-b border-[#e4e4e7] flex items-center px-4 md:px-6 gap-3 bg-white shrink-0 sticky top-0 z-40"
     >
-      {/* Breadcrumb — takes all available space */}
+      {/* Page title — takes all available space */}
       <div className="flex-1 min-w-0 pl-10 md:pl-0 flex items-center">
         <Breadcrumb overrideLabel={title} projectColor={projectColor} />
       </div>
 
-      <SearchBar />
-      <NotificationBell />
-
+      {/* Create task button */}
       <motion.button
-        whileHover={{ y: -1, boxShadow: "0 6px 20px rgba(0,0,0,0.2)" }}
+        whileHover={{ scale: 1.02, boxShadow: "0 6px 20px rgba(0,0,0,0.22)" }}
         whileTap={{ scale: 0.96 }}
         onClick={onOpenCreate}
-        className="h-9 px-3 md:px-4 bg-[#0D0D0D] text-white rounded-[10px] text-[13px] font-black flex items-center gap-1.5 border-0 cursor-pointer flex-shrink-0"
-        style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.12)" }}
+        className="h-9 px-4 bg-[#111111] text-white rounded-xl text-[13px] font-semibold flex items-center gap-1.5 border-0 cursor-pointer flex-shrink-0"
+        style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}
       >
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-          <path d="M12 5v14M5 12h14" stroke="white" strokeWidth="2.2" strokeLinecap="round" />
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+          <path d="M12 5v14M5 12h14" stroke="white" strokeWidth="2.4" strokeLinecap="round" />
         </svg>
-        <span className="hidden sm:inline">New project</span>
+        <span className="hidden sm:inline">Create task</span>
       </motion.button>
+
+      {/* Search */}
+      <SearchBar />
+
+      {/* Bell */}
+      <NotificationBell />
     </header>
   );
 }
