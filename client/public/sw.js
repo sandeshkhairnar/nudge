@@ -1,15 +1,7 @@
 const CACHE_NAME = "nudge-pwa-cache-v1";
 
-// Add whichever assets you want to pre-cache here
-const PRECACHE_ASSETS = ["/", "/manifest.json"];
-
 self.addEventListener("install", (event) => {
   self.skipWaiting();
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(PRECACHE_ASSETS);
-    })
-  );
 });
 
 self.addEventListener("activate", (event) => {
