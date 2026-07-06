@@ -35,7 +35,7 @@ export function WorkspaceSwitcher({ collapsed }: Props) {
         }}
         onMouseEnter={(e) => {
           if (workspaces.length > 1)
-            (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)";
+            (e.currentTarget as HTMLElement).style.background = "#F9FAFB";
         }}
         onMouseLeave={(e) => {
           (e.currentTarget as HTMLElement).style.background = "transparent";
@@ -49,9 +49,9 @@ export function WorkspaceSwitcher({ collapsed }: Props) {
             height: 28,
             background: workspace.logo_url
               ? "transparent"
-              : "linear-gradient(135deg, #36C5F0 0%, #2EB67D 100%)",
-            border: "1px solid rgba(255,255,255,0.1)",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+              : "linear-gradient(135deg, #4F46E5 0%, #2563EB 100%)",
+            border: "1px solid #E5E7EB",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
           }}
         >
           {workspace.logo_url ? (
@@ -81,20 +81,20 @@ export function WorkspaceSwitcher({ collapsed }: Props) {
               className="flex-1 min-w-0 overflow-hidden text-left"
             >
               <p
-                className="text-[12.5px] font-bold truncate leading-tight"
+                className="text-[12.5px] font-[700] truncate leading-tight"
                 style={{
-                  color: "rgba(255,255,255,0.85)",
-                  fontFamily: "'DM Sans', sans-serif",
+                  color: "#111827",
+                  fontFamily: "'Plus Jakarta Sans', sans-serif",
                 }}
               >
                 {workspace.name}
               </p>
               {workspace.plan && (
                 <p
-                  className="text-[10px] capitalize truncate"
+                  className="text-[10px] capitalize truncate font-[600]"
                   style={{
-                    color: "rgba(255,255,255,0.28)",
-                    fontFamily: "'DM Sans', sans-serif",
+                    color: "#6B7280",
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
                   }}
                 >
                   {workspace.plan} plan
@@ -116,8 +116,9 @@ export function WorkspaceSwitcher({ collapsed }: Props) {
               <motion.div
                 animate={{ rotate: open ? 180 : 0 }}
                 transition={{ duration: 0.2 }}
+                style={{ color: "#9CA3AF" }}
               >
-                <ChevronDown size={13} />
+                <ChevronDown size={14} strokeWidth={2.5} />
               </motion.div>
             </motion.div>
           )}
@@ -142,9 +143,9 @@ export function WorkspaceSwitcher({ collapsed }: Props) {
               className="absolute left-2 right-2 z-50 rounded-xl overflow-hidden"
               style={{
                 top: "calc(100% + 4px)",
-                background: "#141414",
-                border: "1px solid rgba(255,255,255,0.08)",
-                boxShadow: "0 16px 40px rgba(0,0,0,0.6)",
+                background: "#FFFFFF",
+                border: "1px solid #E5E7EB",
+                boxShadow: "0 12px 32px rgba(0,0,0,0.06)",
               }}
             >
               <div className="p-1.5 flex flex-col gap-0.5">
@@ -168,13 +169,13 @@ export function WorkspaceSwitcher({ collapsed }: Props) {
                       className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg border-0 cursor-pointer transition-all text-left"
                       style={{
                         background: isActive
-                          ? "rgba(54,197,240,0.08)"
+                          ? "#F3F4F6"
                           : "transparent",
                       }}
                       onMouseEnter={(e) => {
                         if (!isActive)
                           (e.currentTarget as HTMLElement).style.background =
-                            "rgba(255,255,255,0.05)";
+                            "#F9FAFB";
                       }}
                       onMouseLeave={(e) => {
                         if (!isActive)
@@ -190,8 +191,8 @@ export function WorkspaceSwitcher({ collapsed }: Props) {
                           height: 24,
                           background: ws.logo_url
                             ? "transparent"
-                            : "linear-gradient(135deg, #36C5F0, #2EB67D)",
-                          border: "1px solid rgba(255,255,255,0.08)",
+                            : "linear-gradient(135deg, #4F46E5, #2563EB)",
+                          border: "1px solid #E5E7EB",
                         }}
                       >
                         {ws.logo_url ? (
@@ -216,17 +217,17 @@ export function WorkspaceSwitcher({ collapsed }: Props) {
                           className="text-[12px] font-bold truncate"
                           style={{
                             color: isActive
-                              ? "#36C5F0"
-                              : "rgba(255,255,255,0.7)",
-                            fontFamily: "'DM Sans', sans-serif",
+                              ? "#4F46E5"
+                              : "#111827",
+                            fontFamily: "'Plus Jakarta Sans', sans-serif",
                           }}
                         >
                           {ws.name}
                         </p>
                         {ws.plan && (
                           <p
-                            className="text-[10px] capitalize"
-                            style={{ color: "rgba(255,255,255,0.25)" }}
+                            className="text-[10px] capitalize font-medium"
+                            style={{ color: "#6B7280" }}
                           >
                             {ws.plan}
                           </p>
@@ -235,7 +236,7 @@ export function WorkspaceSwitcher({ collapsed }: Props) {
 
                       {/* Active check */}
                       {isActive && (
-                        <Check size={12} style={{ color: "#36C5F0", flexShrink: 0 }} />
+                        <Check size={12} style={{ color: "#4F46E5", flexShrink: 0 }} strokeWidth={3} />
                       )}
                     </button>
                   );

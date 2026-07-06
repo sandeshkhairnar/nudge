@@ -69,7 +69,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       addProject({
         id: res.project.id,
         name: res.project.name,
-        color: res.project.color ?? "#36C5F0",
+        color: res.project.color ?? "#4F46E5",
         progress: res.project.progress ?? 0,
       });
     }
@@ -79,16 +79,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap');
-        *, *::before, *::after { font-family: 'Sora', sans-serif; box-sizing: border-box; }
-        ::selection { background: #36C5F0; color: #fff; }
+        *, *::before, *::after { font-family: 'Plus Jakarta Sans', sans-serif; box-sizing: border-box; }
+        ::selection { background: #EBF1FF; color: #4F46E5; }
         ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #E0E0D8; border-radius: 4px; }
-        input::placeholder { color: #C4C4BC; }
+        ::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 4px; }
+        input::placeholder { color: #94A3B8; font-weight: 400; }
       `}</style>
 
-      <div className="flex h-screen overflow-hidden bg-[#FAFAFA]">
+      <div className="flex h-screen overflow-hidden bg-[#F7F8FA]">
         {/* Desktop sidebar */}
         <div className="hidden md:flex flex-shrink-0">
           <Sidebar />
@@ -98,14 +97,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <Sidebar />
         </div>
 
-        <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-white/50">
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#F7F8FA]">
           <Topbar
             title={title}
             projectColor={projectColor}
             onOpenCreate={() => setOpen(true)}
+            isDashboard={pathname === "/space"}
           />
-          <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-7 relative z-0 bg-[#F9F9F7]">
-            {children}
+          <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 md:p-8 relative z-0">
+            <div className={pathname === "/space" ? "mt-2" : ""}>
+              {children}
+            </div>
           </div>
         </div>
       </div>
@@ -118,3 +120,5 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     </>
   );
 }
+
+

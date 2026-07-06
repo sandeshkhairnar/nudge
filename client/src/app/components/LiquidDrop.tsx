@@ -61,10 +61,10 @@ export default function LiquidDrop() {
 
       {/* Orbit rings */}
       <div style={{ position: "absolute", width: "clamp(480px,52vw,720px)", height: "clamp(480px,52vw,720px)", animation: "spin-slow 50s linear infinite", border: "1px solid rgba(54,197,240,0.05)", borderRadius: "50%", pointerEvents: "none" }}>
-        <div style={{ position: "absolute", top: -3, left: "50%", width: 6, height: 6, borderRadius: "50%", background: "#36C5F0", boxShadow: "0 0 10px #36C5F0" }} />
+        <div style={{ position: "absolute", top: -3, left: "50%", width: 6, height: 6, borderRadius: "50%", background: "#4F46E5", boxShadow: "0 0 10px #4F46E5" }} />
       </div>
       <div style={{ position: "absolute", width: "clamp(580px,62vw,860px)", height: "clamp(580px,62vw,860px)", animation: "spin-reverse 70s linear infinite", border: "1px solid rgba(46,182,125,0.04)", borderRadius: "50%", pointerEvents: "none" }}>
-        <div style={{ position: "absolute", bottom: -3, right: "30%", width: 4, height: 4, borderRadius: "50%", background: "#2EB67D", boxShadow: "0 0 8px #2EB67D" }} />
+        <div style={{ position: "absolute", bottom: -3, right: "30%", width: 4, height: 4, borderRadius: "50%", background: "#10B981", boxShadow: "0 0 8px #10B981" }} />
       </div>
 
       {/* Pulse ring */}
@@ -131,7 +131,7 @@ export default function LiquidDrop() {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
           <span style={{ fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Active Teams</span>
           <div style={{ width: 22, height: 22, borderRadius: "50%", background: "rgba(54,197,240,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M2 8L8 2M8 2H3M8 2V7" stroke="#36C5F0" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            <svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M2 8L8 2M8 2H3M8 2V7" stroke="#4F46E5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
           </div>
         </div>
         <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.8)" }}>Unparalleled</div>
@@ -154,12 +154,13 @@ export default function LiquidDrop() {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
           <span style={{ fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Retention</span>
           <div style={{ width: 22, height: 22, borderRadius: "50%", background: "rgba(46,182,125,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M2 8L8 2M8 2H3M8 2V7" stroke="#2EB67D" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            <svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M2 8L8 2M8 2H3M8 2V7" stroke="#10B981" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
           </div>
         </div>
         <div style={{ fontSize: 30, fontWeight: 800, color: "#fff", letterSpacing: "-0.03em" }}>96%</div>
-        <div style={{ width: 36, height: 3, background: "linear-gradient(90deg,#36C5F0,#2EB67D)", borderRadius: 2, marginTop: 6 }} />
+        <div style={{ width: 36, height: 3, background: "linear-gradient(90deg,#4F46E5,#10B981)", borderRadius: 2, marginTop: 6 }} />
       </motion.div>
     </div>
   );
 }
+

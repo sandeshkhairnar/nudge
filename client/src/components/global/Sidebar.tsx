@@ -26,11 +26,10 @@ function NudgeLogo({ collapsed }: { collapsed: boolean }) {
             exit={{ opacity: 0, scale: 0.7, rotate: 20 }}
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
           >
-            <svg width="32" height="32" viewBox="0 0 48 48" fill="none">
-              <rect x="6" y="6" width="16" height="16" rx="8" fill="#36C5F0" />
-              <rect x="6" y="26" width="16" height="16" rx="4" fill="#36C5F0" opacity="0.35" />
-              <rect x="26" y="6" width="16" height="16" rx="4" fill="#2EB67D" opacity="0.35" />
-              <rect x="26" y="26" width="16" height="16" rx="8" fill="#2EB67D" />
+            <svg width="28" height="28" viewBox="0 0 100 100" fill="none">
+              <path d="M28 72V28" stroke="#FFFFFF" strokeWidth="14" strokeLinecap="round" />
+              <path d="M72 72V28" stroke="#FFFFFF" strokeWidth="14" strokeLinecap="round" />
+              <path d="M28 28L72 72" stroke="#4F46E5" strokeWidth="14" strokeLinecap="round" />
             </svg>
           </motion.div>
         ) : (
@@ -40,19 +39,18 @@ function NudgeLogo({ collapsed }: { collapsed: boolean }) {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -12 }}
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-            className="flex items-center gap-2.5"
+            className="flex items-center gap-0"
           >
-            <svg width="30" height="30" viewBox="0 0 48 48" fill="none">
-              <rect x="6" y="6" width="16" height="16" rx="8" fill="#36C5F0" />
-              <rect x="6" y="26" width="16" height="16" rx="4" fill="#36C5F0" opacity="0.35" />
-              <rect x="26" y="6" width="16" height="16" rx="4" fill="#2EB67D" opacity="0.35" />
-              <rect x="26" y="26" width="16" height="16" rx="8" fill="#2EB67D" />
+            <svg style={{ height: "15px", width: "auto", marginRight: "1px" }} viewBox="21 21 58 58" fill="none">
+              <path d="M28 72V28" stroke="#FFFFFF" strokeWidth="14" strokeLinecap="round" />
+              <path d="M72 72V28" stroke="#FFFFFF" strokeWidth="14" strokeLinecap="round" />
+              <path d="M28 28L72 72" stroke="#4F46E5" strokeWidth="14" strokeLinecap="round" />
             </svg>
             <span
-              className="text-[22px] font-black tracking-[-0.04em] text-white leading-none"
-              style={{ fontFamily: "'Sora', 'DM Sans', sans-serif" }}
+              className="text-[20px] font-[800] tracking-tight text-white leading-none"
+              style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
             >
-              nudge
+              udge
             </span>
           </motion.div>
         )}
@@ -212,18 +210,16 @@ function NavItem({
     <Link href={item.href} className="no-underline block" onClick={onClick}>
       <motion.div
         whileTap={{ scale: 0.97 }}
-        className="relative flex items-center rounded-xl cursor-pointer transition-all duration-150 group/nav"
+        className="relative flex items-center rounded-[12px] cursor-pointer transition-all duration-150 group/nav"
         style={{
-          padding: collapsed ? "9px 10px" : "9px 11px",
+          padding: collapsed ? "10px" : "10px 14px",
           justifyContent: collapsed ? "center" : "flex-start",
-          gap: collapsed ? 0 : 10,
-          background: active
-            ? "rgba(54,197,240,0.1)"
-            : "transparent",
+          gap: collapsed ? 0 : 12,
+          background: active ? "#4F46E5" : "transparent",
         }}
         onMouseEnter={(e) => {
           if (!active) {
-            (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.045)";
+            (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)";
           }
         }}
         onMouseLeave={(e) => {
@@ -232,19 +228,11 @@ function NavItem({
           }
         }}
       >
-        {active && (
-          <motion.div
-            layoutId="nav-pill"
-            className="absolute left-0 top-[6px] bottom-[6px] w-[3px] rounded-r-full"
-            style={{ background: "linear-gradient(180deg, #36C5F0, #2EB67D)" }}
-            transition={{ type: "spring", stiffness: 500, damping: 40 }}
-          />
-        )}
 
         <span
           className="flex-shrink-0 transition-all duration-150"
           style={{
-            color: active ? "#36C5F0" : "rgba(255,255,255,0.38)",
+            color: active ? "#FFFFFF" : "#9CA3AF",
           }}
         >
           {icons[item.icon]}
@@ -257,11 +245,11 @@ function NavItem({
               animate={{ opacity: 1, width: "auto" }}
               exit={{ opacity: 0, width: 0 }}
               transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="text-[13px] whitespace-nowrap overflow-hidden flex-1"
+              className="text-[14px] whitespace-nowrap overflow-hidden flex-1"
               style={{
                 fontWeight: active ? 700 : 500,
-                color: active ? "#ffffff" : "rgba(255,255,255,0.45)",
-                fontFamily: "'DM Sans', sans-serif",
+                color: active ? "#FFFFFF" : "#9CA3AF",
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
                 letterSpacing: "-0.01em",
               }}
             >
@@ -285,7 +273,7 @@ function NavItem({
                 fontSize: collapsed ? 9 : 10,
                 paddingLeft: 4,
                 paddingRight: 4,
-                background: "linear-gradient(135deg, #36C5F0, #2EB67D)",
+                background: "linear-gradient(135deg, #4F46E5, #10B981)",
                 position: collapsed ? "absolute" : "relative",
                 top: collapsed ? 4 : "auto",
                 right: collapsed ? 4 : "auto",
@@ -335,11 +323,11 @@ function ProjectRow({
           gap: 9,
           padding: collapsed ? "8px 10px" : "7px 11px",
           justifyContent: collapsed ? "center" : "flex-start",
-          background: active ? "rgba(255,255,255,0.07)" : "transparent",
+          background: active ? "#4F46E5" : "transparent",
         }}
         onMouseEnter={(e) => {
           if (!active)
-            (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)";
+            (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)";
         }}
         onMouseLeave={(e) => {
           if (!active)
@@ -370,8 +358,8 @@ function ProjectRow({
               className="text-[12.5px] flex-1 truncate"
               style={{
                 fontWeight: active ? 700 : 500,
-                color: active ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.42)",
-                fontFamily: "'DM Sans', sans-serif",
+                color: active ? "#FFFFFF" : "#9CA3AF",
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
                 letterSpacing: "-0.01em",
               }}
             >
@@ -380,7 +368,7 @@ function ProjectRow({
 
             <div
               className="rounded-full overflow-hidden flex-shrink-0"
-              style={{ width: 32, height: 3, background: "rgba(255,255,255,0.07)" }}
+              style={{ width: 32, height: 3, background: "rgba(255,255,255,0.1)" }}
             >
               <motion.div
                 initial={{ width: 0 }}
@@ -393,7 +381,7 @@ function ProjectRow({
 
             <span
               className="text-[10px] font-bold tabular-nums flex-shrink-0"
-              style={{ color: "rgba(255,255,255,0.2)", minWidth: 24, textAlign: "right" }}
+              style={{ color: "#9CA3AF", minWidth: 24, textAlign: "right" }}
             >
               {project.progress}%
             </span>
@@ -553,31 +541,14 @@ export default function Sidebar() {
       transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
       className="h-screen flex flex-col flex-shrink-0 relative overflow-hidden select-none"
       style={{
-        background: "#0A0A0A",
-        borderRight: "1px solid rgba(255,255,255,0.05)",
+        background: "#111827",
+        borderRight: "1px solid #1F2937",
       }}
     >
       <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          backgroundImage: "radial-gradient(rgba(255,255,255,0.025) 1px, transparent 1px)",
-          backgroundSize: "20px 20px",
-        }}
-      />
-
-      <div
-        className="absolute -top-16 left-1/2 -translate-x-1/2 w-48 h-48 rounded-full pointer-events-none"
-        style={{
-          background: "radial-gradient(ellipse, rgba(54,197,240,0.06) 0%, transparent 70%)",
-          filter: "blur(24px)",
-        }}
-      />
-
-      <div
         className="flex items-center justify-between flex-shrink-0 relative"
         style={{
-          padding: collapsed && !isMobile ? "18px 16px" : "18px 16px",
-          borderBottom: "1px solid rgba(255,255,255,0.04)",
+          padding: collapsed && !isMobile ? "24px 16px" : "24px 20px",
           minHeight: 64,
         }}
       >
@@ -593,16 +564,16 @@ export default function Sidebar() {
               width: 26,
               height: 26,
               background: "rgba(255,255,255,0.05)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              color: "rgba(255,255,255,0.3)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              color: "#9CA3AF",
             }}
             onMouseEnter={(e) => {
               (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.1)";
-              (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.7)";
+              (e.currentTarget as HTMLElement).style.color = "#FFFFFF";
             }}
             onMouseLeave={(e) => {
               (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)";
-              (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.3)";
+              (e.currentTarget as HTMLElement).style.color = "#9CA3AF";
             }}
           >
             <motion.svg
@@ -683,15 +654,15 @@ export default function Sidebar() {
                 <div className="flex items-center justify-between px-2 mb-1.5">
                   <span
                     className="text-[9.5px] font-black uppercase tracking-[0.16em]"
-                    style={{ color: "rgba(255,255,255,0.18)", fontFamily: "'DM Sans', sans-serif" }}
+                    style={{ color: "#9CA3AF", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
                   >
                     Projects
                   </span>
                   <Link href="/space/new" className="no-underline">
                     <motion.div
-                      whileHover={{ scale: 1.15, color: "rgba(255,255,255,0.5)" }}
+                      whileHover={{ scale: 1.15, color: "#111827" }}
                       className="flex items-center justify-center rounded cursor-pointer"
-                      style={{ color: "rgba(255,255,255,0.22)" }}
+                      style={{ color: "#6B7280" }}
                     >
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
                         <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" />
@@ -720,7 +691,7 @@ export default function Sidebar() {
             <div className="mt-4 flex flex-col gap-1 items-center">
               <div
                 className="w-5 h-px mb-1.5"
-                style={{ background: "rgba(255,255,255,0.07)" }}
+                style={{ background: "rgba(255,255,255,0.1)" }}
               />
               {projects.slice(0, 6).map((p, i) => (
                 <ProjectRow
@@ -747,7 +718,7 @@ export default function Sidebar() {
               className="absolute bottom-0 left-0 right-0 flex flex-col items-center justify-end pointer-events-none"
               style={{
                 height: 52,
-                background: "linear-gradient(to bottom, transparent, rgba(10,10,10,0.92) 70%)",
+                background: "linear-gradient(to bottom, transparent, #111827 70%)",
               }}
             >
               <div className="flex flex-col items-center pb-1.5" style={{ gap: 0 }}>
@@ -756,7 +727,7 @@ export default function Sidebar() {
                   animate={{ y: [0, 3, 0] }}
                   transition={{ duration: 1.1, repeat: Infinity, ease: "easeInOut", delay: 0 }}
                 >
-                  <path d="M1 1l6 6 6-6" stroke="rgba(30, 170, 202, 0.28)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M1 1l6 6 6-6" stroke="rgba(59, 130, 246, 0.28)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
                 </motion.svg>
                 <motion.svg
                   width="20" height="8" viewBox="0 0 14 8" fill="none"
@@ -776,7 +747,7 @@ export default function Sidebar() {
         className="flex-shrink-0 relative"
         style={{
           padding: collapsed && !isMobile ? "10px 8px" : "10px 10px",
-          borderTop: "1px solid rgba(255,255,255,0.04)",
+          borderTop: "1px solid #1F2937",
         }}
       >
         {bottomItems.map((item) => (
@@ -807,7 +778,7 @@ export default function Sidebar() {
                 showStatus={true}
                 role="You"
                 size={30}
-                fallbackColor="#36C5F0"
+                fallbackColor="#4F46E5"
               />
             </div>
 
@@ -822,13 +793,13 @@ export default function Sidebar() {
                 >
                   <p
                     className="text-[12.5px] font-bold truncate leading-tight"
-                    style={{ color: "rgba(255,255,255,0.82)", fontFamily: "'DM Sans', sans-serif" }}
+                    style={{ color: "#FFFFFF", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
                   >
                     {profile.full_name ?? "User"}
                   </p>
                   <p
                     className="text-[10.5px] truncate"
-                    style={{ color: "rgba(255,255,255,0.24)", fontFamily: "'DM Sans', sans-serif" }}
+                    style={{ color: "#6B7280", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
                   >
                     {profile.email}
                   </p>
@@ -897,7 +868,7 @@ export default function Sidebar() {
               animate={{ scale: [1, 1.3, 1] }}
               transition={{ duration: 2, repeat: Infinity }}
               className="absolute top-1 right-1 w-2 h-2 rounded-full"
-              style={{ background: "#36C5F0" }}
+              style={{ background: "#4F46E5" }}
             />
           )}
         </motion.button>
@@ -931,3 +902,5 @@ export default function Sidebar() {
 
   return sidebarContent;
 }
+
+

@@ -783,11 +783,11 @@ export default function Topbar({ title, projectColor, onOpenCreate }: TopbarProp
       <NotificationBell />
 
       <motion.button
-        whileHover={{ y: -1, boxShadow: "0 6px 20px rgba(0,0,0,0.2)" }}
+        whileHover={{ y: -1, boxShadow: "0 6px 20px rgba(79, 70, 229, 0.3)" }}
         whileTap={{ scale: 0.96 }}
         onClick={onOpenCreate}
-        className="h-9 px-3 md:px-4 bg-[#0D0D0D] text-white rounded-[10px] text-[13px] font-black flex items-center gap-1.5 border-0 cursor-pointer flex-shrink-0"
-        style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.12)" }}
+        className="h-9 px-3 md:px-4 bg-[#4F46E5] text-white rounded-[10px] text-[13px] font-black flex items-center gap-1.5 border-0 cursor-pointer flex-shrink-0 hover:bg-[#4338CA] transition-colors"
+        style={{ boxShadow: "0 2px 8px rgba(79, 70, 229, 0.25)" }}
       >
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
           <path d="M12 5v14M5 12h14" stroke="white" strokeWidth="2.2" strokeLinecap="round" />
