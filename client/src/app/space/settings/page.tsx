@@ -9,9 +9,11 @@ import {
   Building, Shield, Bell, Zap, LogOut, Camera, Check, Loader2,
   User, Mail, Link, Globe, Plus, X,
 } from "lucide-react";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 export default function SettingsPage() {
   const supabase = createClient();
+  const pushState = usePushNotifications();
 
   // ── Store ────────────────────────────────────────────────────────────────
   const workspace = useWorkspaceStore((s) => s.workspace);
@@ -576,24 +578,59 @@ export default function SettingsPage() {
                 className="bg-white border border-[#E5E7EB] rounded-2xl p-6 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
                 <h3 className="text-[15px] font-bold text-gray-900 mb-4 border-b border-gray-100 pb-3">Notification Preferences</h3>
                 <div className="space-y-5">
-                  {([
-                    { key: "email" as const, title: "Email Notifications", desc: "Receive daily summary and direct mentions." },
-                    { key: "push" as const, title: "Push Notifications", desc: "Get real-time updates in your browser." },
-                    { key: "tasks" as const, title: "Task Assignments", desc: "Notify me when a task is assigned to me." },
-                  ]).map((pref) => (
-                    <div key={pref.key} className="flex items-center justify-between pb-5 border-b border-gray-100 last:border-0 last:pb-0">
-                      <div>
-                        <h4 className="text-[14px] font-semibold text-gray-900">{pref.title}</h4>
-                        <p className="text-[13px] text-gray-500 mt-0.5">{pref.desc}</p>
-                      </div>
-                      <div
-                        onClick={() => setNotificationPrefs((p) => ({ ...p, [pref.key]: !p[pref.key] }))}
-                        className={`w-10 h-5 rounded-full relative cursor-pointer p-0.5 transition-all shadow-inner border border-black/5 ${notificationPrefs[pref.key] ? "bg-[#4F46E5]" : "bg-gray-200"}`}
-                      >
-                        <motion.div animate={{ x: notificationPrefs[pref.key] ? 20 : 0 }} className="w-4 h-4 bg-white rounded-full shadow-sm" />
-                      </div>
+                  <div className="flex items-center justify-between pb-5 border-b border-gray-100 last:border-0 last:pb-0">
+                    <div>
+                      <h4 className="text-[14px] font-semibold text-gray-900">Email Notifications</h4>
+                      <p className="text-[13px] text-gray-500 mt-0.5">Receive daily summary and direct mentions.</p>
                     </div>
-                  ))}
+                    <div
+                      onClick={() => setNotificationPrefs((p) => ({ ...p, email: !p.email }))}
+                      className={`w-10 h-5 rounded-full relative cursor-pointer p-0.5 transition-all shadow-inner border border-black/5 ${notificationPrefs.email ? "bg-[#4F46E5]" : "bg-gray-200"}`}
+                    >
+                      <motion.div animate={{ x: notificationPrefs.email ? 20 : 0 }} className="w-4 h-4 bg-white rounded-full shadow-sm" />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pb-5 border-b border-gray-100 last:border-0 last:pb-0">
+                    <div>
+                      <h4 className="text-[14px] font-semibold text-gray-900">Push Notifications</h4>
+                      <p className="text-[13px] text-gray-500 mt-0.5">Get real-time updates in your browser.</p>
+                      {pushState.isSupported && pushState.permission === "denied" && (
+                        <p className="text-[11px] text-red-500 mt-1">Permission denied by browser settings.</p>
+                      )}
+                    </div>
+                    <div
+                      onClick={async () => {
+                        if (!notificationPrefs.push) {
+                          const sub = await pushState.subscribeToPush();
+                          if (sub) {
+                            setNotificationPrefs((p) => ({ ...p, push: true }));
+                            pushState.sendTestNotification("Nudge Enabled!", "You will now receive push notifications.");
+                          } else {
+                            alert("Please allow notifications in your browser settings to enable this.");
+                          }
+                        } else {
+                          setNotificationPrefs((p) => ({ ...p, push: false }));
+                        }
+                      }}
+                      className={`w-10 h-5 rounded-full relative cursor-pointer p-0.5 transition-all shadow-inner border border-black/5 ${notificationPrefs.push && pushState.subscription ? "bg-[#4F46E5]" : "bg-gray-200"}`}
+                    >
+                      <motion.div animate={{ x: notificationPrefs.push && pushState.subscription ? 20 : 0 }} className="w-4 h-4 bg-white rounded-full shadow-sm" />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pb-5 border-b border-gray-100 last:border-0 last:pb-0">
+                    <div>
+                      <h4 className="text-[14px] font-semibold text-gray-900">Task Assignments</h4>
+                      <p className="text-[13px] text-gray-500 mt-0.5">Notify me when a task is assigned to me.</p>
+                    </div>
+                    <div
+                      onClick={() => setNotificationPrefs((p) => ({ ...p, tasks: !p.tasks }))}
+                      className={`w-10 h-5 rounded-full relative cursor-pointer p-0.5 transition-all shadow-inner border border-black/5 ${notificationPrefs.tasks ? "bg-[#4F46E5]" : "bg-gray-200"}`}
+                    >
+                      <motion.div animate={{ x: notificationPrefs.tasks ? 20 : 0 }} className="w-4 h-4 bg-white rounded-full shadow-sm" />
+                    </div>
+                  </div>
                 </div>
               </motion.section>
             )}

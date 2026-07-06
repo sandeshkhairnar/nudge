@@ -22,10 +22,27 @@ const plusJakarta = Plus_Jakarta_Sans({
   weight: ["400", "500", "600", "700", "800"],
 });
 
+import { PwaRegistrar } from "@/components/global/PwaRegistrar";
+
+import type { Viewport } from "next";
+
+export const viewport: Viewport = {
+  themeColor: "#CCFF00",
+};
+
 export const metadata: Metadata = {
   title: "Nudge — The tool that actually moves your team forward",
   description:
     "Nudge watches your work, finds what's stalling, and sends the one message that unsticks it. No noise. Just momentum.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Nudge OS",
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export default function RootLayout({
@@ -38,6 +55,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${plusJakarta.variable} antialiased`}
       >
+        <PwaRegistrar />
         <NotificationProvider>
           {children}
         </NotificationProvider>

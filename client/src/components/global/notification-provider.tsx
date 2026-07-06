@@ -3,7 +3,6 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useNotificationSound } from "@/hooks/useNotificationSound";
-import { ToastContainer, ToastProps } from "@/components/global/toast";
 import { IncomingCallModal, IncomingCall } from "@/components/global/IncomingCallModal";
 import { usePathname, useRouter } from "next/navigation";
 import { useNotificationStore, type Notification } from "@/store/notification-store";
@@ -28,7 +27,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const supabase = createClient();
   const router = useRouter();
   const pathname = usePathname();
-  const [toasts, setToasts] = useState<ToastProps[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [incomingCall, setIncomingCall] = useState<IncomingCall | null>(null);
   const { playSound } = useNotificationSound();
@@ -151,22 +149,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
             playSound(shaped.type);
 
-            if (!isInboxPage) {
-              const toast: ToastProps = {
-                id: shaped.id,
-                type: shaped.type,
-                title: shaped.sender?.full_name ?? "Nudge",
-                message: shaped.preview,
-                projectName: shaped.project_name ?? undefined,
-                channelName: shaped.channel_name ?? undefined,
-                onClose: (id) => setToasts((prev) => prev.filter((t) => t.id !== id)),
-                onClick: () => {
-                  router.push("/space/inbox");
-                },
-              };
-              setToasts((prev) => [toast, ...prev].slice(0, 5));
-            }
-
             if (
               typeof window !== "undefined" &&
               "Notification" in window &&
@@ -236,11 +218,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         call={incomingCall}
         onAccept={handleAcceptCall}
         onDecline={handleDeclineCall}
-      />
-
-      <ToastContainer
-        toasts={toasts}
-        onClose={(id) => setToasts((prev) => prev.filter((t) => t.id !== id))}
       />
     </NotificationContext.Provider>
   );

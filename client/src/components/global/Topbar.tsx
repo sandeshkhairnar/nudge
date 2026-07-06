@@ -388,16 +388,18 @@ function NotificationBell() {
     <div className="relative flex-shrink-0" ref={panelRef}>
       {/* Bell button */}
       <motion.button
-        whileHover={{ scale: 1.06 }}
-        whileTap={{ scale: 0.93 }}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
         onClick={() => setOpen((o) => !o)}
-        className="w-9 h-9 rounded-[10px] bg-[#F9F9F7] border border-[#EBEBEB] flex items-center justify-center relative cursor-pointer"
+        className={`w-9 h-9 rounded-xl flex items-center justify-center relative cursor-pointer transition-all border ${
+          open ? "bg-white shadow-sm border-gray-200" : "bg-[#F9F9F7] border-transparent hover:border-gray-200 hover:bg-white hover:shadow-sm"
+        }`}
       >
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
           <path
             d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"
-            stroke="#374151"
-            strokeWidth="1.8"
+            stroke={open ? "#111827" : "#4B5563"}
+            strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
@@ -407,11 +409,11 @@ function NotificationBell() {
             <motion.span
               key="badge"
               initial={{ scale: 0 }}
-              animate={{ scale: [1, 1.3, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-[#E01E5A] border-2 border-white flex items-center justify-center"
+              animate={{ scale: [1, 1.2, 1] }}
+              transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 3 }}
+              className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-indigo-600 border-2 border-white flex items-center justify-center shadow-sm"
             >
-              <span className="text-[9px] font-black text-white leading-none">
+              <span className="text-[9px] font-bold text-white leading-none">
                 {unreadCount > 9 ? "9+" : unreadCount}
               </span>
             </motion.span>
@@ -424,51 +426,44 @@ function NotificationBell() {
         {open && (
           <motion.div
             key="panel"
-            initial={{ opacity: 0, y: 8, scale: 0.97 }}
+            initial={{ opacity: 0, y: 8, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 4, scale: 0.97 }}
-            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute top-11 right-0 w-[min(360px,calc(100vw-24px))] bg-white border border-[#EBEBEB] rounded-2xl z-[99] overflow-hidden"
-            style={{ boxShadow: "0 16px 48px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
+            exit={{ opacity: 0, y: 4, scale: 0.98 }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
+            className="absolute top-12 right-0 w-[min(380px,calc(100vw-24px))] bg-white border border-gray-200 rounded-2xl z-[99] overflow-hidden shadow-xl"
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-[#F0F0EB]">
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100 bg-gray-50/50">
               <div className="flex items-center gap-2">
-                <span className="text-[13px] font-black text-[#0D0D0D]">Unread</span>
+                <span className="text-[14px] font-bold text-gray-900">Notifications</span>
                 {unreadCount > 0 && (
-                  <span className="px-1.5 py-0.5 rounded-full bg-[#E01E5A] text-white text-[10px] font-black leading-none">
-                    {unreadCount}
+                  <span className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 text-[11px] font-bold">
+                    {unreadCount} new
                   </span>
                 )}
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 {unreadCount > 0 && (
                   <button
                     onClick={() => markAllAsRead()}
-                    className="text-[11px] font-bold text-[#36C5F0] hover:text-[#1BA8D5] cursor-pointer border-0 bg-transparent transition-colors"
+                    className="text-[12px] font-medium text-indigo-600 hover:text-indigo-800 transition-colors bg-transparent border-0 cursor-pointer"
                   >
                     Mark all read
                   </button>
                 )}
-                <button
-                  onClick={() => setOpen(false)}
-                  className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-[#F4F4F1] border-0 bg-transparent cursor-pointer text-[#9CA3AF] hover:text-[#374151] transition-colors"
-                >
-                  <X size={13} />
-                </button>
               </div>
             </div>
 
             {/* Notification list */}
-            <div className="max-h-[420px] overflow-y-auto">
+            <div className="max-h-[400px] overflow-y-auto">
               {unread.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 gap-3">
-                  <div className="w-12 h-12 rounded-full bg-[#F4F4F1] flex items-center justify-center">
-                    <Check size={20} className="text-[#9CA3AF]" strokeWidth={2} />
+                  <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center">
+                    <Check size={20} className="text-gray-400" strokeWidth={2.5} />
                   </div>
                   <div className="text-center">
-                    <p className="text-[13px] font-semibold text-[#374151]">All caught up!</p>
-                    <p className="text-[11.5px] text-[#9CA3AF] mt-0.5">No unread notifications</p>
+                    <p className="text-[14px] font-semibold text-gray-900">You're all caught up!</p>
+                    <p className="text-[12px] text-gray-500 mt-0.5">No new notifications.</p>
                   </div>
                 </div>
               ) : (
@@ -476,7 +471,6 @@ function NotificationBell() {
                   {unread.map((n, i) => {
                     const rawContent = (n as any).content ?? n.preview ?? "";
                     const { preview, sysType } = resolvePreview(rawContent);
-                    const isSystem = n.type === "system" || !!sysType;
                     const meta = TYPE_META[n.type as NotifType] ?? TYPE_META.system;
                     const { accent, bg } = sysType
                       ? parseSystemAccent(sysType)
@@ -485,21 +479,21 @@ function NotificationBell() {
                     const senderName = n.sender?.full_name;
 
                     return (
-                      <motion.div
+                      <div
                         key={n.id}
-                        initial={{ opacity: 0, x: 6 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: i * 0.04 }}
-                        className="group flex items-start gap-3 px-4 py-3 hover:bg-[#F9F9F7] transition-colors cursor-pointer border-b border-[#F5F5F2] last:border-0"
+                        className="group flex items-start gap-3.5 px-5 py-4 hover:bg-gray-50 transition-colors cursor-pointer border-b border-gray-100 last:border-0 relative"
                         onClick={() => {
                           markAsRead(n.id);
                           setOpen(false);
                           window.location.href = "/space/inbox";
                         }}
                       >
+                        {/* Unread dot indicator */}
+                        <div className="absolute left-2 top-[28px] w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                        
                         {/* Icon / avatar */}
                         <div
-                          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+                          className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm border border-black/5"
                           style={{ background: bg, color: accent }}
                         >
                           {icon}
@@ -510,56 +504,56 @@ function NotificationBell() {
                           <div className="flex items-start justify-between gap-2 mb-0.5">
                             <div className="flex items-center gap-1.5 flex-wrap min-w-0">
                               {senderName ? (
-                                <span className="text-[12.5px] font-black text-[#0D0D0D] truncate">
+                                <span className="text-[13px] font-semibold text-gray-900 truncate">
                                   {senderName}
                                 </span>
                               ) : (
                                 <span
-                                  className="text-[10px] font-black px-1.5 py-0.5 rounded-full"
+                                  className="text-[11px] font-semibold px-2 py-0.5 rounded-md border border-black/5"
                                   style={{ color: accent, background: bg }}
                                 >
                                   {sysType
                                     ? sysType === "mom_card"
-                                      ? "Meeting Minutes"
+                                      ? "Meeting Notes"
                                       : meta.label
                                     : meta.label}
                                 </span>
                               )}
                               {n.project_name && (
-                                <span className="text-[10.5px] text-[#9CA3AF] truncate">
+                                <span className="text-[12px] font-medium text-gray-400 truncate">
                                   · {n.project_name}
                                 </span>
                               )}
                             </div>
-                            <span className="text-[10px] text-[#C4C4BC] whitespace-nowrap flex-shrink-0 mt-0.5">
-                              {formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}
+                            <span className="text-[11px] text-gray-400 whitespace-nowrap flex-shrink-0 mt-0.5 font-medium">
+                              {formatDistanceToNow(new Date(n.created_at))}
                             </span>
                           </div>
 
-                          <p className="text-[12px] text-[#6B7280] leading-relaxed line-clamp-2">
+                          <p className="text-[13px] text-gray-600 leading-snug line-clamp-2 mt-1">
                             {preview || n.preview}
                           </p>
 
                           {/* Channel tag */}
                           {(n as any).channel_name && (
-                            <span className="inline-block mt-1 text-[10px] font-semibold text-[#36C5F0]">
+                            <span className="inline-block mt-1.5 text-[11px] font-medium text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">
                               #{(n as any).channel_name}
                             </span>
                           )}
                         </div>
 
-                        {/* Mark read button (shows on hover) */}
+                        {/* Mark read button */}
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             markAsRead(n.id);
                           }}
                           title="Mark as read"
-                          className="opacity-0 group-hover:opacity-100 transition-opacity w-6 h-6 flex items-center justify-center rounded-full hover:bg-[#ECFDF5] border-0 bg-transparent cursor-pointer flex-shrink-0 mt-0.5"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity w-7 h-7 flex items-center justify-center rounded-full hover:bg-white hover:shadow-sm border border-transparent hover:border-gray-200 bg-transparent cursor-pointer flex-shrink-0 mt-0.5 text-gray-400 hover:text-green-600"
                         >
-                          <Check size={12} className="text-[#2EB67D]" strokeWidth={2.5} />
+                          <Check size={14} strokeWidth={2.5} />
                         </button>
-                      </motion.div>
+                      </div>
                     );
                   })}
                 </div>
@@ -567,17 +561,17 @@ function NotificationBell() {
             </div>
 
             {/* Footer */}
-            <div className="px-4 py-2.5 border-t border-[#F0F0EB] flex items-center justify-between">
-              <span className="text-[11px] text-[#C4C4BC]">
-                {unreadCount > 8 ? `+${unreadCount - 8} more unread` : ""}
+            <div className="px-5 py-3 border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
+              <span className="text-[12px] font-medium text-gray-500">
+                {unreadCount > 8 ? `+${unreadCount - 8} older unread` : ""}
               </span>
               <Link
                 href="/space/inbox"
                 onClick={() => setOpen(false)}
-                className="flex items-center gap-1 text-[12px] font-bold text-[#9CA3AF] hover:text-[#374151] transition-colors no-underline"
+                className="flex items-center gap-1.5 text-[13px] font-semibold text-indigo-600 hover:text-indigo-700 transition-colors no-underline"
               >
-                View all
-                <ArrowRight size={11} />
+                View Inbox
+                <ArrowRight size={14} />
               </Link>
             </div>
           </motion.div>
