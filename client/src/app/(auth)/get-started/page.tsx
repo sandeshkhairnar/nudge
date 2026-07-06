@@ -18,23 +18,20 @@ type InviteData = {
 };
 
 function NudgeLogo({ dark = false }: { dark?: boolean }) {
-  const id = `signup-pills-${dark ? "d" : "l"}`;
   return (
-    <svg width="130" height="34" viewBox="0 0 220 56" fill="none">
-      <g id={id}>
-        <rect x="8" y="8" width="16" height="16" rx="8" fill="#36C5F0" />
-        <rect x="8" y="26" width="16" height="16" rx="4" fill="#36C5F0" opacity="0.4" />
-        <rect x="26" y="8" width="16" height="16" rx="4" fill="#2EB67D" opacity="0.4" />
-        <rect x="26" y="26" width="16" height="16" rx="8" fill="#2EB67D" />
-        <animateTransform
-          href={`#${id}`} attributeName="transform" type="rotate"
-          values="0 24 24;-30 24 24;-360 24 24"
-          keyTimes="0;0.05;1" dur="6s" repeatCount="indefinite"
-        />
-      </g>
-      <text x="56" y="37" fontFamily="Sora,sans-serif" fontWeight="800" fontSize="28"
-        fill={dark ? "#fff" : "#0D0D0D"} letterSpacing="-1">nudge</text>
-    </svg>
+    <div className="flex items-center gap-0">
+      <svg style={{ height: "24px", width: "auto", marginRight: "2px" }} viewBox="21 21 58 58" fill="none">
+        <path d="M28 72V28" stroke={dark ? "#FFFFFF" : "#111827"} strokeWidth="14" strokeLinecap="round" />
+        <path d="M72 72V28" stroke={dark ? "#FFFFFF" : "#111827"} strokeWidth="14" strokeLinecap="round" />
+        <path d="M28 28L72 72" stroke="#4F46E5" strokeWidth="14" strokeLinecap="round" />
+      </svg>
+      <span
+        className="text-[32px] font-[800] tracking-tight leading-none"
+        style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", color: dark ? "#FFFFFF" : "#111827" }}
+      >
+        udge
+      </span>
+    </div>
   );
 }
 
@@ -52,7 +49,7 @@ function CursorGlow() {
     <motion.div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0 }}>
       <motion.div style={{
         position: "absolute", width: 500, height: 500, borderRadius: "50%",
-        background: "radial-gradient(circle,rgba(46,182,125,0.06) 0%,transparent 70%)",
+        background: "radial-gradient(circle,rgba(79,70,229,0.06) 0%,transparent 70%)",
         x: sx, y: sy, translateX: "-50%", translateY: "-50%",
       }} />
     </motion.div>
@@ -67,20 +64,18 @@ function Field({ label, type = "text", placeholder, value, onChange, error, hint
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex justify-between items-center">
-        <label className="text-[11px] font-black text-gray-400 tracking-widest uppercase">{label}</label>
-        {hint && <span className="text-[11px] text-gray-300 font-medium">{hint}</span>}
+        <label className="text-[11px] font-semibold text-gray-500 tracking-wider uppercase">{label}</label>
+        {hint && <span className="text-[11px] text-gray-400 font-medium">{hint}</span>}
       </div>
       <motion.div
         animate={{
           boxShadow: error
-            ? "0 0 0 2px #E01E5A40"
+            ? "0 0 0 2px rgba(239, 68, 68, 0.4)"
             : focused
-              ? "0 0 0 2px #2EB67D50"
-              : readOnly
-                ? "0 0 0 1px #E8E8E2"
-                : "0 0 0 1px #E8E8E2",
+              ? "0 0 0 2px rgba(79, 70, 229, 0.5)"
+              : "0 0 0 1px #E5E7EB",
         }}
-        className="rounded-xl bg-white"
+        className="rounded-lg overflow-hidden bg-white"
         transition={{ duration: 0.2 }}
       >
         <input
@@ -88,14 +83,14 @@ function Field({ label, type = "text", placeholder, value, onChange, error, hint
           onChange={(e) => onChange(e.target.value)}
           onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
           readOnly={readOnly}
-          className="w-full px-4 py-3 bg-transparent border-none outline-none text-[14px] font-medium text-gray-900 placeholder-gray-300"
-          style={{ fontFamily: "Sora,sans-serif", cursor: readOnly ? "default" : "text", opacity: readOnly ? 0.7 : 1 }}
+          className="w-full px-4 py-2.5 bg-transparent border-none outline-none text-[13px] font-medium text-gray-900 placeholder-gray-400"
+          style={{ cursor: readOnly ? "default" : "text", opacity: readOnly ? 0.7 : 1 }}
         />
       </motion.div>
       <AnimatePresence>
         {error && (
           <motion.p initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
-            className="text-[11px] font-semibold" style={{ color: "#E01E5A" }}>
+            className="text-[11px] font-medium text-red-500">
             {error}
           </motion.p>
         )}
@@ -111,14 +106,14 @@ function PasswordStrength({ password }: { password: string }) {
         : /[A-Z]/.test(password) && /[0-9]/.test(password) ? 4
           : 3;
   const labels = ["", "Weak", "Fair", "Good", "Strong"];
-  const colors = ["", "#E01E5A", "#ECB22E", "#36C5F0", "#2EB67D"];
+  const colors = ["", "#EF4444", "#F59E0B", "#10B981", "#10B981"];
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex gap-1">
         {[1, 2, 3, 4].map((i) => (
           <motion.div
             key={i}
-            animate={{ background: i <= s ? colors[s] : "#E8E8E2" }}
+            animate={{ background: i <= s ? colors[s] : "#E5E7EB" }}
             transition={{ duration: 0.3 }}
             className="flex-1 h-[3px] rounded-sm"
           />
@@ -126,7 +121,7 @@ function PasswordStrength({ password }: { password: string }) {
       </div>
       {password.length > 0 && (
         <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-          className="text-[11px] font-bold" style={{ color: colors[s] }}>
+          className="text-[11px] font-semibold" style={{ color: colors[s] }}>
           {labels[s]}
         </motion.p>
       )}
@@ -142,7 +137,7 @@ function StepDots({ current, total }: { current: number; total: number }) {
           key={i}
           animate={{
             width: i === current ? 28 : 8,
-            background: i === current ? "#2EB67D" : i < current ? "#2EB67D" : "#E8E8E2",
+            background: i === current ? "#4F46E5" : i < current ? "#4F46E5" : "#E5E7EB",
             opacity: i < current ? 0.5 : 1,
           }}
           className="h-1 rounded-sm"
@@ -158,39 +153,36 @@ function InviteBanner({ invite }: { invite: InviteData }) {
     <motion.div
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="mb-5 rounded-2xl overflow-hidden"
-      style={{ border: "1px solid rgba(54,197,240,0.25)", background: "rgba(54,197,240,0.04)" }}
+      className="mb-5 rounded-lg overflow-hidden bg-indigo-50 border border-indigo-100"
     >
-      <div className="px-4 py-3.5 flex items-start gap-3">
+      <div className="px-4 py-3 flex items-start gap-3">
         <div
-          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-          style={{ background: "rgba(54,197,240,0.12)" }}
+          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 bg-indigo-100 text-indigo-600"
         >
-          <span style={{ color: "#36C5F0", fontSize: 14 }}>✉</span>
+          <span style={{ fontSize: 14 }}>✉</span>
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[12.5px] font-black text-gray-900 mb-1">
+          <p className="text-[13px] font-semibold text-gray-900 mb-1">
             {invite.profiles?.full_name ?? "Someone"} invited you to join
           </p>
           <div className="flex items-center gap-1.5 flex-wrap">
             {invite.workspaces && (
               <div className="flex items-center gap-1">
                 <Building2 size={10} className="text-gray-400" />
-                <span className="text-[11px] font-semibold text-gray-600">{invite.workspaces.name}</span>
+                <span className="text-[11px] font-medium text-gray-600">{invite.workspaces.name}</span>
               </div>
             )}
             {invite.projects && (
               <>
                 <ChevronRight size={9} className="text-gray-300" />
                 <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 rounded-full" style={{ background: invite.projects.color ?? "#36C5F0" }} />
-                  <span className="text-[11px] font-semibold text-gray-600">{invite.projects.name}</span>
+                  <div className="w-2 h-2 rounded-full" style={{ background: invite.projects.color ?? "#4F46E5" }} />
+                  <span className="text-[11px] font-medium text-gray-600">{invite.projects.name}</span>
                 </div>
               </>
             )}
             <span
-              className="text-[9.5px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full"
-              style={{ background: "rgba(54,197,240,0.12)", color: "#36C5F0" }}
+              className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700"
             >
               {invite.role}
             </span>
@@ -308,12 +300,11 @@ function SignupInner() {
 
   if (inviteLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "#F9F9F7" }}>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
-          className="w-6 h-6 rounded-full border-[2.5px]"
-          style={{ borderColor: "rgba(0,0,0,0.1)", borderTopColor: "#2EB67D" }}
+          className="w-6 h-6 rounded-full border-[2.5px] border-indigo-200 border-t-indigo-600"
         />
       </div>
     );
@@ -330,9 +321,16 @@ function SignupInner() {
         <motion.div
           initial={{ x: -60, opacity: 0 }} animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="relative overflow-hidden flex flex-col justify-between"
-          style={{ background: "#0D0D0D", padding: "clamp(32px,5vw,52px) clamp(24px,5vw,56px)", minHeight: "clamp(200px,40vh,340px)" }}
+          className="relative overflow-hidden flex flex-col justify-between bg-gray-950"
+          style={{ 
+            padding: "clamp(32px,5vw,52px) clamp(24px,5vw,56px)", 
+            minHeight: "clamp(200px,40vh,340px)",
+            backgroundImage: "url('/auth-bg.png')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
         >
+          <div className="absolute inset-0 bg-gray-950/70 backdrop-blur-[2px] z-0" />
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
@@ -343,7 +341,7 @@ function SignupInner() {
           <div
             className="absolute -top-16 -right-16 w-64 h-64 rounded-full pointer-events-none"
             style={{
-              background: "radial-gradient(ellipse,rgba(54,197,240,0.09) 0%,transparent 70%)",
+              background: "radial-gradient(ellipse,rgba(79,70,229,0.09) 0%,transparent 70%)",
               filter: "blur(40px)",
             }}
           />
@@ -358,12 +356,11 @@ function SignupInner() {
             className="relative z-10 mt-8 lg:mt-0"
           >
             <span
-              className="block mb-3 text-[10px] font-black tracking-[0.2em] uppercase"
-              style={{ color: invite ? "#36C5F0" : "#2EB67D" }}
+              className="block mb-3 text-[10px] font-bold tracking-[0.2em] uppercase text-indigo-400"
             >
               {invite ? `Invited by ${invite.profiles?.full_name ?? "a teammate"}` : "Free forever on Solo"}
             </span>
-            <h2 className="text-[clamp(24px,3vw,36px)] font-black text-white tracking-tight leading-[1.1] mb-3">
+            <h2 className="text-[clamp(24px,3vw,36px)] font-bold text-white tracking-tight leading-[1.1] mb-3">
               {invite ? (
                 <>You're invited<br className="hidden sm:block" /> to {invite.projects?.name ?? invite.workspaces?.name ?? "a workspace"}.</>
               ) : (
@@ -402,11 +399,11 @@ function SignupInner() {
 
           <div className="relative z-10 hidden lg:flex items-center gap-3 mt-8">
             <div className="flex">
-              {["#36C5F0", "#2EB67D", "#ECB22E", "#E01E5A"].map((c, i) => (
+              {["#4F46E5", "#10B981", "#F59E0B", "#EF4444"].map((c, i) => (
                 <div
                   key={i}
-                  className="w-7 h-7 rounded-full border-2 flex items-center justify-center text-[10px] font-black text-white"
-                  style={{ background: c, borderColor: "#0D0D0D", marginLeft: i === 0 ? 0 : -8 }}
+                  className="w-7 h-7 rounded-full border-2 border-gray-950 flex items-center justify-center text-[10px] font-bold text-white"
+                  style={{ background: c, marginLeft: i === 0 ? 0 : -8 }}
                 >
                   {String.fromCharCode(65 + i)}
                 </div>
@@ -423,8 +420,8 @@ function SignupInner() {
         <motion.div
           initial={{ x: 60, opacity: 0 }} animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="flex flex-col justify-center items-center overflow-y-auto"
-          style={{ background: "#F9F9F7", padding: "clamp(32px,5vw,52px) clamp(20px,6vw,64px)" }}
+          className="flex flex-col justify-center items-center overflow-y-auto bg-gray-50"
+          style={{ padding: "clamp(32px,5vw,52px) clamp(20px,6vw,64px)" }}
         >
           <div className="w-full max-w-[420px]">
             <AnimatePresence mode="wait">
@@ -437,12 +434,12 @@ function SignupInner() {
                 >
                   <div className="mb-6">
                     <StepDots current={0} total={totalSteps} />
-                    <h1 className="text-[clamp(22px,4vw,30px)] font-black text-gray-900 tracking-tight mt-5 mb-1.5">
+                    <h1 className="text-[clamp(22px,4vw,30px)] font-bold text-gray-900 tracking-tight mt-5 mb-1.5">
                       {invite ? "Create your account" : "Create your account"}
                     </h1>
                     <p className="text-[13px] font-medium text-gray-500">
                       Already have one?{" "}
-                      <Link href={signInHref} className="font-bold no-underline" style={{ color: "#36C5F0" }}>
+                      <Link href={signInHref} className="font-semibold text-indigo-600 no-underline hover:text-indigo-700 transition-colors">
                         Sign in →
                       </Link>
                     </p>
@@ -460,12 +457,11 @@ function SignupInner() {
                     <>
                       <motion.button
                         onClick={() => signInWithGoogle(typeof window !== 'undefined' && 'electronAPI' in window)}
-                        whileHover={{ y: -2, boxShadow: "0 4px 16px rgba(0,0,0,0.08)" }}
+                        whileHover={{ y: -1, boxShadow: "0 4px 12px rgba(0,0,0,0.05)" }}
                         whileTap={{ scale: 0.98 }}
-                        className="w-full py-3 px-5 bg-white border border-gray-200 rounded-xl text-[13px] font-bold text-gray-800 flex items-center gap-3 cursor-pointer mb-5"
-                        style={{ fontFamily: "Sora,sans-serif" }}
+                        className="w-full py-2.5 px-5 bg-white border border-gray-200 rounded-lg text-[13px] font-semibold text-gray-700 flex items-center gap-3 cursor-pointer shadow-sm transition-all mb-5"
                       >
-                        <span className="w-[20px] h-[20px] rounded-md bg-gray-100 flex items-center justify-center text-[11px] font-black flex-shrink-0">
+                        <span className="w-[20px] h-[20px] rounded-md bg-gray-50 flex items-center justify-center text-[11px] font-bold flex-shrink-0 text-gray-600">
                           G
                         </span>
                         Continue with Google
@@ -473,7 +469,7 @@ function SignupInner() {
 
                       <div className="flex items-center gap-3 mb-5">
                         <div className="flex-1 h-px bg-gray-200" />
-                        <span className="text-[10px] font-black text-gray-300 tracking-widest uppercase">or</span>
+                        <span className="text-[10px] font-bold text-gray-400 tracking-widest uppercase">or</span>
                         <div className="flex-1 h-px bg-gray-200" />
                       </div>
                     </>
@@ -509,16 +505,14 @@ function SignupInner() {
                   <motion.button
                     onClick={next}
                     disabled={loading}
-                    whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}
-                    className="w-full py-3.5 bg-gray-900 text-white border-none rounded-xl text-[14px] font-black cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60"
-                    style={{ fontFamily: "Sora,sans-serif", boxShadow: "0 4px 16px rgba(0,0,0,0.14)" }}
+                    whileHover={{ y: -1, boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }} whileTap={{ scale: 0.97 }}
+                    className="w-full py-3 bg-indigo-600 text-white border-none rounded-lg text-[13px] font-semibold cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60 shadow-sm transition-all hover:bg-indigo-700"
                   >
                     {loading ? (
                       <motion.div
                         animate={{ rotate: 360 }}
                         transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
-                        className="w-[18px] h-[18px] rounded-full border-[2.5px]"
-                        style={{ borderColor: "rgba(255,255,255,0.3)", borderTopColor: "#fff" }}
+                        className="w-[18px] h-[18px] rounded-full border-[2.5px] border-indigo-200 border-t-white"
                       />
                     ) : (
                       <>
@@ -538,7 +532,7 @@ function SignupInner() {
                 >
                   <div className="mb-7">
                     <StepDots current={1} total={2} />
-                    <h1 className="text-[clamp(22px,4vw,30px)] font-black text-gray-900 tracking-tight mt-5 mb-1.5">
+                    <h1 className="text-[clamp(22px,4vw,30px)] font-bold text-gray-900 tracking-tight mt-5 mb-1.5">
                       Set up your workspace
                     </h1>
                     <p className="text-[13px] font-medium text-gray-500">
@@ -559,23 +553,22 @@ function SignupInner() {
                     />
 
                     <div className="flex flex-col gap-2">
-                      <label className="text-[11px] font-black text-gray-400 tracking-widest uppercase">
+                      <label className="text-[11px] font-semibold text-gray-500 tracking-wider uppercase">
                         Your purpose{" "}
-                        <span className="text-gray-300 font-normal normal-case tracking-normal">(optional)</span>
+                        <span className="text-gray-400 font-normal normal-case tracking-normal">(optional)</span>
                       </label>
                       <div className="flex flex-wrap gap-2">
                         {roles.map((r) => (
                           <motion.button
                             key={r} onClick={() => set("role")(form.role === r ? "" : r)}
-                            whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
+                            whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                             animate={{
-                              background: form.role === r ? "#0D0D0D" : "#fff",
+                              background: form.role === r ? "#4F46E5" : "#fff",
                               color: form.role === r ? "#fff" : "#374151",
-                              borderColor: form.role === r ? "#0D0D0D" : "#E8E8E2",
+                              borderColor: form.role === r ? "#4F46E5" : "#E5E7EB",
                             }}
                             transition={{ duration: 0.15 }}
-                            className="px-3.5 py-1.5 rounded-full text-[12px] font-semibold border cursor-pointer"
-                            style={{ fontFamily: "Sora,sans-serif" }}
+                            className="px-3.5 py-1.5 rounded-full text-[12px] font-medium border cursor-pointer"
                           >
                             {r}
                           </motion.button>
@@ -584,7 +577,7 @@ function SignupInner() {
                     </div>
 
                     <div className="flex flex-col gap-2">
-                      <label className="text-[11px] font-black text-gray-400 tracking-widest uppercase">
+                      <label className="text-[11px] font-semibold text-gray-500 tracking-wider uppercase">
                         Team size
                       </label>
                       <div className="grid grid-cols-4 gap-2">
@@ -592,15 +585,14 @@ function SignupInner() {
                           <motion.button
                             key={size}
                             onClick={() => set("teamSize")(form.teamSize === size ? "" : size)}
-                            whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.96 }}
+                            whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                             animate={{
-                              background: form.teamSize === size ? "#0D0D0D" : "#fff",
+                              background: form.teamSize === size ? "#4F46E5" : "#fff",
                               color: form.teamSize === size ? "#fff" : "#374151",
-                              borderColor: form.teamSize === size ? "#0D0D0D" : "#E8E8E2",
+                              borderColor: form.teamSize === size ? "#4F46E5" : "#E5E7EB",
                             }}
                             transition={{ duration: 0.15 }}
-                            className="py-2.5 rounded-xl text-[12px] font-semibold border cursor-pointer text-center"
-                            style={{ fontFamily: "Sora,sans-serif" }}
+                            className="py-2.5 rounded-lg text-[12px] font-medium border cursor-pointer text-center"
                           >
                             {size}
                           </motion.button>
@@ -613,24 +605,21 @@ function SignupInner() {
                     <motion.button
                       onClick={() => setStep(0)}
                       whileHover={{ y: -1 }} whileTap={{ scale: 0.97 }}
-                      className="flex-none py-3.5 px-5 bg-white border border-gray-200 rounded-xl text-[14px] font-bold cursor-pointer text-gray-500"
-                      style={{ fontFamily: "Sora,sans-serif" }}
+                      className="flex-none py-2.5 px-4 bg-white border border-gray-200 rounded-lg text-[14px] font-semibold cursor-pointer text-gray-500 shadow-sm"
                     >
                       ←
                     </motion.button>
                     <motion.button
                       onClick={next}
-                      whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}
+                      whileHover={{ y: -1, boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }} whileTap={{ scale: 0.97 }}
                       disabled={loading}
-                      className="flex-1 py-3.5 bg-gray-900 text-white border-none rounded-xl text-[14px] font-black cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60"
-                      style={{ fontFamily: "Sora,sans-serif", boxShadow: "0 4px 16px rgba(0,0,0,0.14)" }}
+                      className="flex-1 py-3 bg-indigo-600 text-white border-none rounded-lg text-[13px] font-semibold cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60 shadow-sm transition-all hover:bg-indigo-700"
                     >
                       {loading ? (
                         <motion.div
                           animate={{ rotate: 360 }}
                           transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
-                          className="w-[18px] h-[18px] rounded-full border-[2.5px]"
-                          style={{ borderColor: "rgba(255,255,255,0.3)", borderTopColor: "#fff" }}
+                          className="w-[18px] h-[18px] rounded-full border-[2.5px] border-indigo-200 border-t-white"
                         />
                       ) : (
                         <>Create workspace <span className="opacity-40">→</span></>
@@ -650,14 +639,13 @@ function SignupInner() {
                   <motion.div
                     initial={{ scale: 0, rotate: -20 }} animate={{ scale: 1, rotate: 0 }}
                     transition={{ type: "spring", stiffness: 180, delay: 0.1 }}
-                    className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-8"
-                    style={{ background: "#2EB67D" }}
+                    className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-8 bg-emerald-500"
                   >
                     <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
                       <path d="M9 18l6 6 12-12" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </motion.div>
-                  <h2 className="text-[clamp(22px,4vw,28px)] font-black text-gray-900 tracking-tight mb-2">
+                  <h2 className="text-[clamp(22px,4vw,28px)] font-bold text-gray-900 tracking-tight mb-2">
                     {invite
                       ? `Welcome to ${invite.workspaces?.name ?? "the workspace"}!`
                       : `Welcome to nudge${form.workspace ? `, ${form.workspace}` : ""}!`}
@@ -681,8 +669,7 @@ function SignupInner() {
                       <motion.div
                         initial={{ scale: 0 }} animate={{ scale: 1 }}
                         transition={{ delay: 0.5 + i * 0.18, type: "spring", stiffness: 200 }}
-                        className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
-                        style={{ background: "#2EB67D" }}
+                        className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 bg-emerald-500"
                       >
                         <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                           <path d="M2.5 6l2.5 2.5 4.5-5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />

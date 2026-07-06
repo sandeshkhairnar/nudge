@@ -35,11 +35,8 @@ export function CountUp({ to }: { to: number }) {
 export function Card({ children, className = "", style }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) {
   return (
     <div
-      className={`h-full flex flex-col rounded-[24px] bg-white transition-all duration-300 relative z-10 ${className}`}
-      style={{
-        boxShadow: "0 12px 48px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.02)",
-        ...style,
-      }}>
+      className={`h-full flex flex-col rounded-xl bg-white border border-gray-200 shadow-sm transition-all relative z-10 ${className}`}
+      style={style}>
       {children}
     </div>
   );
@@ -47,16 +44,16 @@ export function Card({ children, className = "", style }: { children: React.Reac
 
 export function CardHeader({ title, sub, right, icon }: { title: string; sub?: string; right?: React.ReactNode; icon?: React.ReactNode }) {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0 px-5 sm:px-6 py-4 border-b border-[#F4F4F0] flex-shrink-0">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0 px-4 sm:px-5 py-3.5 border-b border-gray-200 flex-shrink-0 bg-gray-50/50 rounded-t-xl">
       <div className="flex items-center gap-3">
         {icon && (
-          <div className="w-8 h-8 rounded-[10px] bg-[#36C5F0]/10 flex items-center justify-center text-[#36C5F0] flex-shrink-0">
+          <div className="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 flex-shrink-0">
             {icon}
           </div>
         )}
         <div className="min-w-0">
-          <p className="text-[14px] font-[800] text-[#111111] leading-tight tracking-tight truncate">{title}</p>
-          {sub && <p className="text-[12px] text-[#A0A09B] font-[600] tracking-wide mt-0.5 truncate">{sub}</p>}
+          <p className="text-[13px] font-semibold text-gray-900 leading-tight truncate">{title}</p>
+          {sub && <p className="text-[11px] text-gray-500 font-medium mt-0.5 truncate">{sub}</p>}
         </div>
       </div>
       {right && (
@@ -71,10 +68,10 @@ export function CardHeader({ title, sub, right, icon }: { title: string; sub?: s
 export function EmptySlot({ msg }: { msg: string }) {
   return (
     <div className="flex-1 flex flex-col items-center justify-center py-6 px-4">
-      <div className="w-8 h-8 rounded-xl bg-[#F5F5F2] flex items-center justify-center mb-2 text-[#C8C8C0]">
+      <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center mb-2 text-gray-400">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="1.8" strokeDasharray="3 2" /></svg>
       </div>
-      <p className="text-[11px] text-[#B0B0A8] text-center leading-relaxed">{msg}</p>
+      <p className="text-[11px] text-gray-500 text-center">{msg}</p>
     </div>
   );
 }

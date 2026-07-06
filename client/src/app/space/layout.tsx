@@ -49,6 +49,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   let title: string | undefined;
   let projectColor: string | undefined;
 
+  const isProjectRoute = segments.length > 1 && !PAGE_TITLES[segments[1]];
+
   if (lastSeg === "space" || segments.length === 1) {
     title = "Dashboard";
   } else if (PAGE_TITLES[lastSeg]) {
@@ -80,7 +82,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <>
       <style>{`
         *, *::before, *::after { font-family: 'Plus Jakarta Sans', sans-serif; box-sizing: border-box; }
-        ::selection { background: #EBF1FF; color: #4F46E5; }
         ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 4px; }
@@ -102,10 +103,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             title={title}
             projectColor={projectColor}
             onOpenCreate={() => setOpen(true)}
-            isDashboard={pathname === "/space"}
           />
-          <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 md:p-8 relative z-0">
-            <div className={pathname === "/space" ? "mt-2" : ""}>
+          <div className={`flex-1 overflow-y-auto overflow-x-hidden relative z-0 ${isProjectRoute ? 'p-4 md:p-5' : 'p-6 md:p-8'}`}>
+            <div className={pathname === "/space" ? "mt-2" : (isProjectRoute ? "h-full" : "")}>
               {children}
             </div>
           </div>

@@ -207,7 +207,7 @@ function SearchBar() {
     <div className="relative group">
       <motion.div
         animate={{
-          width: focused ? 280 : 180,
+          width: focused ? 320 : 240,
           boxShadow: focused
             ? "0 0 0 2px rgba(54,197,240,0.2), 0 8px 24px rgba(0,0,0,0.08)"
             : "0 0 0 1px #EBEBEB",
@@ -723,9 +723,6 @@ function Breadcrumb({ overrideLabel, projectColor }: BreadcrumbProps) {
                   style={{ background: crumb.color }}
                 />
               )}
-              {!crumb.color && crumb.icon && (
-                <span className="text-[#374151] flex-shrink-0">{crumb.icon}</span>
-              )}
               <motion.span
                 key={crumb.label}
                 initial={{ opacity: 0, y: 3 }}
@@ -742,11 +739,6 @@ function Breadcrumb({ overrideLabel, projectColor }: BreadcrumbProps) {
               href={crumb.href!}
               className="flex items-center gap-1.5 no-underline group"
             >
-              {crumb.icon && (
-                <span className="text-[#C4C4BC] group-hover:text-[#9CA3AF] transition-colors flex-shrink-0">
-                  {crumb.icon}
-                </span>
-              )}
               <span className="text-[13px] font-semibold text-[#B0B0A8] group-hover:text-[#6B7280] transition-colors truncate hidden sm:block">
                 {crumb.label}
               </span>

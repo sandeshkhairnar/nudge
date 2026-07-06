@@ -32,12 +32,12 @@ export default function VelocityCard({ tasks, weekly }: VelocityCardProps) {
     dataLabels: { enabled: false },
     xaxis: {
       categories: weekly.map(w => w.week),
-      labels: { style: { colors: "#B0B0A8", fontSize: "10px", fontWeight: 700 } },
+      labels: { style: { colors: "#9CA3AF", fontSize: "10px", fontWeight: 600 } },
       axisBorder: { show: false },
       axisTicks: { show: false }
     },
     yaxis: {
-      labels: { style: { colors: "#B0B0A8", fontSize: "10px", fontWeight: 700 } },
+      labels: { style: { colors: "#9CA3AF", fontSize: "10px", fontWeight: 600 } },
       tickAmount: 3
     },
     grid: {
@@ -70,11 +70,11 @@ export default function VelocityCard({ tasks, weekly }: VelocityCardProps) {
         sub="Weekly distribution"
         icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 20V10M18 20V4M6 20v-4" strokeLinecap="round" strokeLinejoin="round" /></svg>}
         right={
-          <div className="flex items-center flex-nowrap gap-3 sm:gap-4 bg-[#F9F9F8] px-3 py-1.5 rounded-xl border border-[#F4F4F0] min-w-max">
-            {[["Done", "#2EB67D"], ["Active", "#36C5F0"], ["Todo", "#E0E0D8"]].map(([l, c]) => (
+          <div className="flex items-center flex-nowrap gap-3 sm:gap-4 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200 min-w-max">
+            {[["Done", "#2EB67D"], ["Active", "#36C5F0"], ["Todo", "#E5E7EB"]].map(([l, c]) => (
               <div key={l} className="flex items-center gap-1.5 sm:gap-2">
                 <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: c, boxShadow: `0 0 8px ${c}40` }} />
-                <span className="text-[10px] font-[800] text-[#111111] tracking-tight uppercase whitespace-nowrap">{l}</span>
+                <span className="text-[10px] font-semibold text-gray-900 tracking-tight uppercase whitespace-nowrap">{l}</span>
               </div>
             ))}
           </div>
@@ -85,15 +85,15 @@ export default function VelocityCard({ tasks, weekly }: VelocityCardProps) {
           ? <Chart options={velOpts} series={velSeries} type="bar" height="100%" />
           : (
             <div className="h-full flex flex-col items-center justify-center">
-              <div className="w-14 h-14 rounded-[22px] bg-[#F9F9F8] flex items-center justify-center mb-4 text-[#A0A09B] border border-[#F4F4F0]">
+              <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center mb-3 text-gray-400 border border-gray-200">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                   <rect x="3" y="13" width="4" height="8" rx="2" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" />
                   <rect x="10" y="8" width="4" height="13" rx="2" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" />
                   <rect x="17" y="3" width="4" height="18" rx="2" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" />
                 </svg>
               </div>
-              <p className="text-[15px] font-[800] text-[#111111] mb-1">No velocity data</p>
-              <p className="text-[11px] text-[#A0A09B] text-center max-w-[220px] leading-relaxed">Velocity metrics will appear here once tasks are completed in the selected workspace.</p>
+              <p className="text-[14px] font-semibold text-gray-900 mb-1">No velocity data</p>
+              <p className="text-[11px] text-gray-500 text-center max-w-[220px] leading-relaxed">Velocity metrics will appear here once tasks are completed in the selected workspace.</p>
             </div>
           )
         }

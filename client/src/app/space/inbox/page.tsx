@@ -19,10 +19,10 @@ type NotifType = "mention" | "message" | "task" | "system";
 type FilterTab = "all" | "mentions" | "messages" | "unread" | "invites";
 
 function getGroupLabel(date: Date): string {
-  if (isToday(date)) return "TODAY";
-  if (isYesterday(date)) return "YESTERDAY";
-  if (isTomorrow(date)) return "TOMORROW";
-  return format(date, "d MMM").toUpperCase();
+  if (isToday(date)) return "Today";
+  if (isYesterday(date)) return "Yesterday";
+  if (isTomorrow(date)) return "Tomorrow";
+  return format(date, "d MMM yyyy");
 }
 
 function groupItemsByDate<T extends { created_at: string }>(items: T[]) {
@@ -38,17 +38,17 @@ function groupItemsByDate<T extends { created_at: string }>(items: T[]) {
 function relativeTime(iso: string) {
   const diff = Date.now() - new Date(iso).getTime();
   const m = Math.floor(diff / 60000);
-  if (m < 1) return "JUST NOW";
-  if (m < 60) return `${m}M AGO`;
+  if (m < 1) return "Just now";
+  if (m < 60) return `${m}m ago`;
   const h = Math.floor(m / 60);
-  if (h < 24) return `${h}H AGO`;
+  if (h < 24) return `${h}h ago`;
   const d = Math.floor(h / 24);
-  if (d < 7) return `${d}D AGO`;
-  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" }).toUpperCase();
+  if (d < 7) return `${d}d ago`;
+  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
 function colorFromString(s: string) {
-  const palette = ["#36C5F0", "#2EB67D", "#ECB22E", "#E01E5A", "#A259FF", "#FF6B6B"];
+  const palette = ["#4F46E5", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#F43F5E"];
   let h = 0;
   for (let i = 0; i < s.length; i++) h = s.charCodeAt(i) + ((h << 5) - h);
   return palette[Math.abs(h) % palette.length];
@@ -59,8 +59,9 @@ type ParsedSystemMessage = {
   text: string;
   label: string;
   icon: React.ReactNode;
-  accent: string;
-  bg: string;
+  textColor: string;
+  bgColor: string;
+  borderColor: string;
   preview: string;
 };
 
@@ -96,10 +97,11 @@ function parseSystemContent(raw: string): ParsedSystemMessage | null {
       return {
         type,
         text,
-        label: "MEETING MINUTES",
+        label: "Meeting Minutes",
         icon: <ClipboardList size={12} />,
-        accent: "#36C5F0",
-        bg: "#E8F5FD",
+        textColor: "text-indigo-700",
+        bgColor: "bg-indigo-50",
+        borderColor: "border-indigo-200",
         preview: previewText,
       };
 
@@ -108,10 +110,11 @@ function parseSystemContent(raw: string): ParsedSystemMessage | null {
       return {
         type,
         text,
-        label: "NUDGE",
-        icon: <Zap size={10} strokeWidth={3} className="fill-emerald-500" />,
-        accent: "#10B981",
-        bg: "#ECFDF5",
+        label: "Nudge",
+        icon: <Zap size={12} strokeWidth={2.5} className="fill-emerald-500 text-emerald-500" />,
+        textColor: "text-emerald-700",
+        bgColor: "bg-emerald-50",
+        borderColor: "border-emerald-200",
         preview: previewText,
       };
 
@@ -121,10 +124,11 @@ function parseSystemContent(raw: string): ParsedSystemMessage | null {
       return {
         type,
         text,
-        label: "STALL ALERT",
+        label: "Stall Alert",
         icon: <AlertTriangle size={12} />,
-        accent: "#ECB22E",
-        bg: "#FFFBEB",
+        textColor: "text-amber-700",
+        bgColor: "bg-amber-50",
+        borderColor: "border-amber-200",
         preview: previewText,
       };
 
@@ -133,10 +137,11 @@ function parseSystemContent(raw: string): ParsedSystemMessage | null {
       return {
         type,
         text,
-        label: "STARTED MEETING",
+        label: "Started Meeting",
         icon: <Bell size={12} />,
-        accent: "#2EB67D",
-        bg: "#F0FFF4",
+        textColor: "text-emerald-700",
+        bgColor: "bg-emerald-50",
+        borderColor: "border-emerald-200",
         preview: previewText,
       };
 
@@ -145,10 +150,11 @@ function parseSystemContent(raw: string): ParsedSystemMessage | null {
       return {
         type,
         text,
-        label: "ARCHIVED MEETING",
+        label: "Archived Meeting",
         icon: <Archive size={12} />,
-        accent: "#A0A09B",
-        bg: "#F9F9F8",
+        textColor: "text-gray-600",
+        bgColor: "bg-gray-100",
+        borderColor: "border-gray-200",
         preview: previewText,
       };
 
@@ -156,10 +162,11 @@ function parseSystemContent(raw: string): ParsedSystemMessage | null {
       return {
         type,
         text,
-        label: "INCOMING CALL",
+        label: "Incoming Call",
         icon: <Bell size={12} />,
-        accent: "#E01E5A",
-        bg: "#FFF5F7",
+        textColor: "text-red-700",
+        bgColor: "bg-red-50",
+        borderColor: "border-red-200",
         preview: previewText,
       };
 
@@ -168,10 +175,11 @@ function parseSystemContent(raw: string): ParsedSystemMessage | null {
       return {
         type: type || "system",
         text,
-        label: "SYSTEM",
+        label: "System",
         icon: <Info size={12} />,
-        accent: "#A0A09B",
-        bg: "#F9F9F8",
+        textColor: "text-gray-600",
+        bgColor: "bg-gray-100",
+        borderColor: "border-gray-200",
         preview: previewText,
       };
   }
@@ -199,10 +207,11 @@ function getNotificationPreview(n: Notification): { preview: string; systemParse
       systemParsed: {
         type: "mom_card",
         text: raw,
-        label: "MEETING MINUTES",
+        label: "Meeting Minutes",
         icon: <ClipboardList size={12} />,
-        accent: "#36C5F0",
-        bg: "#E8F5FD",
+        textColor: "text-indigo-700",
+        bgColor: "bg-indigo-50",
+        borderColor: "border-indigo-200",
         preview: parseMomCardPreview(raw),
       },
     };
@@ -219,19 +228,9 @@ function getNotificationPreview(n: Notification): { preview: string; systemParse
   return { preview, systemParsed: null };
 }
 
-const TYPE_CONFIG: Record<NotifType, { icon: React.ReactNode; accent: string; label: string }> = {
-  mention: { icon: <AtSign size={10} strokeWidth={3} />, accent: "#36C5F0", label: "MENTION" },
-  message: { icon: <MessageSquare size={10} strokeWidth={3} />, accent: "#2EB67D", label: "MESSAGE" },
-  task: { icon: <AlertCircle size={10} strokeWidth={3} />, accent: "#ECB22E", label: "TASK" },
-  system: { icon: <Bell size={10} strokeWidth={3} />, accent: "#A259FF", label: "SYSTEM" },
-} as const;
-
-function SystemBadge({ label, icon, accent, bg }: { label: string; icon: React.ReactNode; accent: string; bg: string }) {
+function SystemBadge({ label, icon, textColor, bgColor, borderColor }: { label: string; icon: React.ReactNode; textColor: string; bgColor: string; borderColor: string }) {
   return (
-    <span
-      className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[6px] shadow-sm text-[9px] font-[800] tracking-wider whitespace-nowrap flex-shrink-0"
-      style={{ color: accent, background: bg, border: `1px solid color-mix(in srgb, ${accent}, transparent 85%)` }}
-    >
+    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-semibold flex-shrink-0 border ${bgColor} ${textColor} ${borderColor}`}>
       {icon}
       {label}
     </span>
@@ -277,8 +276,6 @@ function NotificationRow({
       ? systemParsed.label
       : item.sender?.full_name ?? "Notification";
 
-  const cfg = !isInvite ? TYPE_CONFIG[(item as Notification).type || "system"] : null;
-
   const avatarUrl = isInvite ? item.profiles?.avatar_url : item.sender?.avatar_url;
   const avatarName = isInvite ? item.profiles?.full_name : item.sender?.full_name;
   const avatarEmail = isInvite ? item.profiles?.email : item.sender?.email;
@@ -287,78 +284,77 @@ function NotificationRow({
   return (
     <div
       className={`
-        bg-white mx-3 md:mx-10 px-6 py-5 flex flex-col md:flex-row items-start md:items-center justify-between
-        border border-[#F4F4F0] rounded-[24px] mb-3 transition-all duration-300
-        hover:shadow-[0_12px_48px_rgba(0,0,0,0.04)] hover:-translate-y-0.5
-        ${!item.read && !isInvite ? "ring-2 ring-[#36C5F0]/20 shadow-[0_4px_16px_rgba(54,197,240,0.08)]" : "shadow-[0_2px_8px_rgba(0,0,0,0.02)]"}
+        bg-white px-5 py-4 flex flex-col md:flex-row items-start md:items-center justify-between
+        border border-gray-200 rounded-xl mb-3 transition-colors duration-200
+        hover:border-gray-300 hover:shadow-sm
+        ${!item.read && !isInvite ? "ring-1 ring-indigo-500/20 bg-indigo-50/10 shadow-sm" : "shadow-sm"}
       `}
     >
-      <div className="flex items-start gap-4 flex-1 min-w-0 w-full mb-3 md:mb-0">
-        <div className="relative flex-shrink-0">
+      <div className="flex items-start gap-3.5 flex-1 min-w-0 w-full mb-3 md:mb-0">
+        <div className="relative flex-shrink-0 mt-0.5">
           {isSystemType && !avatarUrl ? (
-            <div
-              className="w-[42px] h-[42px] rounded-full flex items-center justify-center flex-shrink-0 shadow-sm"
-              style={{ background: systemParsed?.bg ?? "#F9F9F8", border: `2px solid color-mix(in srgb, ${systemParsed?.accent ?? "#A0A09B"}, transparent 85%)` }}
-            >
-              <span style={{ color: systemParsed?.accent ?? "#A0A09B" }}>
-                {systemParsed?.icon ?? <Bell size={18} strokeWidth={2.5} />}
+            <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 border shadow-sm ${systemParsed?.bgColor ?? "bg-gray-100"} ${systemParsed?.borderColor ?? "border-gray-200"}`}>
+              <span className={systemParsed?.textColor ?? "text-gray-500"}>
+                {systemParsed?.icon ?? <Bell size={16} />}
               </span>
             </div>
           ) : (
-            <div className="w-[42px] h-[42px] rounded-full overflow-hidden flex-shrink-0 border-2 border-white shadow-sm">
+            <div className="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0 border border-gray-200 shadow-sm">
               <GlobalAvatar
                 url={avatarUrl}
                 name={avatarName}
                 email={avatarEmail}
-                size={38}
+                size={36}
                 fallbackColor={colorFromString(avatarId || "system")}
               />
             </div>
           )}
           {!item.read && !isInvite && (
-            <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-[#36C5F0] border-[3px] border-white shadow-sm" />
+            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-indigo-500 border-2 border-white shadow-sm" />
           )}
         </div>
 
-        <div className="min-w-0 flex-1 mt-0.5">
-          <div className="flex items-center gap-2.5 mb-1.5 flex-wrap">
-            <span className="text-[14px] font-[800] text-[#111111] truncate">{title}</span>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
+            <span className="text-[13.5px] font-bold text-gray-900 truncate">{title}</span>
             {systemParsed && (
               <SystemBadge
                 label={systemParsed.label}
                 icon={systemParsed.icon}
-                accent={systemParsed.accent}
-                bg={systemParsed.bg}
+                textColor={systemParsed.textColor}
+                bgColor={systemParsed.bgColor}
+                borderColor={systemParsed.borderColor}
               />
             )}
             {isInvite && (
               <SystemBadge
-                label="INVITE"
-                icon={<Bell size={10} strokeWidth={3} />}
-                accent="#2EB67D"
-                bg="#ECFDF5"
+                label="Invitation"
+                icon={<Bell size={12} />}
+                textColor="text-emerald-700"
+                bgColor="bg-emerald-50"
+                borderColor="border-emerald-200"
               />
             )}
-            <span className="text-[10px] font-[800] text-[#A0A09B] whitespace-nowrap ml-auto tracking-wider">{relativeTime(item.created_at)}</span>
+            <span className="text-[11px] font-medium text-gray-400 whitespace-nowrap ml-auto">{relativeTime(item.created_at)}</span>
           </div>
-          <p className="text-[13.5px] font-[500] text-[#111111] leading-relaxed line-clamp-2 md:pr-8">{preview}</p>
+          <p className="text-[13px] font-medium text-gray-600 leading-relaxed line-clamp-2 md:pr-6">{preview}</p>
         </div>
       </div>
 
-      <div className="flex items-center justify-end gap-3 w-full md:w-auto md:ml-4 flex-shrink-0">
+      <div className="flex items-center justify-end gap-2.5 w-full md:w-auto md:ml-4 flex-shrink-0">
         {isInvite ? (
           <div className="flex gap-2 w-full md:w-auto">
             <button
               onClick={() => onAccept?.(item.id)}
-              className="flex-1 md:flex-none py-2 px-5 rounded-[12px] text-[12px] font-[800] text-emerald-700 bg-emerald-50 hover:bg-emerald-100 hover:scale-105 active:scale-95 transition-all cursor-pointer border-0 shadow-sm"
+              className="flex-1 md:flex-none py-1.5 px-4 rounded-lg text-[12px] font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition-colors cursor-pointer border-0 shadow-sm"
             >
-              ACCEPT
+              Accept
             </button>
             <button
               onClick={() => onDecline?.(item.id)}
-              className="flex-1 md:flex-none py-2 px-5 rounded-[12px] text-[12px] font-[800] text-red-700 bg-red-50 hover:bg-red-100 hover:scale-105 active:scale-95 transition-all cursor-pointer border-0 shadow-sm"
+              className="flex-1 md:flex-none py-1.5 px-4 rounded-lg text-[12px] font-semibold text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer shadow-sm"
             >
-              DECLINE
+              Decline
             </button>
           </div>
         ) : (
@@ -366,25 +362,26 @@ function NotificationRow({
             {!item.read && (
               <button
                 onClick={() => onMarkRead?.(item.id)}
-                className="text-emerald-500 bg-emerald-50 border border-transparent hover:border-emerald-200 cursor-pointer p-2 rounded-[12px] hover:scale-105 active:scale-95 transition-all shadow-sm"
+                className="text-emerald-600 bg-white border border-gray-200 hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-700 cursor-pointer p-1.5 rounded-lg transition-colors shadow-sm flex items-center gap-1.5"
                 title="Mark as Read"
               >
-                <Check size={16} strokeWidth={3} />
+                <Check size={14} strokeWidth={2.5} />
+                <span className="text-[11px] font-bold hidden sm:block">Mark read</span>
               </button>
             )}
             <button
               onClick={() => onArchive?.(item.id)}
-              className="text-[#A0A09B] bg-[#F9F9F8] border border-transparent hover:border-[#E0E0E0] hover:text-[#111111] cursor-pointer p-2 rounded-[12px] hover:scale-105 active:scale-95 transition-all shadow-sm"
+              className="text-gray-400 bg-white border border-gray-200 hover:bg-gray-50 hover:text-gray-700 cursor-pointer p-1.5 rounded-lg transition-colors shadow-sm"
               title="Archive"
             >
-              <Archive size={16} strokeWidth={2.5} />
+              <Archive size={14} />
             </button>
             {item.project_id && (
               <Link
                 href={`/space/${item.project_id}`}
-                className="text-white text-[12px] font-[800] bg-[#111111] px-5 py-2 rounded-[12px] hover:bg-[#222222] hover:scale-105 active:scale-95 shadow-md hover:shadow-lg transition-all no-underline whitespace-nowrap tracking-wider flex items-center gap-1.5"
+                className="text-white text-[12px] font-semibold bg-gray-900 px-3.5 py-1.5 rounded-lg hover:bg-black transition-colors shadow-sm no-underline whitespace-nowrap flex items-center gap-1"
               >
-                VIEW <ArrowRight size={12} strokeWidth={3} />
+                View <ArrowRight size={12} />
               </Link>
             )}
           </div>
@@ -499,60 +496,61 @@ export default function InboxPage() {
   const totalUnreadCount = unreadCount + invitations.length;
 
   return (
-    <div className="bg-transparent text-[#111111] min-h-screen flex flex-col font-sans">
-      <header className="p-6 md:p-10 pb-6 relative z-10">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
+    <div className="bg-transparent text-gray-900 h-full flex flex-col font-sans">
+      <header className="pb-6 relative z-10 w-full">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
           <div>
-            <h1 className="text-[32px] font-[800] text-[#111111] mb-1.5 tracking-[-0.02em]">Inbox</h1>
-            <p className="text-[14px] text-[#A0A09B] font-[600] tracking-tight">
+            <h1 className="text-[24px] font-bold text-gray-900 tracking-tight">Inbox</h1>
+            <p className="text-[13px] text-gray-500 font-medium mt-1">
               You have{" "}
-              <span className="text-[#36C5F0] font-[800]">{totalUnreadCount}</span>{" "}
+              <span className="text-indigo-600 font-semibold">{totalUnreadCount}</span>{" "}
               unread notifications
             </p>
           </div>
           <button
             onClick={handleMarkAllRead}
-            className="bg-white border border-[#F4F4F0] px-5 py-2.5 rounded-[12px] text-[12px] font-[800] text-[#111111] shadow-sm hover:shadow-[0_4px_16px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 active:scale-95 transition-all cursor-pointer tracking-wider"
+            className="bg-white border border-gray-200 px-4 py-2 rounded-lg text-[12px] font-semibold text-gray-700 shadow-sm hover:bg-gray-50 hover:text-gray-900 transition-colors cursor-pointer flex-shrink-0"
           >
-            MARK ALL READ
+            Mark All Read
           </button>
         </div>
 
-        <div className="flex flex-col xl:flex-row gap-5 xl:items-center">
-          <div className="relative w-full max-w-[420px] group flex-shrink-0 z-20">
-            <Search size={16} strokeWidth={2.5} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#A0A09B] group-focus-within:text-[#111111] transition-colors" />
+        <div className="flex flex-col lg:flex-row gap-4 lg:items-center w-full">
+          <div className="relative w-full lg:max-w-xs group flex-shrink-0 z-20">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
             <input
               type="text"
-              placeholder="SEARCH..."
-              className="w-full px-5 py-3.5 pl-[42px] pr-12 bg-white border border-[#F4F4F0] rounded-[16px] text-[13px] font-[700] text-[#111111] placeholder:text-[#A0A09B] focus:outline-none focus:border-[#E0E0E0] focus:ring-4 focus:ring-[#E0E0E0]/30 shadow-sm hover:shadow-[0_4px_16px_rgba(0,0,0,0.04)] transition-all uppercase tracking-wider"
+              placeholder="Search notifications..."
+              className="w-full px-4 py-2 pl-9 pr-8 bg-white border border-gray-200 rounded-lg text-[13px] font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 shadow-sm transition-all"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
             {search && (
               <button
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-[#A0A09B] hover:text-[#111111] bg-[#F9F9F8] rounded-full p-1.5 border-0 cursor-pointer transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 bg-gray-100 rounded-full p-1 border-0 cursor-pointer transition-colors"
                 onClick={() => setSearch("")}
               >
-                <X size={14} strokeWidth={2.5} />
+                <X size={12} />
               </button>
             )}
           </div>
 
-          <div className="flex items-center gap-2 overflow-x-auto w-full hide-scrollbar sm:flex-wrap">
+          <div className="flex items-center gap-2 overflow-x-auto w-full hide-scrollbar sm:flex-wrap pb-1 lg:pb-0">
             {[
-              { id: "all", label: "ALL" },
-              { id: "unread", label: unreadCount ? `UNREAD · ${unreadCount}` : "UNREAD" },
-              { id: "mentions", label: "MENTIONS" },
-              { id: "messages", label: "MESSAGES" },
-              { id: "invites", label: invitations.length ? `INVITES · ${invitations.length}` : "INVITES" },
+              { id: "all", label: "All" },
+              { id: "unread", label: unreadCount ? `Unread (${unreadCount})` : "Unread" },
+              { id: "mentions", label: "Mentions" },
+              { id: "messages", label: "Messages" },
+              { id: "invites", label: invitations.length ? `Invites (${invitations.length})` : "Invites" },
             ].map((t) => (
               <button
                 key={t.id}
                 onClick={() => setFilter(t.id as FilterTab)}
-                className={`px-5 py-3 rounded-[14px] text-[11px] font-[800] transition-all tracking-wider ${filter === t.id
-                  ? "bg-[#111111] text-white shadow-md -translate-y-0.5"
-                  : "bg-white text-[#A0A09B] border border-[#F4F4F0] hover:text-[#111111] hover:shadow-[0_4px_16px_rgba(0,0,0,0.04)] hover:-translate-y-0.5 cursor-pointer"
-                  }`}
+                className={`px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all whitespace-nowrap cursor-pointer border ${
+                  filter === t.id
+                    ? "bg-indigo-50 border-indigo-200 text-indigo-700 shadow-sm"
+                    : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50 hover:text-gray-900 shadow-sm"
+                }`}
               >
                 {t.label}
               </button>
@@ -561,22 +559,22 @@ export default function InboxPage() {
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto pb-20 scroll-smooth px-3 lg:px-0 relative z-0">
+      <main className="flex-1 overflow-y-auto pb-20 scroll-smooth relative z-0 w-full">
         {loading ? (
           <div className="flex items-center justify-center h-40">
-            <Loader2 className="animate-spin text-[#36C5F0]" size={32} />
+            <Loader2 className="animate-spin text-indigo-500" size={32} />
           </div>
         ) : Object.entries(filteredItems).length === 0 ? (
-          <div className="flex flex-col items-center justify-center mt-32 gap-4 text-[#A0A09B]">
-            <div className="w-16 h-16 rounded-full bg-white border border-[#F4F4F0] shadow-sm flex items-center justify-center">
-              <Bell size={28} strokeWidth={2.5} className="text-[#A0A09B]/50" />
+          <div className="flex flex-col items-center justify-center mt-20 gap-3 text-gray-400">
+            <div className="w-14 h-14 rounded-full bg-gray-50 border border-gray-200 shadow-sm flex items-center justify-center">
+              <Check size={24} className="text-gray-400" />
             </div>
-            <p className="text-[14px] font-[800] text-[#A0A09B] tracking-widest uppercase">ALL CAUGHT UP</p>
+            <p className="text-[14px] font-semibold text-gray-500">All caught up</p>
           </div>
         ) : (
           Object.entries(filteredItems).map(([dateLabel, items]) => (
-            <div key={dateLabel} className="mb-10">
-              <h2 className="text-[10px] font-[900] text-[#A0A09B] mx-6 md:mx-12 mb-4 tracking-[0.15em] uppercase">{dateLabel}</h2>
+            <div key={dateLabel} className="mb-8">
+              <h2 className="text-[12px] font-bold text-gray-400 mb-3 px-2 uppercase tracking-wide">{dateLabel}</h2>
               <div className="flex flex-col">
                 {items.map((item: any, idx: number) => (
                   <NotificationRow
@@ -602,7 +600,7 @@ export default function InboxPage() {
         {hasMore && notifications.length > 0 && (
           <div ref={sentinelRef} className="py-8 flex justify-center">
             {isLoadingMore ? (
-              <Loader2 className="animate-spin text-[#36C5F0]" size={24} />
+               <Loader2 className="animate-spin text-indigo-500" size={24} />
             ) : (
               <div className="h-1" />
             )}

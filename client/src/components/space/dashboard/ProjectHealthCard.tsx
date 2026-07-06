@@ -11,7 +11,7 @@ function MiniRing({ value, color, size = 42 }: { value: number; color: string; s
   return (
     <div className="relative flex-shrink-0" style={{ width: size, height: size }}>
       <svg ref={ref} width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#F4F4F0" strokeWidth="3" />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#E5E7EB" strokeWidth="3" />
         <motion.circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth="3.5"
           strokeLinecap="round" strokeDasharray={c}
           initial={{ strokeDashoffset: c }}
@@ -20,7 +20,7 @@ function MiniRing({ value, color, size = 42 }: { value: number; color: string; s
           style={{ transformOrigin: "center", transform: "rotate(-90deg)" }} />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-[9px] font-[800] tracking-tight text-[#111111]">{value}%</span>
+        <span className="text-[10px] font-bold tracking-tight text-gray-900">{value}%</span>
       </div>
     </div>
   );
@@ -45,7 +45,7 @@ export default function ProjectHealthCard({ projects }: ProjectHealthCardProps) 
         title="Project Health"
         sub="Progress tracking"
         icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-        right={<span className="text-[10px] font-[800] text-[#A0A09B] uppercase tracking-wider">{projects.length} ACTIVE</span>}
+        right={<span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{projects.length} ACTIVE</span>}
       />
       <div className="flex-1 overflow-y-auto px-5 py-5 min-h-0">
         {projects.length === 0
@@ -56,19 +56,19 @@ export default function ProjectHealthCard({ projects }: ProjectHealthCardProps) 
                 <Link key={p.id} href={`/space/${p.id}`} className="no-underline block group/proj">
                   <motion.div 
                     whileHover={{ x: 3 }} 
-                    className="flex items-center gap-4 cursor-pointer p-2 -m-2 rounded-2xl hover:bg-[#F9F9F8] transition-all duration-300"
+                    className="flex items-center gap-4 cursor-pointer p-2 -m-2 rounded-xl hover:bg-gray-50 transition-all duration-300"
                   >
                     <MiniRing value={p.progress} color={p.color} />
 
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-center mb-1.5 px-0.5">
-                        <span className="text-[13px] font-[800] text-[#111111] truncate group-hover/proj:text-[#36C5F0] transition-colors">{p.name}</span>
-                        <div className="flex items-center px-2 py-0.5 rounded-[6px] bg-[#F9F9F8] border border-[#F4F4F0]">
-                          <span className="text-[9px] font-[800] text-[#A0A09B] uppercase">{p.task_count} TASKS</span>
+                        <span className="text-[13px] font-semibold text-gray-900 truncate group-hover/proj:text-indigo-600 transition-colors">{p.name}</span>
+                        <div className="flex items-center px-2 py-0.5 rounded-[6px] bg-gray-50 border border-gray-200">
+                          <span className="text-[9px] font-semibold text-gray-500 uppercase">{p.task_count} TASKS</span>
                         </div>
                       </div>
 
-                      <div className="h-1.5 bg-[#F4F4F0] rounded-full overflow-hidden">
+                      <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: `${p.progress}%` }}

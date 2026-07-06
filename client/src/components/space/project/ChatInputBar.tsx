@@ -152,20 +152,20 @@ export default function ChatInputBar({
           layout
           className="relative rounded-2xl bg-white overflow-visible"
           style={{
-            border: "1px solid #E8E8E4",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)",
+            border: "1px solid #E5E7EB",
+            boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
             transition: "box-shadow 0.2s, border-color 0.2s",
           }}
           onFocusCapture={(e) => {
-            (e.currentTarget as HTMLElement).style.borderColor = "#C8C8C0";
+            (e.currentTarget as HTMLElement).style.borderColor = "#D1D5DB";
             (e.currentTarget as HTMLElement).style.boxShadow =
-              "0 1px 3px rgba(0,0,0,0.08), 0 6px 24px rgba(0,0,0,0.07)";
+              "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)";
           }}
           onBlurCapture={(e) => {
             if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-              (e.currentTarget as HTMLElement).style.borderColor = "#E8E8E4";
+              (e.currentTarget as HTMLElement).style.borderColor = "#E5E7EB";
               (e.currentTarget as HTMLElement).style.boxShadow =
-                "0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)";
+                "0 1px 2px 0 rgba(0, 0, 0, 0.05)";
             }
           }}
         >
@@ -243,13 +243,12 @@ export default function ChatInputBar({
               onPaste={onPaste}
               placeholder={`Message #${activeChannelName ?? "general"}`}
               rows={1}
-              className="flex-1 bg-transparent border-none outline-none resize-none text-[13.5px] text-[#0D0D0D] placeholder-[#C4C4BC] font-medium leading-relaxed"
+              className="flex-1 bg-transparent border-none outline-none resize-none text-[13px] text-gray-900 placeholder-gray-400 font-medium leading-relaxed"
               style={{
-                fontFamily: "'Sora', sans-serif",
                 minHeight: 28,
                 maxHeight: 140,
-                paddingTop: 2,
-                paddingBottom: 2,
+                paddingTop: 4,
+                paddingBottom: 4,
               }}
             />
 
@@ -306,13 +305,12 @@ export default function ChatInputBar({
                   height: 30,
                   paddingLeft: hasContent && !uploading ? 12 : 0,
                   paddingRight: hasContent && !uploading ? 12 : 0,
-                  background: hasContent && !uploading ? "#0D0D0D" : "#F4F4F1",
-                  color: hasContent && !uploading ? "#fff" : "#C4C4BC",
+                  background: hasContent && !uploading ? "#111827" : "#F3F4F6",
+                  color: hasContent && !uploading ? "#fff" : "#9CA3AF",
                   gap: 5,
-                  fontFamily: "'Sora', sans-serif",
                   fontSize: 12,
-                  fontWeight: 800,
-                  boxShadow: hasContent && !uploading ? "0 2px 8px rgba(0,0,0,0.18)" : "none",
+                  fontWeight: 600,
+                  boxShadow: hasContent && !uploading ? "0 1px 2px rgba(0,0,0,0.05)" : "none",
                 }}
                 animate={{ width: hasContent && !uploading ? "auto" : 30 }}
                 transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}

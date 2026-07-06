@@ -60,25 +60,6 @@ interface RecentActivity {
 }
 
 /* ═══════════════════════════
-   COMPONENTS
-═══════════════════════════ */
-function Badge({ children, color = "blue" }: { children: React.ReactNode, color?: string }) {
-  const colors: any = {
-    blue: "bg-blue-50 text-blue-600 border-blue-100",
-    emerald: "bg-emerald-50 text-emerald-600 border-emerald-100",
-    amber: "bg-amber-50 text-amber-600 border-amber-100",
-    purple: "bg-purple-50 text-purple-600 border-purple-100",
-    rose: "bg-rose-50 text-rose-600 border-rose-100"
-  };
-  return (
-    <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${colors[color]}`}>
-      {children}
-    </span>
-  );
-}
-
-
-/* ═══════════════════════════
    PAGE
 ═══════════════════════════ */
 export default function AnalyticsPage() {
@@ -240,47 +221,34 @@ export default function AnalyticsPage() {
   };
 
   if (loading) return (
-    <div className="flex items-center justify-center h-[500px]">
-      <div className="flex flex-col items-center">
-        <Loader2 className="animate-spin text-[#36C5F0] mb-4" size={40} />
-        <span className="text-[14px] font-black text-gray-400 uppercase tracking-widest">Engaging Neural Analytics...</span>
-      </div>
+    <div className="flex items-center justify-center h-[400px]">
+      <Loader2 className="animate-spin text-indigo-500" size={32} />
     </div>
   );
 
   return (
-    <div className="max-w-[1400px] mx-auto p-4 sm:p-6 lg:p-10 space-y-12">
-      {/* Dynamic Header */}
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }} 
-          animate={{ opacity: 1, y: 0 }}
-          className="space-y-4"
-        >
-          <div className="flex flex-wrap items-center gap-3">
-            <Badge color="purple"><Sparkles size={11} className="inline mr-1.5" /> AI Insights Active</Badge>
-            <div className="flex items-center gap-2 px-3 py-1 bg-emerald-500/5 border border-emerald-500/10 rounded-full">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em]">Operational</span>
-            </div>
-          </div>
-          <h1 className="text-[42px] sm:text-[56px] lg:text-[72px] font-black text-gray-900 tracking-tighter leading-[0.9] mb-4">
-            Workspace <span className="text-[#36C5F0]">Merit</span>
+    <div className="w-full h-full flex flex-col font-sans bg-transparent pb-12">
+      {/* Header */}
+      <div className="pb-6 mb-6 w-full flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-200">
+        <div>
+          <h1 className="text-[24px] font-bold text-gray-900 tracking-tight flex items-center gap-2">
+            Workspace Merit
+            <Sparkles className="text-indigo-500" size={20} />
           </h1>
-          <p className="text-gray-500 text-[16px] sm:text-[18px] font-medium max-w-2xl leading-relaxed">
-            Real-time performance engine. Surfacing <span className="text-[#36C5F0] font-bold">top performance</span> and <span className="text-purple-600 font-bold">high-velocity projects</span> across your organization.
+          <p className="text-[13px] text-gray-500 font-medium mt-1">
+            Real-time performance engine tracking velocity and task throughput.
           </p>
-        </motion.div>
+        </div>
         
-        <div className="flex bg-white/40 backdrop-blur-xl border border-gray-200/50 p-2 rounded-[28px] shadow-2xl shadow-gray-200/40 self-start shrink-0">
+        <div className="flex items-center bg-gray-50 border border-gray-200 p-1 rounded-lg shadow-sm shrink-0">
           {(["7d", "30d", "all"] as TimeRange[]).map((r) => (
             <button
               key={r}
               onClick={() => setTimeRange(r)}
-              className={`px-8 py-3 rounded-2xl text-[12px] font-black uppercase tracking-widest transition-all border-0 cursor-pointer ${
+              className={`px-4 py-1.5 rounded-md text-[12px] font-semibold transition-colors border-0 cursor-pointer ${
                 timeRange === r 
-                  ? "bg-[#0D0D0D] text-white shadow-xl scale-[1.02]" 
-                  : "text-gray-400 hover:text-gray-900 hover:bg-gray-50/50"
+                  ? "bg-white text-gray-900 shadow-sm border border-gray-200/50" 
+                  : "bg-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100"
               }`}
             >
               {r === 'all' ? 'Lifetime' : r.toUpperCase()}
@@ -289,140 +257,122 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      {/* Actionable Merit Grid */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-        
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         {/* TOP PERFORMERS CARD */}
-        <div className="xl:col-span-1 bg-[#0D0D0D] text-white rounded-[48px] p-8 sm:p-10 shadow-3xl relative overflow-hidden flex flex-col min-h-[550px]">
-          <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-purple-600/30 rounded-full blur-[120px] -mr-48 -mt-48 transition-opacity duration-1000" />
-          <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-[#36C5F0]/20 rounded-full blur-[100px] -ml-36 -mb-36" />
-          
-          <div className="flex items-center justify-between mb-12 relative z-10">
+        <div className="xl:col-span-1 bg-white border border-gray-200 rounded-xl p-6 shadow-sm flex flex-col">
+          <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-[24px] font-black tracking-tight flex items-center gap-3">
-                <Trophy size={28} className="text-amber-400" />
+              <h3 className="text-[16px] font-bold text-gray-900 flex items-center gap-2">
+                <Trophy size={18} className="text-amber-500" />
                 Merit Leaders
               </h3>
-              <p className="text-gray-500 text-[13px] font-bold mt-1 uppercase tracking-widest">Global Ranking</p>
+              <p className="text-[12px] text-gray-500 font-medium mt-0.5">Top contributors by throughput</p>
             </div>
           </div>
 
-          <div className="space-y-8 flex-1 relative z-10">
+          <div className="space-y-5 flex-1">
             {memberRankings.slice(0, 5).map((m, i) => (
-              <motion.div 
-                key={m.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.1 }}
-                className="flex items-center gap-5 group cursor-default"
-              >
-                <div className="relative shrink-0">
+              <div key={m.id} className="flex items-center gap-4">
+                <div className="relative">
                   <Avatar 
                     url={m.avatar} 
                     name={m.name} 
                     email={m.email}
                     role={m.status}
-                    size={64} 
-                    className="rounded-[24px] border border-white/10 shadow-lg group-hover:border-[#36C5F0]/40 transition-all group-hover:scale-105 duration-500"
+                    size={42} 
+                    className="border border-gray-200 shadow-sm"
                   />
                   {i < 3 && (
-                    <div className={`absolute -top-2 -right-2 p-1.5 rounded-xl border-2 border-[#0D0D0D] shadow-lg ${
-                      i === 0 ? "bg-amber-400 text-black scale-110" : i === 1 ? "bg-gray-300 text-black" : "bg-orange-400 text-black"
+                    <div className={`absolute -top-1.5 -right-1.5 w-5 h-5 flex items-center justify-center rounded-full border-2 border-white shadow-sm ${
+                      i === 0 ? "bg-amber-400 text-white" : i === 1 ? "bg-gray-300 text-gray-700" : "bg-orange-400 text-white"
                     }`}>
-                      <Trophy size={12} />
+                      <Trophy size={10} />
                     </div>
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-end mb-2.5">
+                  <div className="flex justify-between items-end mb-1.5">
                     <div>
-                      <span className="text-[17px] font-black block tracking-tight">{m.name}</span>
-                      <span className={`text-[11px] font-black uppercase tracking-[0.15em] ${m.status === 'Elite' ? 'text-[#36C5F0]' : 'text-gray-500'}`}>{m.status}</span>
+                      <span className="text-[13.5px] font-bold text-gray-900 block truncate">{m.name}</span>
+                      <span className={`text-[11px] font-semibold ${m.status === 'Elite' ? 'text-indigo-600' : 'text-gray-500'}`}>{m.status}</span>
                     </div>
                     <div className="text-right">
-                      <span className="text-[24px] font-black leading-none">{m.meritScore}</span>
-                      <p className="text-[9px] text-gray-500 font-black tracking-tighter uppercase mt-1">Merit</p>
+                      <span className="text-[15px] font-bold text-gray-900 leading-none">{m.meritScore}</span>
+                      <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mt-0.5">Merit</p>
                     </div>
                   </div>
-                  <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
                     <motion.div 
                       initial={{ width: 0 }}
                       animate={{ width: `${m.meritScore}%` }}
-                      transition={{ duration: 1, delay: 0.5 }}
-                      className={`h-full rounded-full ${m.status === 'Elite' ? 'bg-gradient-to-r from-[#36C5F0] via-purple-500 to-rose-500' : 'bg-gray-700'}`}
+                      transition={{ duration: 1, delay: 0.2 }}
+                      className={`h-full rounded-full ${m.status === 'Elite' ? 'bg-indigo-500' : 'bg-gray-400'}`}
                     />
                   </div>
                 </div>
-              </motion.div>
-            ))}
-          </div>
-
-          <div className="mt-10 pt-10 border-t border-white/5 relative z-10">
-            <div className="flex items-center gap-4 p-5 bg-white/5 rounded-[32px] border border-white/10">
-              <div className="w-10 h-10 rounded-2xl bg-[#36C5F0]/20 flex items-center justify-center text-[#36C5F0]">
-                <Sparkles size={20} />
               </div>
-              <p className="text-[12px] text-gray-400 leading-snug font-medium">
-                Analysis incorporates <span className="text-white font-bold">dynamic velocity</span> and <span className="text-white font-bold">task completion depth</span>.
-              </p>
-            </div>
+            ))}
+            {memberRankings.length === 0 && (
+              <div className="h-full flex flex-col items-center justify-center text-gray-400">
+                 <p className="text-[12px] font-medium">No merit data available.</p>
+              </div>
+            )}
           </div>
         </div>
 
         {/* VELOCITY LEADERBOARD (Fastest Projects) */}
-        <div className="xl:col-span-2 bg-white/50 backdrop-blur-3xl border border-gray-200/50 rounded-[48px] p-8 sm:p-10 shadow-2xl shadow-gray-200/20 flex flex-col">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-12 gap-6">
+        <div className="xl:col-span-2 bg-white border border-gray-200 rounded-xl p-6 shadow-sm flex flex-col">
+          <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-[24px] font-black text-gray-900 flex items-center gap-3">
-                <Flame size={28} className="text-rose-500" />
+              <h3 className="text-[16px] font-bold text-gray-900 flex items-center gap-2">
+                <Flame size={18} className="text-rose-500" />
                 Momentum Matrix
               </h3>
-              <p className="text-[15px] text-gray-500 font-medium mt-1">Sprinting projects by historical task throughput.</p>
+              <p className="text-[12px] text-gray-500 font-medium mt-0.5">Sprinting projects by task throughput</p>
             </div>
-            <div className="px-5 py-2.5 bg-rose-500/5 text-rose-600 rounded-2xl text-[12px] font-black flex items-center justify-center gap-2 border border-rose-500/10">
-              <Activity size={16} className="animate-pulse" /> PEAK VELOCITY
+            <div className="px-2.5 py-1 bg-rose-50 text-rose-600 rounded-md text-[11px] font-bold flex items-center gap-1.5 border border-rose-100 shadow-sm">
+              <Activity size={12} className="animate-pulse" /> Peak Velocity
             </div>
           </div>
  
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
             {projectVelocities.slice(0, 4).map((p, i) => (
-              <motion.div 
+              <div 
                 key={p.id}
-                whileHover={{ y: -8, scale: 1.01 }}
-                className="p-8 rounded-[40px] bg-white border border-gray-100 hover:border-[#36C5F0]/40 transition-all duration-500 flex flex-col justify-between shadow-sm hover:shadow-xl hover:shadow-[#36C5F0]/5 group"
+                className="p-5 rounded-xl bg-gray-50 border border-gray-200 flex flex-col justify-between shadow-sm hover:border-gray-300 transition-colors"
               >
                 <div>
-                  <div className="flex justify-between items-start mb-8">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-[20px] flex items-center justify-center text-white font-black shadow-lg group-hover:rotate-6 transition-transform duration-500" style={{ background: p.color }}>
+                  <div className="flex justify-between items-start mb-5">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold shadow-sm text-[14px]" style={{ background: p.color }}>
                         {p.name[0]}
                       </div>
-                      <span className="text-[18px] font-black text-gray-900 tracking-tight">{p.name}</span>
+                      <span className="text-[15px] font-bold text-gray-900 tracking-tight">{p.name}</span>
                     </div>
                     <div className="text-right">
-                      <span className="text-[28px] font-black text-rose-500 leading-none">{p.velocity}</span>
-                      <span className="text-[10px] font-black text-gray-400 block uppercase tracking-widest mt-1">OP/DAY</span>
+                      <span className="text-[20px] font-bold text-rose-600 leading-none">{p.velocity}</span>
+                      <span className="text-[9px] font-bold text-gray-400 block uppercase tracking-widest mt-0.5">OP/DAY</span>
                     </div>
                   </div>
                   
-                  <div className="space-y-4">
+                  <div className="space-y-2">
                     <div className="flex justify-between items-end">
-                      <span className="text-[12px] font-black text-gray-400 uppercase tracking-widest group-hover:text-[#36C5F0] transition-colors">Project Progress</span>
-                      <span className="text-[15px] font-black text-gray-900">{p.progress}%</span>
+                      <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Progress</span>
+                      <span className="text-[12px] font-bold text-gray-900">{p.progress}%</span>
                     </div>
-                    <div className="h-3 bg-gray-100 rounded-full overflow-hidden p-0.5">
+                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                       <motion.div 
                         initial={{ width: 0 }}
                         animate={{ width: `${p.progress}%` }}
-                        transition={{ duration: 1.5, ease: "easeOut" }}
-                        className="h-full rounded-full bg-gradient-to-r from-[#36C5F0] via-[#2EB67D] to-indigo-500"
+                        transition={{ duration: 1, ease: "easeOut" }}
+                        className="h-full rounded-full bg-indigo-500"
                       />
                     </div>
                   </div>
                 </div>
  
-                <div className="mt-10 flex items-center justify-between pt-6 border-t border-gray-50">
-                  <div className="flex -space-x-3">
+                <div className="mt-5 flex items-center justify-between pt-4 border-t border-gray-200">
+                  <div className="flex -space-x-2">
                     {p.members.length > 0 ? (
                       p.members.map(m => (
                         <Avatar 
@@ -430,68 +380,65 @@ export default function AnalyticsPage() {
                           url={m.avatar} 
                           name={m.name} 
                           email={m.email}
-                          size={32} 
+                          size={28} 
                           fallbackColor={p.color} 
-                          className="border-2 border-white shadow-sm"
+                          className="border-2 border-gray-50 shadow-sm"
                         />
                       ))
                     ) : (
-                      <div className="w-8 h-8 rounded-full border-2 border-white bg-gray-50 flex items-center justify-center text-[10px] text-gray-400 font-bold">?</div>
+                      <div className="w-7 h-7 rounded-full border-2 border-gray-50 bg-gray-200 flex items-center justify-center text-[10px] text-gray-500 font-bold">?</div>
                     )}
                   </div>
-                  <div className="flex items-center gap-2 group-hover:translate-x-1 transition-transform">
-                    <span className="text-[11px] font-black text-[#2EB67D] uppercase tracking-wider">Advancing</span>
-                    <ArrowUpRight size={14} className="text-[#2EB67D]" />
+                  <div className="flex items-center gap-1">
+                    <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Advancing</span>
+                    <ArrowUpRight size={12} className="text-emerald-600" />
                   </div>
                 </div>
-              </motion.div>
+              </div>
             ))}
             {projectVelocities.length === 0 && (
-              <div className="col-span-2 py-24 text-center border-2 border-dashed border-gray-100 rounded-[40px]">
-                <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mx-auto mb-4">
-                  <Target size={32} className="text-gray-300" />
-                </div>
-                <p className="text-gray-400 font-bold uppercase tracking-widest text-[12px]">No data detected in current range</p>
+              <div className="col-span-2 py-16 text-center border border-dashed border-gray-200 bg-gray-50 rounded-xl flex flex-col items-center justify-center">
+                <Target size={24} className="text-gray-400 mb-3" />
+                <p className="text-gray-500 font-semibold text-[13px]">No data detected in current range</p>
               </div>
             )}
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-10">
-        
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
         {/* COMPLETION VELOCITY CHART */}
-        <div className="lg:col-span-2 bg-white/50 backdrop-blur-3xl border border-gray-200/50 rounded-[48px] p-8 sm:p-10 shadow-2xl shadow-gray-200/20">
-          <div className="flex items-center justify-between mb-10">
+        <div className="lg:col-span-2 bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-[20px] font-black text-gray-900 flex items-center gap-3">
-                <TrendingUp size={24} className="text-[#36C5F0]" />
+              <h3 className="text-[16px] font-bold text-gray-900 flex items-center gap-2">
+                <TrendingUp size={18} className="text-indigo-500" />
                 Throughput Intelligence
               </h3>
-              <p className="text-[13px] text-gray-500 font-bold mt-1 uppercase tracking-widest">Daily Operations Matrix</p>
+              <p className="text-[12px] text-gray-500 font-medium mt-0.5">Daily completion matrix over time</p>
             </div>
           </div>
-          <div className="h-[320px]">
+          <div className="h-[280px]">
              <Chart 
               options={{
                 chart: { toolbar: { show: false }, background: 'transparent', animations: { enabled: true, speed: 800 } },
-                colors: ['#36C5F0', '#2EB67D'],
-                stroke: { curve: 'smooth', width: 5 },
+                colors: ['#4F46E5'],
+                stroke: { curve: 'smooth', width: 3 },
                 fill: {
                   type: 'gradient',
-                  gradient: { shadeIntensity: 1, opacityFrom: 0.45, opacityTo: 0.05, stops: [20, 100] }
+                  gradient: { shadeIntensity: 1, opacityFrom: 0.2, opacityTo: 0.05, stops: [20, 100] }
                 },
                 xaxis: { 
                   categories: velocityChartData.map(d => d.x), 
                   axisBorder: { show: false }, 
                   axisTicks: { show: false },
-                  labels: { style: { colors: '#94a3b8', fontWeight: 700, fontSize: '10px' } }
+                  labels: { style: { colors: '#6B7280', fontWeight: 600, fontSize: '11px' } }
                 },
                 yaxis: {
-                  labels: { style: { colors: '#94a3b8', fontWeight: 700 } }
+                  labels: { style: { colors: '#6B7280', fontWeight: 600, fontSize: '11px' } }
                 },
-                grid: { borderColor: '#f1f5f9', strokeDashArray: 4, padding: { left: 20, right: 20 } },
-                markers: { size: 4, colors: ['#36C5F0'], strokeWidth: 3, hover: { size: 7 } },
+                grid: { borderColor: '#E5E7EB', strokeDashArray: 4, padding: { left: 10, right: 10, bottom: 0, top: 0 } },
+                markers: { size: 4, colors: ['#4F46E5'], strokeWidth: 2, hover: { size: 6 } },
                 tooltip: { theme: 'light', x: { show: false }, style: { fontSize: '12px', fontFamily: 'inherit' } }
               }} 
               series={[{ name: 'Tasks Completed', data: velocityChartData.map(d => d.y) }]} 
@@ -502,49 +449,38 @@ export default function AnalyticsPage() {
         </div>
 
         {/* RECENT ACTION LOG */}
-        <div className="bg-[#FAFAF8]/50 backdrop-blur-xl border border-gray-200/80 rounded-[48px] p-8 sm:p-10 shadow-sm flex flex-col">
-          <div className="flex items-center justify-between mb-10">
-            <h3 className="text-[20px] font-black text-gray-900 flex items-center gap-3">
-              <Activity size={24} className="text-gray-400" />
-              Neural Stream
+        <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm flex flex-col">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-[16px] font-bold text-gray-900 flex items-center gap-2">
+              <Activity size={18} className="text-gray-400" />
+              Activity Stream
             </h3>
-            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
+            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
           </div>
-          <div className="space-y-7 flex-1 overflow-y-auto pr-2 scrollbar-hide">
+          <div className="space-y-5 flex-1 overflow-y-auto pr-2">
             {recentActivities.map((a, i) => (
-              <motion.div 
-                key={a.id} 
-                initial={{ opacity: 0, x: 10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.05 }}
-                className="flex gap-5 items-start relative group"
-              >
-                <div className={`mt-1.5 w-3 h-3 rounded-full shrink-0 border-2 border-white shadow-sm transition-transform group-hover:scale-125 ${a.type === 'completion' ? 'bg-emerald-500' : 'bg-[#36C5F0]'}`} />
+              <div key={a.id} className="flex gap-4 items-start">
+                <div className={`mt-1.5 w-2 h-2 rounded-full shrink-0 border border-white shadow-sm ${a.type === 'completion' ? 'bg-emerald-500' : 'bg-indigo-500'}`} />
                 <div className="min-w-0 flex-1">
-                  <p className="text-[14px] font-black text-gray-900 leading-tight group-hover:text-[#36C5F0] transition-colors">{a.title}</p>
-                  <p className="text-[11px] font-bold text-gray-500 flex items-center flex-wrap gap-x-2 mt-1.5 opacity-70">
-                    <span className="text-gray-900">{a.user}</span>
-                    <span className="text-[8px] opacity-30">•</span>
+                  <p className="text-[13px] font-semibold text-gray-900 leading-snug">{a.title}</p>
+                  <p className="text-[11px] font-medium text-gray-500 flex items-center gap-1.5 mt-1">
+                    <span>{a.user}</span>
+                    <span className="opacity-50">•</span>
                     <span>{a.time}</span>
                     {a.type === 'completion' && (
-                      <span className="px-1.5 py-0.5 bg-emerald-50 text-emerald-600 rounded text-[9px] font-black uppercase">Confirmed</span>
+                      <span className="px-1.5 py-0.5 bg-emerald-50 text-emerald-600 rounded text-[9px] font-bold uppercase tracking-wider border border-emerald-100 ml-1">Done</span>
                     )}
                   </p>
                 </div>
-              </motion.div>
+              </div>
             ))}
             {recentActivities.length === 0 && (
-              <div className="h-full flex flex-col items-center justify-center text-gray-300 gap-4 py-10">
-                <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center">
-                  <Activity size={24} opacity={0.2} />
-                </div>
-                <p className="text-[11px] font-black uppercase tracking-widest opacity-40">Static Stream</p>
+              <div className="h-full flex flex-col items-center justify-center text-gray-400 gap-3">
+                <Activity size={24} className="opacity-40" />
+                <p className="text-[12px] font-semibold">No recent activity</p>
               </div>
             )}
           </div>
-          <button className="mt-10 w-full py-4 rounded-[24px] bg-white border border-gray-100 shadow-sm text-gray-900 text-[11px] font-black uppercase tracking-[0.2em] hover:bg-gray-50 hover:shadow-md active:scale-95 transition-all cursor-pointer">
-            Access Full Node Log
-          </button>
         </div>
 
       </div>

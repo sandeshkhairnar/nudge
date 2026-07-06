@@ -6,23 +6,20 @@ import { useRouter } from "next/navigation";
 import { updatePassword } from "@/lib/auth";
 
 function NudgeLogo({ dark = false }: { dark?: boolean }) {
-  const id = `reset-pills-${dark ? "d" : "l"}`;
   return (
-    <svg width="130" height="34" viewBox="0 0 220 56" fill="none">
-      <g id={id}>
-        <rect x="8" y="8" width="16" height="16" rx="8" fill="#36C5F0" />
-        <rect x="8" y="26" width="16" height="16" rx="4" fill="#36C5F0" opacity="0.4" />
-        <rect x="26" y="8" width="16" height="16" rx="4" fill="#2EB67D" opacity="0.4" />
-        <rect x="26" y="26" width="16" height="16" rx="8" fill="#2EB67D" />
-        <animateTransform
-          href={`#${id}`} attributeName="transform" type="rotate"
-          values="0 24 24;-360 24 24" keyTimes="0;1"
-          dur="6s" repeatCount="indefinite"
-        />
-      </g>
-      <text x="56" y="37" fontFamily="Sora,sans-serif" fontWeight="800" fontSize="28"
-        fill={dark ? "#fff" : "#0D0D0D"} letterSpacing="-1">nudge</text>
-    </svg>
+    <div className="flex items-center gap-0">
+      <svg style={{ height: "24px", width: "auto", marginRight: "2px" }} viewBox="21 21 58 58" fill="none">
+        <path d="M28 72V28" stroke={dark ? "#FFFFFF" : "#111827"} strokeWidth="14" strokeLinecap="round" />
+        <path d="M72 72V28" stroke={dark ? "#FFFFFF" : "#111827"} strokeWidth="14" strokeLinecap="round" />
+        <path d="M28 28L72 72" stroke="#4F46E5" strokeWidth="14" strokeLinecap="round" />
+      </svg>
+      <span
+        className="text-[32px] font-[800] tracking-tight leading-none"
+        style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", color: dark ? "#FFFFFF" : "#111827" }}
+      >
+        udge
+      </span>
+    </div>
   );
 }
 
@@ -40,7 +37,7 @@ function CursorGlow() {
     <motion.div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0 }}>
       <motion.div style={{
         position: "absolute", width: 480, height: 480, borderRadius: "50%",
-        background: "radial-gradient(circle,rgba(54,197,240,0.06) 0%,transparent 70%)",
+        background: "radial-gradient(circle,rgba(79,70,229,0.06) 0%,transparent 70%)",
         x: sx, y: sy, translateX: "-50%", translateY: "-50%",
       }} />
     </motion.div>
@@ -54,31 +51,30 @@ function Field({ label, type = "text", placeholder, value, onChange, error }: {
   const [focused, setFocused] = useState(false);
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-[11px] font-black text-gray-400 tracking-widest uppercase">{label}</label>
+      <label className="text-[11px] font-semibold text-gray-500 tracking-wider uppercase">{label}</label>
       <motion.div
         animate={{
           boxShadow: error
-            ? "0 0 0 2px #E01E5A40"
+            ? "0 0 0 2px rgba(239, 68, 68, 0.4)"
             : focused
-              ? "0 0 0 2px #36C5F050"
-              : "0 0 0 1px #E8E8E2",
+              ? "0 0 0 2px rgba(79, 70, 229, 0.5)"
+              : "0 0 0 1px #E5E7EB",
         }}
-        className="rounded-xl overflow-hidden bg-white"
+        className="rounded-lg overflow-hidden bg-white"
         transition={{ duration: 0.2 }}
       >
         <input
           type={type} placeholder={placeholder} value={value}
           onChange={(e) => onChange(e.target.value)}
           onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
-          className="w-full px-4 py-3 bg-transparent border-none outline-none text-[14px] font-medium text-gray-900 placeholder-gray-300"
-          style={{ fontFamily: "Sora,sans-serif" }}
+          className="w-full px-4 py-2.5 bg-transparent border-none outline-none text-[13px] font-medium text-gray-900 placeholder-gray-400"
         />
       </motion.div>
       <AnimatePresence>
         {error && (
           <motion.p
             initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
-            className="text-[11px] font-semibold" style={{ color: "#E01E5A" }}
+            className="text-[11px] font-medium text-red-500"
           >
             {error}
           </motion.p>
@@ -95,8 +91,8 @@ function PasswordStrength({ password }: { password: string }) {
     { label: "Uppercase letter", ok: /[A-Z]/.test(password) },
     { label: "Number", ok: /\d/.test(password) },
   ];
-  const score = checks.filter((c) => c.ok).length;
-  const colors = ["#E01E5A", "#ECB22E", "#ECB22E", "#2EB67D", "#2EB67D"];
+  const colors = ["#EF4444", "#F59E0B", "#F59E0B", "#10B981", "#10B981"];
+  const score = checks.filter(c => c.ok).length;
 
   if (!password) return null;
 
@@ -107,7 +103,7 @@ function PasswordStrength({ password }: { password: string }) {
           <motion.div
             key={i}
             className="h-[3px] flex-1 rounded-full"
-            animate={{ background: i < score ? colors[score] : "#E8E8E2" }}
+            animate={{ background: i < score ? colors[score] : "#E5E7EB" }}
             transition={{ duration: 0.3, delay: i * 0.06 }}
           />
         ))}
@@ -116,13 +112,13 @@ function PasswordStrength({ password }: { password: string }) {
         {checks.map((c, i) => (
           <motion.span
             key={i}
-            className="text-[10px] font-bold flex items-center gap-1"
-            animate={{ color: c.ok ? "#2EB67D" : "#C4C4BC" }}
+            className="text-[10px] font-semibold flex items-center gap-1"
+            animate={{ color: c.ok ? "#10B981" : "#9CA3AF" }}
           >
             <motion.span
               animate={{ scale: c.ok ? 1 : 0.8 }}
               className="inline-block w-3 h-3 rounded-full text-[8px] flex items-center justify-center"
-              style={{ background: c.ok ? "#2EB67D" : "#E8E8E2", color: c.ok ? "#fff" : "#aaa", lineHeight: "12px", textAlign: "center" }}
+              style={{ background: c.ok ? "#10B981" : "#E5E7EB", color: c.ok ? "#ffffff" : "#9CA3AF", lineHeight: "12px", textAlign: "center" }}
             >
               {c.ok ? "✓" : ""}
             </motion.span>
@@ -173,13 +169,16 @@ export default function ResetPasswordPage() {
         <motion.div
           initial={{ x: -60, opacity: 0 }} animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="relative overflow-hidden flex flex-col justify-between"
+          className="relative overflow-hidden flex flex-col justify-between bg-gray-950"
           style={{
-            background: "#0D0D0D",
             padding: "clamp(28px,5vw,52px) clamp(24px,5vw,56px)",
             minHeight: "clamp(200px,40vh,360px)",
+            backgroundImage: "url('/auth-bg.png')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
           }}
         >
+          <div className="absolute inset-0 bg-gray-950/70 backdrop-blur-[2px] z-0" />
           {/* Animated orbs */}
           <motion.div
             animate={{ scale: [1, 1.12, 1], rotate: [0, -6, 0] }}
@@ -220,12 +219,11 @@ export default function ResetPasswordPage() {
             className="relative z-10 mt-8 lg:mt-0"
           >
             <span
-              className="block mb-3 text-[10px] font-black tracking-[0.2em] uppercase"
-              style={{ color: "#2EB67D" }}
+              className="block mb-3 text-[10px] font-bold tracking-[0.2em] uppercase text-emerald-500"
             >
               Password reset
             </span>
-            <h2 className="text-[clamp(24px,3.5vw,36px)] font-black text-white tracking-tight leading-[1.1] mb-3">
+            <h2 className="text-[clamp(24px,3.5vw,36px)] font-bold text-white tracking-tight leading-[1.1] mb-3">
               Almost there.<br className="hidden sm:block" /> Pick a new one.
             </h2>
             <p
@@ -266,8 +264,8 @@ export default function ResetPasswordPage() {
         <motion.div
           initial={{ x: 60, opacity: 0 }} animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="flex flex-col justify-center items-center overflow-y-auto"
-          style={{ background: "#F9F9F7", padding: "clamp(32px,5vw,52px) clamp(20px,6vw,64px)" }}
+          className="flex flex-col justify-center items-center overflow-y-auto bg-gray-50"
+          style={{ padding: "clamp(32px,5vw,52px) clamp(20px,6vw,64px)" }}
         >
           <div className="w-full max-w-[420px]">
             <AnimatePresence mode="wait">
@@ -281,14 +279,13 @@ export default function ResetPasswordPage() {
                   <motion.div
                     initial={{ scale: 0, rotate: -20 }} animate={{ scale: 1, rotate: 0 }}
                     transition={{ type: "spring", stiffness: 180, delay: 0.1 }}
-                    className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-8"
-                    style={{ background: "#2EB67D" }}
+                    className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-8 bg-emerald-500"
                   >
                     <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
                       <path d="M9 18l6 6 12-12" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </motion.div>
-                  <h2 className="text-[clamp(22px,4vw,28px)] font-black text-gray-900 tracking-tight mb-2">
+                  <h2 className="text-[clamp(22px,4vw,28px)] font-bold text-gray-900 tracking-tight mb-2">
                     Password updated!
                   </h2>
                   <p className="text-[14px] text-gray-400 leading-[1.65]">
@@ -297,8 +294,7 @@ export default function ResetPasswordPage() {
                   <motion.div
                     initial={{ scaleX: 0 }} animate={{ scaleX: 1 }}
                     transition={{ duration: 2.2, ease: "linear" }}
-                    className="h-[3px] rounded-full mt-8 origin-left"
-                    style={{ background: "#2EB67D" }}
+                    className="h-[3px] rounded-full mt-8 origin-left bg-emerald-500"
                   />
                 </motion.div>
               ) : (
@@ -308,7 +304,7 @@ export default function ResetPasswordPage() {
                   transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
                 >
                   <div className="mb-6">
-                    <h1 className="text-[clamp(22px,4vw,30px)] font-black text-gray-900 tracking-tight mb-1.5">
+                    <h1 className="text-[clamp(22px,4vw,30px)] font-bold text-gray-900 tracking-tight mb-1.5">
                       Set new password
                     </h1>
                     <p className="text-[13px] font-medium text-gray-500">
@@ -319,8 +315,7 @@ export default function ResetPasswordPage() {
                   {error && !error.includes("Password") && !error.includes("match") && (
                     <motion.div
                       initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-                      className="mb-5 px-4 py-3 rounded-xl text-[13px] font-semibold"
-                      style={{ background: "#FEF2F2", border: "1px solid #FEE2E2", color: "#E01E5A" }}
+                      className="mb-5 px-4 py-3 rounded-lg text-[13px] font-semibold bg-red-50 border border-red-200 text-red-600"
                     >
                       {error}
                     </motion.div>
@@ -348,17 +343,15 @@ export default function ResetPasswordPage() {
 
                   <motion.button
                     onClick={handleSubmit}
-                    whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}
+                    whileHover={{ y: -1, boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }} whileTap={{ scale: 0.97 }}
                     disabled={loading}
-                    className="w-full py-3.5 mt-2 bg-gray-900 text-white border-none rounded-xl text-[14px] font-black cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60"
-                    style={{ fontFamily: "Sora,sans-serif", boxShadow: "0 4px 16px rgba(0,0,0,0.14)" }}
+                    className="w-full py-3 mt-2 bg-indigo-600 text-white border-none rounded-lg text-[13px] font-semibold cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60 shadow-sm transition-all hover:bg-indigo-700"
                   >
                     {loading ? (
                       <motion.div
                         animate={{ rotate: 360 }}
                         transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
-                        className="w-[18px] h-[18px] rounded-full border-[2.5px]"
-                        style={{ borderColor: "rgba(255,255,255,0.3)", borderTopColor: "#fff" }}
+                        className="w-[18px] h-[18px] rounded-full border-[2.5px] border-indigo-200 border-t-white"
                       />
                     ) : (
                       <>Reset password <span className="opacity-40">→</span></>

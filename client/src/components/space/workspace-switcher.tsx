@@ -28,32 +28,12 @@ export function WorkspaceSwitcher({ collapsed }: Props) {
     <div className="relative">
       <button
         onClick={() => workspaces.length > 1 && setOpen((o) => !o)}
-        className="w-full flex items-center gap-2.5 cursor-pointer border-0 bg-transparent transition-all rounded-none"
-        style={{
-          padding: collapsed ? "10px 0" : "10px 14px",
-          justifyContent: collapsed ? "center" : "flex-start",
-        }}
-        onMouseEnter={(e) => {
-          if (workspaces.length > 1)
-            (e.currentTarget as HTMLElement).style.background = "#F9FAFB";
-        }}
-        onMouseLeave={(e) => {
-          (e.currentTarget as HTMLElement).style.background = "transparent";
-        }}
+        className={`w-full flex items-center gap-2.5 cursor-pointer border-0 bg-transparent transition-all rounded-xl hover:bg-white/5 active:bg-white/10 ${
+          collapsed ? "py-2 justify-center" : "px-2.5 py-2 justify-start"
+        }`}
       >
         {/* Logo / Avatar */}
-        <div
-          className="flex-shrink-0 rounded-lg overflow-hidden flex items-center justify-center"
-          style={{
-            width: 28,
-            height: 28,
-            background: workspace.logo_url
-              ? "transparent"
-              : "linear-gradient(135deg, #4F46E5 0%, #2563EB 100%)",
-            border: "1px solid #E5E7EB",
-            boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-          }}
-        >
+        <div className="flex-shrink-0 rounded-lg overflow-hidden flex items-center justify-center w-7 h-7 bg-gradient-to-br from-indigo-500 to-blue-600 border border-white/10 shadow-sm relative">
           {workspace.logo_url ? (
             <img
               src={workspace.logo_url}
@@ -61,10 +41,7 @@ export function WorkspaceSwitcher({ collapsed }: Props) {
               className="w-full h-full object-cover"
             />
           ) : (
-            <span
-              className="text-white font-black leading-none"
-              style={{ fontSize: 11 }}
-            >
+            <span className="text-white font-bold text-[11px] leading-none">
               {initials}
             </span>
           )}
@@ -80,23 +57,11 @@ export function WorkspaceSwitcher({ collapsed }: Props) {
               transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
               className="flex-1 min-w-0 overflow-hidden text-left"
             >
-              <p
-                className="text-[12.5px] font-[700] truncate leading-tight"
-                style={{
-                  color: "#111827",
-                  fontFamily: "'Plus Jakarta Sans', sans-serif",
-                }}
-              >
+              <p className="text-[13px] font-bold text-white truncate leading-tight">
                 {workspace.name}
               </p>
               {workspace.plan && (
-                <p
-                  className="text-[10px] capitalize truncate font-[600]"
-                  style={{
-                    color: "#6B7280",
-                    fontFamily: "'Plus Jakarta Sans', sans-serif",
-                  }}
-                >
+                <p className="text-[11px] capitalize truncate font-medium text-gray-400 mt-0.5">
                   {workspace.plan} plan
                 </p>
               )}
@@ -111,12 +76,11 @@ export function WorkspaceSwitcher({ collapsed }: Props) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              style={{ color: "rgba(255,255,255,0.2)", flexShrink: 0 }}
+              className="flex-shrink-0 text-gray-500"
             >
               <motion.div
                 animate={{ rotate: open ? 180 : 0 }}
                 transition={{ duration: 0.2 }}
-                style={{ color: "#9CA3AF" }}
               >
                 <ChevronDown size={14} strokeWidth={2.5} />
               </motion.div>
@@ -136,17 +100,11 @@ export function WorkspaceSwitcher({ collapsed }: Props) {
             />
 
             <motion.div
-              initial={{ opacity: 0, y: -6, scale: 0.97 }}
+              initial={{ opacity: 0, y: -4, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -6, scale: 0.97 }}
+              exit={{ opacity: 0, y: -4, scale: 0.98 }}
               transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
-              className="absolute left-2 right-2 z-50 rounded-xl overflow-hidden"
-              style={{
-                top: "calc(100% + 4px)",
-                background: "#FFFFFF",
-                border: "1px solid #E5E7EB",
-                boxShadow: "0 12px 32px rgba(0,0,0,0.06)",
-              }}
+              className="absolute left-1 right-1 z-50 rounded-xl overflow-hidden bg-white border border-gray-200 shadow-xl mt-1"
             >
               <div className="p-1.5 flex flex-col gap-0.5">
                 {workspaces.map((ws) => {
@@ -166,35 +124,12 @@ export function WorkspaceSwitcher({ collapsed }: Props) {
                         localStorage.setItem("lastWorkspaceId", ws.id);
                         setOpen(false);
                       }}
-                      className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg border-0 cursor-pointer transition-all text-left"
-                      style={{
-                        background: isActive
-                          ? "#F3F4F6"
-                          : "transparent",
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!isActive)
-                          (e.currentTarget as HTMLElement).style.background =
-                            "#F9FAFB";
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isActive)
-                          (e.currentTarget as HTMLElement).style.background =
-                            "transparent";
-                      }}
+                      className={`w-full flex items-center gap-3 px-2.5 py-2 rounded-lg border-0 cursor-pointer transition-all text-left ${
+                        isActive ? "bg-indigo-50" : "bg-transparent hover:bg-gray-50"
+                      }`}
                     >
                       {/* Logo */}
-                      <div
-                        className="flex-shrink-0 rounded-md overflow-hidden flex items-center justify-center"
-                        style={{
-                          width: 24,
-                          height: 24,
-                          background: ws.logo_url
-                            ? "transparent"
-                            : "linear-gradient(135deg, #4F46E5, #2563EB)",
-                          border: "1px solid #E5E7EB",
-                        }}
-                      >
+                      <div className="flex-shrink-0 rounded-md overflow-hidden flex items-center justify-center w-6 h-6 bg-gradient-to-br from-indigo-500 to-blue-600 border border-gray-100 shadow-sm">
                         {ws.logo_url ? (
                           <img
                             src={ws.logo_url}
@@ -202,10 +137,7 @@ export function WorkspaceSwitcher({ collapsed }: Props) {
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <span
-                            className="text-white font-black"
-                            style={{ fontSize: 9 }}
-                          >
+                          <span className="text-white font-bold text-[9px]">
                             {wsInitials}
                           </span>
                         )}
@@ -213,30 +145,19 @@ export function WorkspaceSwitcher({ collapsed }: Props) {
 
                       {/* Name */}
                       <div className="flex-1 min-w-0">
-                        <p
-                          className="text-[12px] font-bold truncate"
-                          style={{
-                            color: isActive
-                              ? "#4F46E5"
-                              : "#111827",
-                            fontFamily: "'Plus Jakarta Sans', sans-serif",
-                          }}
-                        >
+                        <p className={`text-[13px] font-semibold truncate ${isActive ? "text-indigo-700" : "text-gray-900"}`}>
                           {ws.name}
                         </p>
                         {ws.plan && (
-                          <p
-                            className="text-[10px] capitalize font-medium"
-                            style={{ color: "#6B7280" }}
-                          >
-                            {ws.plan}
+                          <p className={`text-[10px] capitalize font-medium ${isActive ? "text-indigo-500" : "text-gray-500"}`}>
+                            {ws.plan} plan
                           </p>
                         )}
                       </div>
 
                       {/* Active check */}
                       {isActive && (
-                        <Check size={12} style={{ color: "#4F46E5", flexShrink: 0 }} strokeWidth={3} />
+                        <Check size={14} className="text-indigo-600 flex-shrink-0" strokeWidth={3} />
                       )}
                     </button>
                   );

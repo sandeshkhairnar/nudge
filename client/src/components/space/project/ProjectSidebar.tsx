@@ -44,23 +44,23 @@ export default function ProjectSidebar({
 }: ProjectSidebarProps) {
   return (
     <div
-      className={`flex-shrink-0 flex flex-col bg-[#F9F9F7] border-r border-gray-100 overflow-hidden transition-all duration-300
+      className={`flex-shrink-0 flex flex-col bg-gray-50 border-r border-gray-200 overflow-hidden transition-all duration-300
         fixed inset-y-0 left-0 z-40 lg:static lg:z-auto lg:translate-x-0
         ${sidebarOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full lg:translate-x-0"}`}
-      style={{ width: 210 }}
+      style={{ width: 220 }}
     >
-      <div className="px-4 py-3 border-b border-gray-100 flex-shrink-0">
+      <div className="px-4 py-3 border-b border-gray-200 flex-shrink-0 bg-white">
         <div className="flex items-center gap-2.5">
           <motion.div
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={onAvatarClick}
-            className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 cursor-pointer overflow-hidden relative group"
+            className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 cursor-pointer overflow-hidden relative group shadow-sm"
             style={{
               background: project?.avatar_url 
                 ? "transparent" 
-                : (project?.color ? `linear-gradient(135deg,#2EB67D)` : "linear-gradient(135deg,#36C5F0,#2EB67D)"),
-              border: project?.avatar_url ? "1px solid #E8E8E4" : "none",
+                : (project?.color ? `linear-gradient(135deg,#4F46E5)` : "linear-gradient(135deg,#4F46E5,#6366F1)"),
+              border: project?.avatar_url ? "1px solid #E5E7EB" : "none",
             }}
           >
             {project?.avatar_url ? (
@@ -75,16 +75,16 @@ export default function ProjectSidebar({
             </div>
           </motion.div>
           <div className="min-w-0 flex-1">
-            <p className="text-[12.5px] font-black text-gray-900 truncate leading-tight">
+            <p className="text-[13px] font-bold text-gray-900 truncate leading-tight">
               {project?.name ?? "Project"}
             </p>
             <div className="flex items-center gap-1.5 mt-1">
-              <div className="flex-1 h-1 bg-gray-200 rounded-full overflow-hidden">
+              <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
                 <div
                   className="h-full rounded-full transition-all"
                   style={{
                     width: `${project?.progress ?? 0}%`,
-                    background: project?.color ?? "#36C5F0",
+                    background: project?.color ?? "#4F46E5",
                   }}
                 />
               </div>
@@ -102,21 +102,20 @@ export default function ProjectSidebar({
         </div>
       </div>
 
-      <nav className="px-2 pt-2.5 pb-1 flex-shrink-0 space-y-0.5">
+      <nav className="px-2 pt-3 pb-1 flex-shrink-0 space-y-0.5">
         {TABS.map((item) => (
           <motion.button
             key={item.id}
             onClick={() => { onTabChange(item.id); onClose(); }}
             whileHover={{ x: 1.5 }}
-            className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg border-0 cursor-pointer transition-all text-left"
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg border-0 cursor-pointer transition-all text-left"
             style={{
               background: tab === item.id ? "#fff" : "transparent",
-              color: tab === item.id ? "#111827" : "#9CA3AF",
-              boxShadow: tab === item.id ? "0 1px 3px rgba(0,0,0,0.06)" : "none",
-              fontFamily: "'Sora',sans-serif",
+              color: tab === item.id ? "#111827" : "#6B7280",
+              boxShadow: tab === item.id ? "0 1px 2px rgba(0,0,0,0.05)" : "none",
             }}
           >
-            <span className="text-[12.5px] font-semibold">{item.label}</span>
+            <span className="text-[13px] font-semibold">{item.label}</span>
           </motion.button>
         ))}
       </nav>
@@ -130,13 +129,13 @@ export default function ProjectSidebar({
             transition={{ duration: 0.2 }}
             className="px-2 mt-2 overflow-hidden flex-shrink-0"
           >
-            <div className="flex items-center justify-between px-2.5 mb-1">
-              <span className="text-[9px] font-black uppercase tracking-[0.14em] text-gray-300">
+            <div className="flex items-center justify-between px-3 mb-1.5 mt-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">
                 Channels
               </span>
               <button
                 onClick={onAddChannel}
-                className="cursor-pointer text-gray-300 hover:text-gray-600 border-0 bg-transparent p-0.5 transition-colors"
+                className="cursor-pointer text-gray-400 hover:text-gray-700 border-0 bg-transparent p-0.5 transition-colors"
               >
                 <Plus size={12} />
               </button>
@@ -146,16 +145,15 @@ export default function ProjectSidebar({
                 <button
                   key={ch.id}
                   onClick={() => { onChannelSelect(ch); onClose(); }}
-                  className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg border-0 cursor-pointer transition-all text-left"
+                  className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg border-0 cursor-pointer transition-all text-left"
                   style={{
                     background: activeChannel?.id === ch.id ? "#fff" : "transparent",
-                    color: activeChannel?.id === ch.id ? "#111827" : "#9CA3AF",
-                    boxShadow: activeChannel?.id === ch.id ? "0 1px 2px rgba(0,0,0,0.04)" : "none",
-                    fontFamily: "'Sora',sans-serif",
+                    color: activeChannel?.id === ch.id ? "#111827" : "#6B7280",
+                    boxShadow: activeChannel?.id === ch.id ? "0 1px 2px rgba(0,0,0,0.05)" : "none",
                   }}
                 >
-                  <Hash size={11} className="text-gray-300 flex-shrink-0" />
-                  <span className="text-[12px] font-semibold flex-1 text-left truncate">
+                  <Hash size={13} className={`${activeChannel?.id === ch.id ? "text-indigo-500" : "text-gray-400"} flex-shrink-0`} />
+                  <span className="text-[13px] font-medium flex-1 text-left truncate">
                     {ch.name}
                   </span>
                 </button>
@@ -165,13 +163,13 @@ export default function ProjectSidebar({
         )}
       </AnimatePresence>
 
-      <div className="mt-auto px-4 py-3 border-t border-gray-100 flex-shrink-0">
-        <p className="text-[9px] font-black uppercase tracking-[0.12em] text-gray-300 mb-2">
+      <div className="mt-auto px-4 py-3 border-t border-gray-200 flex-shrink-0 bg-white">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-2">
           Online · {onlineUsers.length}
         </p>
         <div className="flex flex-wrap gap-1.5">
           {onlineUsers.length === 0 ? (
-            <p className="text-[10px] text-gray-300">No one online</p>
+            <p className="text-[11px] font-medium text-gray-400">No one online</p>
           ) : (
             onlineUsers.slice(0, 8).map((u) => (
               <div key={u.id} title={u.full_name ?? "User"} className="relative">

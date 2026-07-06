@@ -61,7 +61,7 @@ function AvatarPlaceholder({ name, email, avatarUrl, size = 80 }: {
         <img src={avatarUrl} alt={name || ''} className="rounded-full object-cover shadow-md"
           style={{ width: size, height: size }} />
       ) : (
-        <div className="rounded-full flex items-center justify-center font-black text-white shadow-md"
+        <div className="rounded-full flex items-center justify-center font-bold text-white shadow-md"
           style={{ width: size, height: size, background: bg, fontSize: size * 0.36 }}>
           {getInitials(name, email)}
         </div>
@@ -76,7 +76,7 @@ function ControlBtn({ icon, onClick, className }: {
 }) {
   return (
     <button onClick={(e) => { e.stopPropagation(); onClick?.(); }}
-      className={className || "w-12 h-12 rounded-2xl flex items-center justify-center cursor-pointer transition-all border-0 shadow-md bg-[#0D0D0D] text-white hover:bg-black shadow-sm active:scale-95"}>
+      className={className || "w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer transition-all border border-gray-200 shadow-sm bg-white text-gray-700 hover:bg-gray-50 active:scale-95"}>
       {icon}
     </button>
   );
@@ -126,14 +126,9 @@ function CustomVideoConference({ me, profiles, isPipActive, onTogglePip, activeR
     identity === localParticipant.identity ? (me?.full_name || 'You') : identity;
 
   return (
-    <div className={`flex-1 flex flex-col min-h-0 relative ${isPipActive ? 'gap-0 bg-black' : 'gap-0 bg-[#F9F9F7]'}`}>
+    <div className={`flex-1 flex flex-col min-h-0 relative ${isPipActive ? 'gap-0 bg-black' : 'gap-0 bg-gray-50'}`}>
       {/* Background radial glow - Soft and light */}
-      {!isPipActive && (
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-[20%] left-[20%] w-[60%] h-[60%] bg-[#36C5F0]/10 rounded-full blur-[140px]" />
-          <div className="absolute bottom-[20%] right-[20%] w-[60%] h-[60%] bg-[#2EB67D]/10 rounded-full blur-[140px]" />
-        </div>
-      )}
+      
 
       {/* Focus Area - Maximized */}
       <div className={`flex-1 overflow-hidden relative transition-all duration-700 
@@ -141,7 +136,7 @@ function CustomVideoConference({ me, profiles, isPipActive, onTogglePip, activeR
         <div
           onClick={() => isFocusMode && setIsFocusMode(false)}
           className={`h-full w-full bg-white/40 backdrop-blur-3xl overflow-hidden relative group/focus transition-all duration-700 cursor-pointer
-          ${isFocusMode ? 'rounded-0' : 'rounded-[40px] shadow-[0_24px_80px_rgba(0,0,0,0.06)] border border-black/5 ring-1 ring-black/5'}`}>
+          ${isFocusMode ? 'rounded-0' : 'rounded-2xl shadow-xl border border-gray-200 ring-1 ring-gray-200'}`}>
           {focusTrack && isCameraOn(focusTrack) ? (
             <div className="w-full h-full relative cursor-default">
               <VideoTrack
@@ -149,7 +144,7 @@ function CustomVideoConference({ me, profiles, isPipActive, onTogglePip, activeR
                 className={`w-full h-full focus-video-el ${focusTrack.source === Track.Source.ScreenShare ? 'object-contain' : videoFit}`}
               />
               {screenShareTrack && (
-                <div className="absolute top-8 left-8 flex items-center gap-2 px-4 py-2 bg-[#E01E5A] rounded-full text-white text-[10px] font-black uppercase tracking-widest shadow-xl animate-pulse z-10">
+                <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 bg-rose-50 border border-rose-200 rounded-md text-rose-600 text-[11px] font-bold uppercase tracking-wider shadow-sm animate-pulse z-10">
                   <Monitor size={14} /> Live Sharing
                 </div>
               )}
@@ -163,22 +158,21 @@ function CustomVideoConference({ me, profiles, isPipActive, onTogglePip, activeR
             />
           )}
 
-          <div className={`absolute left-8 bottom-8 flex items-center gap-3 z-10 transition-all duration-500
+          <div className={`absolute left-4 bottom-4 flex items-center gap-2 z-10 transition-all duration-500
             ${isPipActive ? 'scale-75 origin-left' : ''} ${isFocusMode ? 'opacity-0 group-hover/focus:opacity-100' : ''}`}>
-            <div className="px-5 py-2.5 bg-white/90 backdrop-blur-md rounded-[20px] text-[#0D0D0D] font-black text-[12px] tracking-tight flex items-center gap-2 border border-black/5 shadow-xl">
-              <div className="w-2.5 h-2.5 rounded-full bg-[#2EB67D] animate-pulse" />
+            <div className="px-3 py-1.5 bg-white/95 backdrop-blur-sm rounded-lg text-gray-900 font-bold text-[11px] flex items-center gap-1.5 border border-gray-200 shadow-sm">
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               {focusTrack ? getDisplayName(focusTrack.participant.identity) : 'Participant'}
               {focusTrack?.participant.identity === localParticipant.identity && <span className="opacity-40 font-bold ml-1">(You)</span>}
             </div>
             {!isPipActive && (
               <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={(e) => { e.stopPropagation(); onTogglePip?.(); }}
-                className="w-11 h-11 bg-white/80 hover:bg-white backdrop-blur-md text-[#0D0D0D] rounded-2xl flex items-center justify-center transition-all border border-black/5 shadow-lg"
+                className="w-8 h-8 bg-white/90 hover:bg-white backdrop-blur-sm text-gray-700 rounded-lg flex items-center justify-center transition-all border border-gray-200 shadow-sm"
                 title="Picture in Picture"
               >
-                <PictureInPicture2 size={20} />
+                <PictureInPicture2 size={16} />
               </motion.button>
             )}
           </div>
@@ -193,7 +187,7 @@ function CustomVideoConference({ me, profiles, isPipActive, onTogglePip, activeR
         {/* Participants count - Left - Light styling */}
         {!isPipActive && (
           <div className="flex items-center gap-4 pointer-events-auto">
-            <div className="px-6 py-3.5 bg-white/90 backdrop-blur-md rounded-[24px] border border-black/5 flex items-center gap-4 shadow-xl">
+            <div className="px-6 py-3.5 bg-white/90 backdrop-blur-md rounded-xl border border-gray-200 flex items-center gap-4 shadow-xl">
               <div className="flex -space-x-3">
                 {participants.slice(0, 4).map((p, idx) => {
                   const profile = profiles.find(pr => (pr.full_name || pr.email) === p.identity) || (p.identity === localParticipant.identity ? me : null);
@@ -205,50 +199,50 @@ function CustomVideoConference({ me, profiles, isPipActive, onTogglePip, activeR
                 })}
               </div>
               <div className="flex flex-col">
-                <span className="text-[10px] font-black text-black/30 tracking-widest uppercase leading-none mb-0.5">Live Now</span>
-                <span className="text-[12px] font-black text-[#0D0D0D] tracking-tight">{participants.length} Active Participants</span>
+                <span className="text-[10px] font-bold text-black/30 tracking-widest uppercase leading-none mb-0.5">Live Now</span>
+                <span className="text-[12px] font-bold text-gray-900 tracking-tight">{participants.length} Active Participants</span>
               </div>
             </div>
           </div>
         )}
 
         {/* Center Controls - Light translucency */}
-        <div className={`flex items-center gap-2 bg-white/95 backdrop-blur-3xl rounded-[24px] border border-black/5 shadow-xl pointer-events-auto transition-all
-          ${isPipActive ? 'mx-auto px-2.5 py-1 scale-90' : 'px-5 py-2'}`}>
+        <div className={`flex items-center gap-2 bg-white/95 backdrop-blur-xl rounded-xl border border-gray-200 shadow-sm pointer-events-auto transition-all
+          ${isPipActive ? 'mx-auto px-2 py-1 scale-90' : 'px-4 py-2'}`}>
           <ControlBtn
-            icon={localParticipant.isMicrophoneEnabled ? <Mic size={isPipActive ? 14 : 16} className="text-white" /> : <MicOff size={isPipActive ? 14 : 16} className="text-white" />}
+            icon={localParticipant.isMicrophoneEnabled ? <Mic size={isPipActive ? 14 : 16} className="text-gray-700" /> : <MicOff size={isPipActive ? 14 : 16} className="text-white" />}
             onClick={() => localParticipant.setMicrophoneEnabled(!localParticipant.isMicrophoneEnabled)}
-            className={`${isPipActive ? 'w-7 h-7' : 'w-9 h-9'} rounded-[12px] flex items-center justify-center transition-all cursor-pointer border-0 ${!localParticipant.isMicrophoneEnabled ? 'bg-[#FF4A50] text-white shadow-lg' : 'bg-[#0D0D0D] text-white hover:bg-black shadow-md'}`}
+            className={`${isPipActive ? 'w-8 h-8' : 'w-10 h-10'} rounded-lg flex items-center justify-center transition-all cursor-pointer border ${!localParticipant.isMicrophoneEnabled ? 'bg-red-500 border-red-600 text-white shadow-sm' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 shadow-sm'}`}
           />
           <ControlBtn
-            icon={localParticipant.isCameraEnabled ? <Video size={isPipActive ? 14 : 16} className="text-white" /> : <CameraOff size={isPipActive ? 14 : 16} className="text-white" />}
+            icon={localParticipant.isCameraEnabled ? <Video size={isPipActive ? 14 : 16} className="text-gray-700" /> : <CameraOff size={isPipActive ? 14 : 16} className="text-white" />}
             onClick={() => localParticipant.setCameraEnabled(!localParticipant.isCameraEnabled)}
-            className={`${isPipActive ? 'w-7 h-7' : 'w-9 h-9'} rounded-[12px] flex items-center justify-center transition-all cursor-pointer border-0 ${!localParticipant.isCameraEnabled ? 'bg-[#FF4A50] text-white shadow-lg' : 'bg-[#0D0D0D] text-white hover:bg-black shadow-md'}`}
+            className={`${isPipActive ? 'w-8 h-8' : 'w-10 h-10'} rounded-lg flex items-center justify-center transition-all cursor-pointer border ${!localParticipant.isCameraEnabled ? 'bg-red-500 border-red-600 text-white shadow-sm' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 shadow-sm'}`}
           />
 
-          <div className="w-px h-4 bg-black/5 mx-0.5" />
+          <div className="w-px h-4 bg-gray-200 mx-1" />
 
           <ControlBtn
-            icon={<MonitorUp size={isPipActive ? 14 : 16} className="text-white" />}
+            icon={<MonitorUp size={isPipActive ? 14 : 16} className={localParticipant.isScreenShareEnabled ? "text-white" : "text-gray-700"} />}
             onClick={() => localParticipant.setScreenShareEnabled(!localParticipant.isScreenShareEnabled)}
-            className={`${isPipActive ? 'w-7 h-7' : 'w-9 h-9'} rounded-[12px] flex items-center justify-center transition-all cursor-pointer border-0 ${localParticipant.isScreenShareEnabled ? 'bg-[#36C5F0] border-transparent text-white shadow-lg' : 'bg-[#0D0D0D] text-white hover:bg-black shadow-md'}`}
+            className={`${isPipActive ? 'w-8 h-8' : 'w-10 h-10'} rounded-lg flex items-center justify-center transition-all cursor-pointer border ${localParticipant.isScreenShareEnabled ? 'bg-indigo-500 border-indigo-600 text-white shadow-sm' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 shadow-sm'}`}
           />
 
           <ControlBtn
-            icon={isFocusMode ? <Maximize2 size={isPipActive ? 14 : 16} className="text-white" /> : <LayoutGrid size={isPipActive ? 14 : 16} className="text-white" />}
+            icon={isFocusMode ? <Maximize2 size={isPipActive ? 14 : 16} className="text-white" /> : <LayoutGrid size={isPipActive ? 14 : 16} className="text-gray-700" />}
             onClick={() => setIsFocusMode(!isFocusMode)}
-            className={`${isPipActive ? 'w-7 h-7' : 'w-9 h-9'} rounded-[12px] flex items-center justify-center transition-all cursor-pointer border-0 ${isFocusMode ? 'bg-[#36C5F0] border-transparent text-white shadow-lg' : 'bg-[#0D0D0D] text-white hover:bg-black shadow-md'}`}
+            className={`${isPipActive ? 'w-8 h-8' : 'w-10 h-10'} rounded-lg flex items-center justify-center transition-all cursor-pointer border ${isFocusMode ? 'bg-indigo-500 border-indigo-600 text-white shadow-sm' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 shadow-sm'}`}
           />
 
           {!isPipActive && (
             <ControlBtn
-              icon={videoFit === 'cover' ? <Maximize2 size={16} className="text-[#0D0D0D]" /> : <Minimize2 size={16} className="text-[#0D0D0D]" />}
+              icon={videoFit === 'cover' ? <Maximize2 size={16} className="text-gray-700" /> : <Minimize2 size={16} className="text-gray-700" />}
               onClick={() => setVideoFit(videoFit === 'cover' ? 'contain' : 'cover')}
-              className="w-9 h-9 rounded-[12px] flex items-center justify-center transition-all cursor-pointer border-0 bg-transparent text-[#0D0D0D] hover:bg-black/5 border-transparent"
+              className="w-10 h-10 rounded-lg flex items-center justify-center transition-all cursor-pointer border bg-white border-gray-200 text-gray-700 hover:bg-gray-50 shadow-sm"
             />
           )}
 
-          {!isPipActive && <ControlBtn icon={<Settings size={16} className="text-[#0D0D0D]" />} className="w-9 h-9 rounded-[12px] flex items-center justify-center transition-all cursor-pointer border-0 bg-transparent text-[#0D0D0D] hover:bg-black/5 border-transparent" />}
+          {!isPipActive && <ControlBtn icon={<Settings size={16} className="text-gray-700" />} className="w-10 h-10 rounded-lg flex items-center justify-center transition-all cursor-pointer border bg-white border-gray-200 text-gray-700 hover:bg-gray-50 shadow-sm" />}
         </div>
 
         {/* Action Button - Right */}
@@ -263,7 +257,7 @@ function CustomVideoConference({ me, profiles, isPipActive, onTogglePip, activeR
                 }
                 room.disconnect();
               }}
-              className="px-6 py-2.5 bg-[#E01E5A] hover:bg-[#E01E5A]/90 text-white rounded-[16px] text-[12px] font-black transition-all shadow-[0_8px_20px_rgba(224,30,90,0.15)] active:scale-95 flex items-center gap-2"
+              className="px-4 py-2 bg-rose-50 border border-rose-200 hover:bg-rose-100 text-rose-600 rounded-lg text-[12px] font-bold transition-all shadow-sm active:scale-95 flex items-center gap-2"
             >
               <LogOut size={14} />
               Leave
@@ -281,8 +275,8 @@ function CustomVideoConference({ me, profiles, isPipActive, onTogglePip, activeR
               <motion.div key={track.participant.sid}
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className={`w-48 aspect-video rounded-[28px] overflow-hidden relative flex-shrink-0 bg-white shadow-2xl group transition-all duration-300
-                  ${isPinned ? 'ring-4 ring-[#36C5F0] scale-105' : 'ring-1 ring-black/5 hover:ring-black/10'}`}>
+                className={`w-48 aspect-video rounded-2xl overflow-hidden relative flex-shrink-0 bg-white shadow-2xl group transition-all duration-300
+                  ${isPinned ? 'ring-4 ring-indigo-500 scale-105' : 'ring-1 ring-gray-200 hover:ring-black/10'}`}>
 
                 <button
                   onClick={(e) => {
@@ -291,8 +285,8 @@ function CustomVideoConference({ me, profiles, isPipActive, onTogglePip, activeR
                   }}
                   className={`absolute top-3 left-3 z-20 w-9 h-9 rounded-2xl flex items-center justify-center transition-all 
                   ${isPinned
-                      ? 'bg-[#36C5F0] text-white shadow-lg'
-                      : 'bg-white/90 text-[#0D0D0D] opacity-0 group-hover:opacity-100 backdrop-blur-md shadow-xl'
+                      ? 'bg-indigo-500 text-white shadow-lg'
+                      : 'bg-white/90 text-gray-900 opacity-0 group-hover:opacity-100 backdrop-blur-md shadow-xl'
                     }`}
                 >
                   {isPinned ? <PinOff size={16} /> : <Pin size={16} />}
@@ -303,9 +297,9 @@ function CustomVideoConference({ me, profiles, isPipActive, onTogglePip, activeR
                 ) : (
                   <AvatarPlaceholder name={track.participant.identity} size={64} />
                 )}
-                <div className="absolute bottom-4 left-4 px-4 py-1.5 bg-white/95 backdrop-blur-md rounded-2xl text-[#0D0D0D] text-[11px] font-black tracking-tight shadow-lg border border-black/5">
+                <div className="absolute bottom-4 left-4 px-4 py-1.5 bg-white/95 backdrop-blur-md rounded-2xl text-gray-900 text-[11px] font-bold tracking-tight shadow-lg border border-gray-200">
                   <div className="flex items-center gap-1.5">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#2EB67D]" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                     {getDisplayName(track.participant.identity)}
                   </div>
                 </div>
@@ -446,38 +440,38 @@ function InCallView({ token, serverUrl, activeRoom, me, profiles, onLeave }: {
   }, [isPipActive]);
 
   const lobbyContent = (
-    <div className="h-full w-full flex flex-col bg-[#F9F9F7] text-sans overflow-hidden relative">
+    <div className="h-full w-full flex flex-col bg-gray-50 text-sans overflow-hidden relative">
       {/* Lobby Topbar - Premium Glassmorphism */}
       {!isPipActive && (
-        <div className="w-full px-8 py-5 flex items-center justify-between absolute top-0 left-0 right-0 z-50 backdrop-blur-xl bg-white/40 border-b border-black/5 transition-all">
+        <div className="w-full px-6 py-4 flex items-center justify-between absolute top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 transition-all shadow-sm">
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 group cursor-default">
-              <div className="w-9 h-9 rounded-xl bg-black flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-500">
-                <Layout size={18} className="text-white fill-[#36C5F0] group-hover:rotate-12 transition-transform" />
+            <div className="flex items-center gap-2 cursor-default">
+              <div className="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center shadow-sm">
+                <Video size={16} className="text-indigo-600" />
               </div>
               <div className="flex flex-col">
-                <span className="text-[12px] font-black text-[#0D0D0D] tracking-tight leading-none mb-0.5">nudge sync</span>
-                <span className="text-[10px] font-bold text-black/30 tracking-widest uppercase">Video Hub</span>
+                <span className="text-[13px] font-bold text-gray-900 tracking-tight leading-none mb-0.5">Nudge Video</span>
+                <span className="text-[11px] font-medium text-gray-500">Meeting Room</span>
               </div>
             </div>
-            <div className="h-8 w-px bg-black/5 mx-2" />
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-black/5 rounded-full">
-              <div className="w-1.5 h-1.5 rounded-full bg-[#36C5F0] animate-pulse shadow-[0_0_8px_rgba(54,197,240,0.5)]" />
-              <span className="text-[10px] font-black text-black/50 uppercase tracking-[0.15em] shrink-0">Live Platform</span>
+            <div className="h-8 w-px bg-gray-200 mx-2" />
+            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-gray-50 border border-gray-200 rounded-md">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[11px] font-semibold text-gray-600 uppercase tracking-wider shrink-0">Live</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-6">
-            <div className="px-5 py-2 bg-white/60 backdrop-blur-md rounded-2xl border border-black/5 shadow-sm flex items-center gap-3 group hover:border-[#36C5F0]/20 transition-all cursor-default">
+          <div className="flex items-center gap-4">
+            <div className="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg flex items-center gap-2">
               <div className="text-right">
-                <p className="text-[10px] font-black text-black/30 uppercase tracking-[0.15em] leading-none mb-0.5">Ready to join as</p>
-                <p className="text-[13px] font-black text-[#0D0D0D] tracking-tight leading-none">{me?.full_name || 'Visitor'}</p>
+                <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider leading-none mb-0.5">Ready to join as</p>
+                <p className="text-[12px] font-bold text-gray-900 tracking-tight leading-none">{me?.full_name || 'Visitor'}</p>
               </div>
-              <div className="w-8 h-8 rounded-full border-2 border-white shadow-md overflow-hidden ring-1 ring-black/5">
-                <Avatar url={me?.avatar_url} name={me?.full_name} email={me?.email} size={32} />
+              <div className="w-7 h-7 rounded-full border border-gray-200 overflow-hidden">
+                <Avatar url={me?.avatar_url} name={me?.full_name} email={me?.email} size={28} />
               </div>
             </div>
-            <button onClick={onLeave} className="w-10 h-10 rounded-xl bg-white/40 hover:bg-[#FF4A50] hover:text-white text-black/40 flex items-center justify-center transition-all border border-black/5 hover:border-[#FF4A50] shadow-sm active:scale-95 group">
+            <button onClick={onLeave} className="w-10 h-10 rounded-xl bg-white/40 hover:bg-red-500 hover:text-white text-black/40 flex items-center justify-center transition-all border border-gray-200 hover:border-red-500 shadow-sm active:scale-95 group">
               <LogOut size={16} className="group-hover:-translate-x-0.5 transition-transform" />
             </button>
           </div>
@@ -486,26 +480,23 @@ function InCallView({ token, serverUrl, activeRoom, me, profiles, onLeave }: {
 
       <div className="flex-1 flex items-center justify-center p-4">
         {/* Animated background - Soft and airy */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#36C5F0]/10 rounded-full blur-[140px]" />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-[#2EB67D]/10 rounded-full blur-[140px]" />
-        </div>
+        
 
         <div className="relative z-10 w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           {/* Left: Video Preview */}
           <div className="lg:col-span-7 flex flex-col items-center">
-            <div className="w-full aspect-video bg-white/60 backdrop-blur-3xl rounded-[40px] border border-black/5 shadow-[0_32px_80px_rgba(0,0,0,0.06)] overflow-hidden relative group ring-1 ring-black/5">
+            <div className="w-full aspect-video bg-white/60 backdrop-blur-3xl rounded-2xl border border-gray-200 shadow-2xl overflow-hidden relative group ring-1 ring-gray-200">
               <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: "radial-gradient(rgba(0,0,0,0.02) 1px,transparent 1px)", backgroundSize: "32px 32px" }} />
               <div className="absolute inset-0 flex items-center justify-center">
                 {!previewCam ? (
                   <div className={`flex flex-col items-center ${isPipActive ? 'gap-3' : 'gap-6'}`}>
-                    <div className={`${isPipActive ? 'w-24 h-24 ring-4' : 'w-40 h-40 ring-8'} rounded-full bg-white ring-black/5 flex items-center justify-center shadow-2xl transition-all`}>
+                    <div className={`${isPipActive ? 'w-24 h-24 ring-4' : 'w-40 h-40 ring-8'} rounded-full bg-white ring-gray-200 flex items-center justify-center shadow-2xl transition-all`}>
                       <Avatar url={me?.avatar_url} name={me?.full_name} email={me?.email} size={isPipActive ? 80 : 130} />
                     </div>
                     {!isPipActive && (
-                      <div className="flex items-center gap-2 px-4 py-2 bg-black/5 rounded-full border border-black/5">
+                      <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-full border border-gray-200">
                         <CameraOff size={16} className="text-black/40" />
-                        <span className="text-xs font-black text-black/40 uppercase tracking-widest">Camera is off</span>
+                        <span className="text-xs font-bold text-black/40 uppercase tracking-widest">Camera is off</span>
                       </div>
                     )}
                   </div>
@@ -516,28 +507,28 @@ function InCallView({ token, serverUrl, activeRoom, me, profiles, onLeave }: {
             </div>
 
             {/* Controlled Row Below Video */}
-            <div className={`${isPipActive ? 'mt-4 px-5 py-1.5 rounded-2xl scale-90' : 'mt-6 px-6 py-2.5 rounded-[24px]'} flex items-center gap-2.5 bg-white border border-black/5 shadow-[0_8px_30px_rgba(0,0,0,0.04)] z-20 transition-all`}>
+            <div className={`${isPipActive ? 'mt-4 px-5 py-1.5 rounded-2xl scale-90' : 'mt-6 px-6 py-2.5 rounded-xl'} flex items-center gap-2.5 bg-white border border-gray-200 shadow-md z-20 transition-all`}>
               <button onClick={() => setPreviewMic(!previewMic)}
-                className={`${isPipActive ? 'w-8 h-8' : 'w-10 h-10'} rounded-xl flex items-center justify-center transition-all cursor-pointer ${!previewMic ? 'bg-[#FF4A50] text-white shadow-lg' : 'bg-[#0D0D0D] text-white hover:bg-black shadow-md'}`}
+                className={`${isPipActive ? 'w-8 h-8' : 'w-10 h-10'} rounded-lg flex items-center justify-center transition-all cursor-pointer border ${!previewMic ? 'bg-red-50 text-red-600 border-red-200' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'}`}
                 title={previewMic ? 'Mute Microphone' : 'Unmute Microphone'}>
-                {!previewMic ? <MicOff size={isPipActive ? 14 : 18} className="text-white" /> : <Mic size={isPipActive ? 14 : 18} className="text-white" />}
+                {!previewMic ? <MicOff size={isPipActive ? 14 : 16} /> : <Mic size={isPipActive ? 14 : 16} />}
               </button>
-              <div className="w-px h-6 bg-black/5 mx-0.5" />
+              <div className="w-px h-6 bg-gray-200 mx-0.5" />
               <button onClick={() => setPreviewCam(!previewCam)}
-                className={`${isPipActive ? 'w-8 h-8' : 'w-10 h-10'} rounded-xl flex items-center justify-center transition-all cursor-pointer ${!previewCam ? 'bg-[#FF4A50] text-white shadow-lg' : 'bg-[#0D0D0D] text-white hover:bg-black shadow-md'}`}
+                className={`${isPipActive ? 'w-8 h-8' : 'w-10 h-10'} rounded-lg flex items-center justify-center transition-all cursor-pointer border ${!previewCam ? 'bg-red-50 text-red-600 border-red-200' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'}`}
                 title={previewCam ? 'Turn Camera Off' : 'Turn Camera On'}>
-                {!previewCam ? <CameraOff size={isPipActive ? 14 : 18} className="text-white" /> : <Camera size={isPipActive ? 14 : 18} className="text-white" />}
+                {!previewCam ? <CameraOff size={isPipActive ? 14 : 16} /> : <Camera size={isPipActive ? 14 : 16} />}
               </button>
               {!isPipActive && (
                 <>
-                  <div className="w-px h-6 bg-black/5 mx-0.5" />
+                  <div className="w-px h-6 bg-gray-100 mx-0.5" />
                   <button onClick={toggleDocumentPip}
-                    className="w-10 h-10 rounded-xl bg-white border border-black/5 text-[#0D0D0D] hover:bg-black/5 flex items-center justify-center transition-all shadow-sm"
+                    className="w-10 h-10 rounded-xl bg-white border border-gray-200 text-gray-900 hover:bg-gray-100 flex items-center justify-center transition-all shadow-sm"
                     title="Picture in Picture">
                     <PictureInPicture2 size={18} />
                   </button>
-                  <div className="w-px h-6 bg-black/5 mx-0.5" />
-                  <button className="w-10 h-10 rounded-xl bg-white border border-black/5 text-[#0D0D0D] hover:bg-black/5 flex items-center justify-center transition-all shadow-sm" title="Device Settings">
+                  <div className="w-px h-6 bg-gray-100 mx-0.5" />
+                  <button className="w-10 h-10 rounded-xl bg-white border border-gray-200 text-gray-900 hover:bg-gray-100 flex items-center justify-center transition-all shadow-sm" title="Device Settings">
                     <Settings size={18} />
                   </button>
                 </>
@@ -549,25 +540,24 @@ function InCallView({ token, serverUrl, activeRoom, me, profiles, onLeave }: {
           <div className={`${isPipActive ? 'lg:col-span-12 mt-4 space-y-4' : 'lg:col-span-5 space-y-10'} flex flex-col justify-center transition-all`}>
             <div className={`${isPipActive ? 'space-y-2' : 'space-y-5'}`}>
               {!isPipActive && (
-                <div className="inline-flex items-center gap-2.5 px-4 py-2 bg-[#36C5F0]/10 rounded-full border border-[#36C5F0]/20">
-                  <div className="w-2 h-2 rounded-full bg-[#36C5F0] animate-pulse" />
-                  <span className="text-[11px] font-black text-[#36C5F0] uppercase tracking-widest">Live Lobby</span>
+                <div className="inline-flex items-center gap-2.5 px-4 py-2 bg-indigo-500/10 rounded-full border border-indigo-500/20">
+                  <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+                  <span className="text-[11px] font-bold text-indigo-500 uppercase tracking-widest">Live Lobby</span>
                 </div>
               )}
-              <h2 className={`${isPipActive ? 'text-2xl' : 'text-6xl'} font-black text-[#0D0D0D] tracking-tighter leading-[0.9] transition-all`}>
+              <h2 className={`${isPipActive ? 'text-xl' : 'text-3xl'} font-bold text-gray-900 tracking-tight transition-all`}>
                 {activeRoom.startsWith('project-') ? 'Project Sync' : 'Direct Meeting'}
               </h2>
-              {!isPipActive && <p className="text-black/50 text-xl font-medium leading-relaxed max-w-sm">Experience crystal clear video and seamless collaboration. Your team is waiting.</p>}
+              {!isPipActive && <p className="text-gray-500 text-sm font-medium leading-relaxed max-w-sm">Experience crystal clear video and seamless collaboration. Your team is waiting.</p>}
             </div>
 
             <div className="flex flex-col gap-3">
               <motion.button
-                whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => setPreJoinComplete(true)}
-                className={`${isPipActive ? 'h-12 rounded-xl' : 'h-16 rounded-[20px]'} group relative w-full bg-[#0D0D0D] hover:bg-black overflow-hidden shadow-[0_12px_24px_rgba(0,0,0,0.1)] flex items-center justify-center cursor-pointer transition-all`}
+                className={`${isPipActive ? 'h-10 rounded-lg' : 'h-11 rounded-xl'} group relative w-full bg-indigo-600 hover:bg-indigo-700 shadow-sm flex items-center justify-center cursor-pointer transition-all`}
               >
-                <span className={`${isPipActive ? 'text-xs' : 'text-lg'} relative z-10 text-white font-black tracking-tight`}>Join Now</span>
+                <span className={`${isPipActive ? 'text-xs' : 'text-sm'} relative z-10 text-white font-bold tracking-tight`}>Join Now</span>
               </motion.button>
             </div>
           </div>
@@ -593,7 +583,7 @@ function InCallView({ token, serverUrl, activeRoom, me, profiles, onLeave }: {
         {!isPipActive && (
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="w-8 h-8 rounded-xl bg-white/80 backdrop-blur border border-[#EBEBEB] shadow-sm flex items-center justify-center text-[#0D0D0D] hover:bg-white transition-all active:scale-95 group"
+            className="w-8 h-8 rounded-xl bg-white/80 backdrop-blur border border-gray-200 shadow-sm flex items-center justify-center text-gray-900 hover:bg-white transition-all active:scale-95 group"
             title={isExpanded ? "Collapse View" : "Expand to Fullscreen"}
           >
             {isExpanded ? <Minimize2 size={12} className="group-hover:scale-110 transition-transform" /> : <Maximize2 size={16} className="group-hover:scale-110 transition-transform" />}
@@ -607,17 +597,17 @@ function InCallView({ token, serverUrl, activeRoom, me, profiles, onLeave }: {
 
   const pipPlaceholder = (
     <div className="h-full w-full flex flex-col items-center justify-center bg-gray-50/50 p-8 text-center space-y-6">
-      <div className="w-24 h-24 rounded-[32px] bg-white border border-gray-100 flex items-center justify-center shadow-sm relative">
-        <div className="absolute inset-0 bg-[#36C5F0]/10 rounded-[32px] animate-pulse" />
-        <PictureInPicture2 size={40} className="text-[#36C5F0] relative z-10" />
+      <div className="w-24 h-24 rounded-2xl bg-white border border-gray-100 flex items-center justify-center shadow-sm relative">
+        <div className="absolute inset-0 bg-indigo-500/10 rounded-2xl animate-pulse" />
+        <PictureInPicture2 size={40} className="text-indigo-500 relative z-10" />
       </div>
       <div>
-        <h3 className="text-xl font-black text-gray-900 tracking-tight">Meeting in Picture-in-Picture</h3>
+        <h3 className="text-xl font-bold text-gray-900 tracking-tight">Meeting in Picture-in-Picture</h3>
         <p className="text-gray-400 text-sm mt-1 max-w-xs mx-auto font-medium">Your meeting is continuing in a separate floating window. You can keep browsing other tabs.</p>
       </div>
       <button
         onClick={() => pipWindowRef.current?.close()}
-        className="px-8 py-3.5 bg-[#0D0D0D] hover:bg-black text-white text-sm font-black rounded-2xl transition-all shadow-md active:scale-95 flex items-center gap-2 group"
+        className="px-8 py-3.5 bg-gray-900 hover:bg-black text-white text-sm font-bold rounded-2xl transition-all shadow-md active:scale-95 flex items-center gap-2 group"
       >
         <Maximize2 size={16} className="group-hover:scale-110 transition-transform" />
         Bring it back here
@@ -626,8 +616,8 @@ function InCallView({ token, serverUrl, activeRoom, me, profiles, onLeave }: {
   );
 
   return (
-    <div className={`${isExpanded ? 'fixed inset-0 z-[100] h-screen w-screen p-4 md:p-8 bg-[#F9F9F7]' : 'h-[calc(100vh-130px)]'} w-full transition-all duration-300`}>
-      <div className="h-full w-full flex rounded-[32px] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.08)] border border-[#EBEBEB] bg-white font-sans relative" id="in-call-host">
+    <div className={`${isExpanded ? 'fixed inset-0 z-[100] h-screen w-screen p-4 md:p-8 bg-gray-50' : 'h-[calc(100vh-130px)]'} w-full transition-all duration-300`}>
+      <div className="h-full w-full flex rounded-2xl overflow-hidden shadow-lg border border-gray-200 bg-white font-sans relative" id="in-call-host">
         {isPipActive && pipWindowRef.current
           ? (
             <>
@@ -782,19 +772,19 @@ function InCallContent({ activeRoom, me, profiles, isPipActive, onTogglePip }: {
       <div className={`flex-1 flex flex-col min-w-0 ${isPipActive ? 'bg-black' : 'bg-white'}`}>
         {/* Header - Hidden in PiP */}
         {!isPipActive && (
-          <div className="flex items-center justify-between px-6 py-4 border-b border-[#F5F5F2] flex-shrink-0">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-blue-50/50 flex items-center justify-center border border-blue-100/50">
-                <Video size={20} className="text-[#36C5F0]" />
+                <Video size={20} className="text-indigo-500" />
               </div>
               <div>
-                <h2 className="text-[#0D0D0D] font-black text-[17px] tracking-tight leading-tight">{displayTitle}</h2>
+                <h2 className="text-gray-900 font-bold text-[17px] tracking-tight leading-tight">{displayTitle}</h2>
                 <div className="flex items-center gap-3 mt-1">
-                  <span className="text-[#B0B0A8] text-[11px] font-medium">
+                  <span className="text-gray-500 text-[11px] font-medium">
                     {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
                   </span>
-                  <span className="flex items-center gap-1.5 text-[11px] text-[#E01E5A] font-bold">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#E01E5A] animate-pulse" />
+                  <span className="flex items-center gap-1.5 text-[11px] text-rose-500 font-bold">
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
                     Live Meeting
                   </span>
                 </div>
@@ -804,7 +794,7 @@ function InCallContent({ activeRoom, me, profiles, isPipActive, onTogglePip }: {
             <div className="flex items-center gap-2.5">
               <button
                 onClick={() => setIsInviteOpen(true)}
-                className="flex items-center justify-center w-10 h-10 rounded-xl bg-[#36C5F0] text-white hover:bg-[#2ba9d4] transition-all shadow-lg shadow-blue-100 active:scale-95 group"
+                className="flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-500 text-white hover:bg-[#2ba9d4] transition-all shadow-lg shadow-blue-100 active:scale-95 group"
                 title="Add People"
               >
                 <UserPlus size={18} className="group-hover:scale-110 transition-transform" />
@@ -812,14 +802,14 @@ function InCallContent({ activeRoom, me, profiles, isPipActive, onTogglePip }: {
               <button
                 onClick={() => setIsChatOpen(!isChatOpen)}
                 className={`flex items-center justify-center w-10 h-10 rounded-xl transition-all border active:scale-95 shadow-sm group
-                   ${isChatOpen ? 'bg-black text-[#36C5F0] border-black' : 'bg-white text-[#0D0D0D] border-black/5 hover:bg-gray-50'}`}
+                   ${isChatOpen ? 'bg-black text-indigo-500 border-black' : 'bg-white text-gray-900 border-gray-200 hover:bg-gray-50'}`}
                 title={isChatOpen ? 'Close Chat' : 'Messages'}
               >
                 <MessageCircle size={18} className="group-hover:scale-110 transition-transform" />
               </button>
               <button
                 onClick={copyLink}
-                className="flex items-center justify-center w-10 h-10 rounded-xl bg-white text-[#0D0D0D] border border-black/5 hover:bg-gray-50 transition-all shadow-sm active:scale-95 group"
+                className="flex items-center justify-center w-10 h-10 rounded-xl bg-white text-gray-900 border border-gray-200 hover:bg-gray-50 transition-all shadow-sm active:scale-95 group"
                 title="Copy Meeting Link"
               >
                 {copied ? <Check size={18} className="text-emerald-500" /> : <Share2 size={18} className="group-hover:scale-110 transition-transform" />}
@@ -842,7 +832,7 @@ function InCallContent({ activeRoom, me, profiles, isPipActive, onTogglePip }: {
                   className="fixed inset-0 bg-black/40 backdrop-blur-sm"
                 />
                 <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-                  className="relative bg-white rounded-[32px] w-full max-w-md overflow-hidden shadow-[0_24px_80px_rgba(0,0,0,0.15)] border border-[#EBEBEB]">
+                  className="relative bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-xl border border-gray-200">
                   <div className="px-6 py-5 border-b border-gray-50 flex items-center justify-between">
                     <h3 className="text-gray-900 font-bold text-[18px]">Invite People</h3>
                     <button onClick={() => setIsInviteOpen(false)} className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-400 transition-colors">
@@ -962,7 +952,7 @@ function InCallContent({ activeRoom, me, profiles, isPipActive, onTogglePip }: {
                         style={{ background: avatarColor(senderName) }}>
                         {isMe && me?.avatar_url
                           ? <img src={me.avatar_url} className="w-full h-full object-cover" alt="" />
-                          : <div className="w-full h-full flex items-center justify-center text-white text-[10px] font-black">{getInitials(senderName)}</div>
+                          : <div className="w-full h-full flex items-center justify-center text-white text-[10px] font-bold">{getInitials(senderName)}</div>
                         }
                       </div>
                       <div className={`flex flex-col gap-0.5 max-w-[80%] ${isMe ? 'items-end' : ''}`}>
@@ -973,8 +963,8 @@ function InCallContent({ activeRoom, me, profiles, isPipActive, onTogglePip }: {
                           <span className="text-gray-300 text-[10px]">{time}</span>
                         </div>
                         <div className={`${msg.from?.sid === localParticipant?.sid
-                          ? "bg-[#36C5F0] text-white"
-                          : "bg-[#F5F5F2] text-[#0D0D0D]"
+                          ? "bg-indigo-500 text-white"
+                          : "bg-gray-100 text-gray-900"
                           } rounded-2xl p-3 max-w-[85%] shadow-sm`}>
                           {msg.message}
                         </div>
@@ -984,10 +974,10 @@ function InCallContent({ activeRoom, me, profiles, isPipActive, onTogglePip }: {
                 })}
                 {chatMessages.length === 0 && (
                   <div className="h-full flex flex-col items-center justify-center py-20">
-                    <div className="w-12 h-12 rounded-2xl bg-[#F5F5F2] flex items-center justify-center mb-3 text-[#C8C8C0]">
+                    <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center mb-3 text-gray-300">
                       <MessageCircle size={24} />
                     </div>
-                    <p className="text-[10px] font-black text-[#B0B0A8] uppercase tracking-[0.15em]">No messages yet</p>
+                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">No messages yet</p>
                   </div>
                 )}
               </div>
@@ -995,7 +985,7 @@ function InCallContent({ activeRoom, me, profiles, isPipActive, onTogglePip }: {
               <div className="p-4 border-t border-gray-100 flex-shrink-0">
                 <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-2xl px-3 h-11 focus-within:border-blue-300 focus-within:bg-white transition-all">
                   <div className="w-6 h-6 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
-                    <span className="text-amber-500 text-[11px] font-black">S</span>
+                    <span className="text-amber-500 text-[11px] font-bold">S</span>
                   </div>
                   <input
                     type="text"
@@ -1244,36 +1234,33 @@ function LobbyView({ me, profiles, onJoin, onCallUser, isLoading, error }: {
   ];
 
   return (
-    <div className="relative h-[calc(100vh-140px)] w-full flex flex-col p-4 md:p-8 bg-[#F9F9F7]">
-      <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
-        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-[#36C5F0]/5 rounded-full blur-[140px]" />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-[#2EB67D]/5 rounded-full blur-[140px]" />
-      </div>
+    <div className="relative h-[calc(100vh-140px)] w-full flex flex-col p-4 md:p-8 bg-gray-50">
+      
 
       <div className="max-w-[1200px] mx-auto w-full flex flex-col gap-6 h-full min-h-0">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 flex-shrink-0">
           <div className="space-y-1">
-            <div className="flex items-center gap-2 text-[#36C5F0] text-[10px] font-black uppercase tracking-[0.2em]">
-              <div className="w-2 h-2 rounded-full bg-[#36C5F0]" />Video hub
+            <div className="flex items-center gap-2 text-indigo-600 text-[11px] font-semibold uppercase tracking-wider">
+              <Video size={14} className="text-indigo-600" />Video Hub
             </div>
-            <h1 className="text-3xl font-black tracking-tight text-[#0D0D0D]">Meetings & Calls</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-gray-900">Meetings & Calls</h1>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <button onClick={() => setShowSchedule(true)}
-              className="h-10 px-4 rounded-xl bg-white border border-[#EBEBEB] shadow-sm text-[#0D0D0D] font-bold text-xs flex items-center gap-2 hover:bg-gray-50 transition-all active:scale-95">
-              <Calendar size={14} className="text-[#36C5F0]" /> Schedule
+              className="h-10 px-4 rounded-lg bg-white border border-gray-200 shadow-sm text-gray-700 font-semibold text-xs flex items-center gap-2 hover:bg-gray-50 transition-all active:scale-95">
+              <Calendar size={14} className="text-gray-500" /> Schedule
             </button>
             <form onSubmit={e => { e.preventDefault(); onJoin(room, identity); }}
-              className="flex items-center gap-2 bg-white p-2 rounded-2xl border border-[#EBEBEB] shadow-sm">
+              className="flex items-center gap-2 bg-white p-1.5 rounded-lg border border-gray-200 shadow-sm">
               <div className="relative">
-                <Hash className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#B0B0A8]" size={15} />
+                <Hash className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
                 <input type="text" placeholder="Join by ID..." value={room} onChange={e => setRoom(e.target.value)}
-                  className="w-40 h-10 pl-10 pr-4 bg-[#F9F9F7] border-0 rounded-xl outline-none focus:ring-1 focus:ring-[#36C5F0]/30 transition-all text-sm font-bold text-[#0D0D0D] placeholder-[#B0B0A8]" />
+                  className="w-36 h-8 pl-8 pr-3 bg-gray-50 border border-gray-200 rounded-md outline-none focus:ring-1 focus:ring-indigo-500 transition-all text-xs font-semibold text-gray-900 placeholder-gray-400" />
               </div>
               <button type="submit" disabled={isLoading || !room}
-                className="h-10 px-5 bg-[#0D0D0D] hover:bg-black disabled:bg-[#EBEBEB] text-white rounded-xl font-black text-xs transition-all flex items-center gap-2 shadow-sm active:scale-95">
-                {isLoading ? <Loader2 className="animate-spin" size={14} /> : <Zap size={14} className="fill-[#36C5F0] text-[#36C5F0]" />}
+                className="h-8 px-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 text-white rounded-md font-semibold text-xs transition-all flex items-center gap-1.5 shadow-sm active:scale-95">
+                {isLoading ? <Loader2 className="animate-spin" size={14} /> : <Zap size={14} className="text-white" />}
                 Join
               </button>
             </form>
@@ -1283,10 +1270,10 @@ function LobbyView({ me, profiles, onJoin, onCallUser, isLoading, error }: {
         {error && <div className="px-4 py-3 bg-red-50 border border-red-100 rounded-xl text-red-600 text-[13px] font-bold shadow-sm flex-shrink-0">{error}</div>}
 
         {/* Tabs */}
-        <div className="flex items-center gap-1 bg-white rounded-2xl border border-[#EBEBEB] p-1 shadow-sm flex-shrink-0 w-fit">
+        <div className="flex items-center gap-1 border-b border-gray-200 pb-px w-full">
           {TABS.map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}
-              className={`px-5 py-2 rounded-xl text-[12px] font-black transition-all ${tab === t.id ? 'bg-[#0D0D0D] text-white shadow-sm' : 'text-[#B0B0A8] hover:text-[#0D0D0D]'}`}>
+              className={`px-4 py-2 text-[13px] font-semibold transition-all border-b-2 ${tab === t.id ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}>
               {t.label}
             </button>
           ))}
@@ -1300,27 +1287,27 @@ function LobbyView({ me, profiles, onJoin, onCallUser, isLoading, error }: {
                 className="flex flex-col gap-6">
                 {/* Ongoing */}
                 <section>
-                  <p className="text-[10px] font-black text-[#B0B0A8] uppercase tracking-[0.15em] mb-3 flex items-center gap-2">
+                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse inline-block" />
                     Live Now · {ongoing.length}
                   </p>
                   {ongoing.length === 0 ? (
-                    <div className="bg-white rounded-2xl border border-[#EBEBEB] p-6 text-center">
-                      <p className="text-[#B0B0A8] text-sm">No active meetings right now.</p>
+                    <div className="bg-white rounded-2xl border border-gray-200 p-6 text-center">
+                      <p className="text-gray-500 text-sm">No active meetings right now.</p>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {ongoing.map(cl => (
-                        <motion.div key={cl.id} className="bg-white rounded-2xl border-2 border-emerald-200 p-4 flex items-center gap-4 shadow-sm shadow-emerald-50">
-                          <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center flex-shrink-0">
-                            <Video size={18} className="text-emerald-500" />
+                        <motion.div key={cl.id} className="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4 shadow-sm">
+                          <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                            <Video size={18} className="text-emerald-600" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-black text-[#0D0D0D] text-sm truncate">{resolvedNames[cl.room_name] ?? cl.room_name}</p>
-                            <p className="text-[#B0B0A8] text-xs">Live · started {formatRelative(cl.started_at ?? cl.created_at)}</p>
+                            <p className="font-semibold text-gray-900 text-sm truncate">{resolvedNames[cl.room_name] ?? cl.room_name}</p>
+                            <p className="text-gray-500 text-xs mt-0.5">Live · started {formatRelative(cl.started_at ?? cl.created_at)}</p>
                           </div>
                           <button onClick={() => onJoin(cl.room_name, identity)}
-                            className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-black text-xs transition-all active:scale-95 shadow-sm shadow-emerald-100">
+                            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold text-xs transition-all active:scale-95 shadow-sm">
                             Join
                           </button>
                         </motion.div>
@@ -1331,44 +1318,44 @@ function LobbyView({ me, profiles, onJoin, onCallUser, isLoading, error }: {
 
                 {/* Scheduled */}
                 <section>
-                  <p className="text-[10px] font-black text-[#B0B0A8] uppercase tracking-[0.15em] mb-3 flex items-center gap-2">
-                    <Calendar size={10} className="text-[#B0B0A8]" />
+                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <Calendar size={10} className="text-gray-500" />
                     Scheduled · {scheduled.length}
                   </p>
                   {scheduled.length === 0 ? (
-                    <div className="bg-white rounded-2xl border border-[#EBEBEB] p-5 flex items-center justify-between gap-4">
-                      <p className="text-[#B0B0A8] text-sm">No upcoming meetings.</p>
+                    <div className="bg-white rounded-2xl border border-gray-200 p-5 flex items-center justify-between gap-4">
+                      <p className="text-gray-500 text-sm">No upcoming meetings.</p>
                       <button onClick={() => setShowSchedule(true)}
-                        className="px-4 py-2 bg-[#F9F9F7] border border-[#EBEBEB] text-[#0D0D0D] rounded-xl font-bold text-xs hover:bg-white transition-all flex items-center gap-2 active:scale-95">
+                        className="px-4 py-2 bg-gray-50 border border-gray-200 text-gray-900 rounded-xl font-bold text-xs hover:bg-white transition-all flex items-center gap-2 active:scale-95">
                         <Plus size={13} /> Schedule one
                       </button>
                     </div>
                   ) : (
                     <div className="flex flex-col gap-2">
                       {scheduled.map(cl => (
-                        <div key={cl.id} className="bg-white rounded-2xl border border-[#EBEBEB] p-4 flex items-center gap-4 shadow-sm">
-                          <div className="w-10 h-10 rounded-xl bg-[#F5F5F2] flex items-center justify-center flex-shrink-0">
-                            <Calendar size={16} className="text-[#36C5F0]" />
+                        <div key={cl.id} className="bg-white rounded-2xl border border-gray-200 p-4 flex items-center gap-4 shadow-sm">
+                          <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0">
+                            <Calendar size={16} className="text-indigo-500" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-black text-[#0D0D0D] text-sm truncate">{resolvedNames[cl.room_name] ?? cl.room_name}</p>
-                            <p className="text-[#B0B0A8] text-xs">{cl.scheduled_at ? formatScheduled(cl.scheduled_at) : 'Soon'}</p>
+                            <p className="font-bold text-gray-900 text-sm truncate">{resolvedNames[cl.room_name] ?? cl.room_name}</p>
+                            <p className="text-gray-500 text-xs">{cl.scheduled_at ? formatScheduled(cl.scheduled_at) : 'Soon'}</p>
                           </div>
-                          <span className="text-[11px] font-bold text-[#36C5F0] bg-[#36C5F0]/10 px-3 py-1 rounded-full flex-shrink-0">
+                          <span className="text-[11px] font-bold text-indigo-500 bg-indigo-500/10 px-3 py-1 rounded-full flex-shrink-0">
                             {cl.scheduled_at ? callCountdown(cl.scheduled_at) : ''}
                           </span>
                           {cl.status === 'ongoing' ? (
                             <button onClick={() => onJoin(cl.room_name, identity)}
-                              className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-black text-xs transition-all active:scale-95 flex-shrink-0">
+                              className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-xs transition-all active:scale-95 flex-shrink-0">
                               Join Now
                             </button>
                           ) : cl.initiator_id === me?.id ? (
                             <button onClick={() => onJoin(cl.room_name, identity)}
-                              className="px-4 py-2 bg-[#0D0D0D] hover:bg-black text-white rounded-xl font-black text-xs transition-all active:scale-95 flex-shrink-0">
+                              className="px-4 py-2 bg-gray-900 hover:bg-black text-white rounded-xl font-bold text-xs transition-all active:scale-95 flex-shrink-0">
                               Start Meeting
                             </button>
                           ) : (
-                            <div className="px-4 py-2 bg-[#F9F9F7] text-[#B0B0A8] rounded-xl font-bold text-xs flex-shrink-0 border border-[#EBEBEB]">
+                            <div className="px-4 py-2 bg-gray-50 text-gray-500 rounded-xl font-bold text-xs flex-shrink-0 border border-gray-200">
                               Waiting...
                             </div>
                           )}
@@ -1383,14 +1370,14 @@ function LobbyView({ me, profiles, onJoin, onCallUser, isLoading, error }: {
             {tab === 'team' && (
               <motion.div key="team" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
                 className="flex flex-col gap-4">
-                <div className="bg-white rounded-[24px] border border-[#EBEBEB] p-6 shadow-sm">
+                <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
                   <div className="flex items-center justify-between gap-4 mb-4">
                     <div className="relative flex-1 max-w-md">
-                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#B0B0A8]" size={16} />
+                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
                       <input type="text" placeholder="Search team members..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-                        className="w-full h-11 pl-12 pr-4 bg-[#F9F9F7] border border-transparent rounded-[16px] outline-none focus:border-[#EBEBEB] transition-all text-sm font-semibold text-[#0D0D0D] placeholder-[#B0B0A8]" />
+                        className="w-full h-11 pl-12 pr-4 bg-gray-50 border border-transparent rounded-[16px] outline-none focus:border-gray-200 transition-all text-sm font-semibold text-gray-900 placeholder-gray-400" />
                     </div>
-                    <span className="text-[10px] font-black text-[#B0B0A8] uppercase tracking-widest bg-[#F9F9F7] px-3 py-1.5 rounded-xl border border-[#F5F5F2]">
+                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-100">
                       {filteredProfiles.length} members
                     </span>
                   </div>
@@ -1399,7 +1386,7 @@ function LobbyView({ me, profiles, onJoin, onCallUser, isLoading, error }: {
                       {filteredProfiles.map((p, idx) => (
                         <motion.div key={p.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: idx * 0.02 }}
-                          className="group flex items-center gap-4 p-3 hover:bg-[#F9F9F7] rounded-2xl transition-all">
+                          className="group flex items-center gap-4 p-3 hover:bg-gray-50 rounded-2xl transition-all">
                           <div className="relative flex-shrink-0">
                             <Avatar url={p.avatar_url} name={p.full_name} email={p.email} size={44}
                               fallbackColor={idx % 2 === 0 ? '#4F8EF7' : '#2EB67D'} />
@@ -1411,10 +1398,10 @@ function LobbyView({ me, profiles, onJoin, onCallUser, isLoading, error }: {
                           </div>
                           <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button onClick={() => onCallUser(p)} disabled={isLoading}
-                              className="flex items-center gap-2 h-9 px-4 bg-[#36C5F0] text-white rounded-xl font-bold text-xs hover:bg-[#2ba9d4] transition-all disabled:opacity-50 active:scale-95">
+                              className="flex items-center gap-2 h-9 px-4 bg-indigo-500 text-white rounded-xl font-bold text-xs hover:bg-[#2ba9d4] transition-all disabled:opacity-50 active:scale-95">
                               <Video size={14} /> Call
                             </button>
-                            <button className="flex items-center justify-center w-9 h-9 bg-white text-gray-400 border border-[#EBEBEB] rounded-xl hover:text-gray-900 hover:border-gray-300 transition-all">
+                            <button className="flex items-center justify-center w-9 h-9 bg-white text-gray-400 border border-gray-200 rounded-xl hover:text-gray-900 hover:border-gray-300 transition-all">
                               <MessageCircle size={14} />
                             </button>
                           </div>
@@ -1423,8 +1410,8 @@ function LobbyView({ me, profiles, onJoin, onCallUser, isLoading, error }: {
                     </AnimatePresence>
                     {filteredProfiles.length === 0 && (
                       <div className="py-20 flex flex-col items-center justify-center">
-                        <div className="w-14 h-14 rounded-2xl bg-[#F9F9F7] border border-[#EBEBEB] flex items-center justify-center mb-3 text-[#C8C8C0]"><Search size={28} /></div>
-                        <p className="font-black text-[#0D0D0D] text-sm">No team members found</p>
+                        <div className="w-14 h-14 rounded-2xl bg-gray-50 border border-gray-200 flex items-center justify-center mb-3 text-gray-300"><Search size={28} /></div>
+                        <p className="font-bold text-gray-900 text-sm">No team members found</p>
                       </div>
                     )}
                   </div>
@@ -1434,14 +1421,14 @@ function LobbyView({ me, profiles, onJoin, onCallUser, isLoading, error }: {
 
             {tab === 'history' && (
               <motion.div key="history" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-                <div className="bg-white rounded-[24px] border border-[#EBEBEB] overflow-hidden shadow-sm">
+                <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
                   {history.length === 0 ? (
                     <div className="py-24 flex flex-col items-center justify-center">
-                      <div className="w-14 h-14 rounded-2xl bg-[#F9F9F7] border border-[#EBEBEB] flex items-center justify-center mb-3 text-[#C8C8C0]">
+                      <div className="w-14 h-14 rounded-2xl bg-gray-50 border border-gray-200 flex items-center justify-center mb-3 text-gray-300">
                         <PhoneCall size={26} />
                       </div>
-                      <p className="font-black text-[#0D0D0D] text-sm">No call history yet</p>
-                      <p className="text-[#B0B0A8] text-xs mt-1">Your past calls will appear here.</p>
+                      <p className="font-bold text-gray-900 text-sm">No call history yet</p>
+                      <p className="text-gray-500 text-xs mt-1">Your past calls will appear here.</p>
                     </div>
                   ) : (
                     <div className="divide-y divide-[#F5F5F2]">
@@ -1451,24 +1438,24 @@ function LobbyView({ me, profiles, onJoin, onCallUser, isLoading, error }: {
                         const duration = formatDuration(cl.started_at, cl.ended_at);
                         return (
                           <motion.div key={cl.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02 }}
-                            className="flex items-center gap-4 px-6 py-4 hover:bg-[#F9F9F7] transition-colors group">
-                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${isMissed ? 'bg-red-50' : 'bg-[#F9F9F7]'}`}>
+                            className="flex items-center gap-4 px-6 py-4 hover:bg-gray-50 transition-colors group">
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${isMissed ? 'bg-red-50' : 'bg-gray-50'}`}>
                               {isMissed
                                 ? <PhoneMissed size={16} className="text-red-400" />
                                 : isMe
-                                  ? <PhoneOutgoing size={16} className="text-[#36C5F0]" />
-                                  : <PhoneIncoming size={16} className="text-[#2EB67D]" />
+                                  ? <PhoneOutgoing size={16} className="text-indigo-500" />
+                                  : <PhoneIncoming size={16} className="text-emerald-500" />
                               }
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="font-bold text-[#0D0D0D] text-sm truncate">{resolvedNames[cl.room_name] ?? cl.room_name}</p>
-                              <p className={`text-xs font-medium ${isMissed ? 'text-red-400' : 'text-[#B0B0A8]'}`}>
+                              <p className="font-bold text-gray-900 text-sm truncate">{resolvedNames[cl.room_name] ?? cl.room_name}</p>
+                              <p className={`text-xs font-medium ${isMissed ? 'text-red-400' : 'text-gray-500'}`}>
                                 {isMissed ? 'Missed · ' : ''}{formatRelative(cl.created_at)}
                                 {duration && ` · ${duration}`}
                               </p>
                             </div>
                             <button onClick={() => onJoin(cl.room_name, identity)}
-                              className="opacity-0 group-hover:opacity-100 px-3 py-1.5 rounded-xl bg-[#F9F9F7] border border-[#EBEBEB] text-[#0D0D0D] font-bold text-xs hover:bg-white transition-all flex items-center gap-1.5">
+                              className="opacity-0 group-hover:opacity-100 px-3 py-1.5 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 font-bold text-xs hover:bg-white transition-all flex items-center gap-1.5">
                               <PhoneCall size={12} /> Call back
                             </button>
                           </motion.div>
@@ -1491,49 +1478,49 @@ function LobbyView({ me, profiles, onJoin, onCallUser, isLoading, error }: {
               onClick={() => setShowSchedule(false)} className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
             <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="relative bg-white rounded-[32px] w-full max-w-md p-8 shadow-[0_24px_80px_rgba(0,0,0,0.15)] border border-[#EBEBEB]">
-              <button onClick={() => setShowSchedule(false)} className="absolute top-5 right-5 w-9 h-9 rounded-full hover:bg-[#F5F5F2] flex items-center justify-center text-[#B0B0A8] transition-colors">
+              className="relative bg-white rounded-2xl w-full max-w-md p-8 shadow-xl border border-gray-200">
+              <button onClick={() => setShowSchedule(false)} className="absolute top-5 right-5 w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-500 transition-colors">
                 <X size={18} />
               </button>
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-2xl bg-[#36C5F0]/10 flex items-center justify-center">
-                  <Calendar size={20} className="text-[#36C5F0]" />
+                <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 flex items-center justify-center">
+                  <Calendar size={20} className="text-indigo-500" />
                 </div>
                 <div>
-                  <h3 className="font-black text-[#0D0D0D] text-lg">Schedule Meeting</h3>
-                  <p className="text-[#B0B0A8] text-xs">Auto-notify your team in chat</p>
+                  <h3 className="font-bold text-gray-900 text-lg">Schedule Meeting</h3>
+                  <p className="text-gray-500 text-xs">Auto-notify your team in chat</p>
                 </div>
               </div>
               <div className="flex flex-col gap-4">
                 <div>
-                  <label className="text-[11px] font-black text-[#B0B0A8] uppercase tracking-wider block mb-1.5">Title (optional)</label>
+                  <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider block mb-1.5">Title (optional)</label>
                   <input type="text" placeholder="Weekly sync, Design review…" value={schedTitle} onChange={e => setSchedTitle(e.target.value)}
-                    className="w-full h-11 px-4 bg-[#F9F9F7] border border-[#EBEBEB] rounded-2xl text-sm font-semibold text-[#0D0D0D] outline-none focus:ring-2 focus:ring-[#36C5F0]/20 transition-all" />
+                    className="w-full h-11 px-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-semibold text-gray-900 outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all" />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[11px] font-black text-[#B0B0A8] uppercase tracking-wider block mb-1.5">Date</label>
+                    <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider block mb-1.5">Date</label>
                     <input type="date" value={schedDate} onChange={e => setSchedDate(e.target.value)}
-                      className="w-full h-11 px-4 bg-[#F9F9F7] border border-[#EBEBEB] rounded-2xl text-sm font-semibold text-[#0D0D0D] outline-none focus:ring-2 focus:ring-[#36C5F0]/20 transition-all" />
+                      className="w-full h-11 px-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-semibold text-gray-900 outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all" />
                   </div>
                   <div>
-                    <label className="text-[11px] font-black text-[#B0B0A8] uppercase tracking-wider block mb-1.5">Time</label>
+                    <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider block mb-1.5">Time</label>
                     <input type="time" value={schedTime} onChange={e => setSchedTime(e.target.value)}
-                      className="w-full h-11 px-4 bg-[#F9F9F7] border border-[#EBEBEB] rounded-2xl text-sm font-semibold text-[#0D0D0D] outline-none focus:ring-2 focus:ring-[#36C5F0]/20 transition-all" />
+                      className="w-full h-11 px-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-semibold text-gray-900 outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all" />
                   </div>
                 </div>
                 {projects.length > 0 && (
                   <div>
-                    <label className="text-[11px] font-black text-[#B0B0A8] uppercase tracking-wider block mb-1.5">Project (optional)</label>
+                    <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider block mb-1.5">Project (optional)</label>
                     <select value={schedProjectId} onChange={e => setSchedProjectId(e.target.value)}
-                      className="w-full h-11 px-4 bg-[#F9F9F7] border border-[#EBEBEB] rounded-2xl text-sm font-semibold text-[#0D0D0D] outline-none focus:ring-2 focus:ring-[#36C5F0]/20 transition-all">
+                      className="w-full h-11 px-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-semibold text-gray-900 outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all">
                       <option value="">Personal / No project</option>
                       {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                     </select>
                   </div>
                 )}
                 <button onClick={handleSchedule} disabled={schedLoading || !schedDate || !schedTime}
-                  className="w-full h-12 bg-[#0D0D0D] hover:bg-black text-white rounded-2xl font-black text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:bg-[#EBEBEB] disabled:text-[#B0B0A8] mt-2">
+                  className="w-full h-12 bg-gray-900 hover:bg-black text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:bg-[#EBEBEB] disabled:text-gray-500 mt-2">
                   {schedLoading ? <Loader2 size={16} className="animate-spin" /> : <Calendar size={16} />}
                   Schedule Meeting
                 </button>

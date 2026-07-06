@@ -283,42 +283,42 @@ export default function SettingsPage() {
   ];
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8 py-4">
+    <div className="mx-auto w-full">
 
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-5 border-b border-gray-200 mb-6">
         <div>
-          <h1 className="text-[32px] font-black text-gray-900 tracking-tight leading-none">Settings</h1>
-          <p className="text-gray-500 text-[15px] mt-2">Manage your personal presence and collective workspace.</p>
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Settings</h1>
+          <p className="text-gray-500 text-[14px] mt-1">Manage your personal presence and collective workspace.</p>
         </div>
-        <div className="flex items-center gap-2 text-[13px] font-bold text-[#36C5F0] bg-[#36C5F0]/5 px-4 py-2 rounded-full border border-[#36C5F0]/10">
-          <Zap size={14} />
+        <div className="flex items-center gap-2 text-[12px] font-semibold text-[#4F46E5] bg-indigo-50 px-3 py-1.5 rounded-full border border-indigo-100 shadow-sm">
+          <Zap size={14} className="fill-indigo-500" />
           <span>{editingWorkspace?.plan ?? "Solo"} Plan</span>
         </div>
       </div>
 
-      <div className="flex flex-col lg:grid lg:grid-cols-4 gap-8">
+      <div className="flex flex-col lg:flex-row gap-8 lg:gap-10 items-start">
 
         {/* Sidebar tabs */}
-        <aside className="lg:col-span-1">
-          <div className="sticky top-8 flex flex-row lg:flex-col gap-1.5 overflow-x-auto lg:overflow-visible pb-4 lg:pb-0 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+        <aside className="w-full lg:w-48 flex-shrink-0">
+          <div className="flex flex-row lg:flex-col gap-1 overflow-x-auto lg:overflow-visible pb-4 lg:pb-0 scrollbar-hide -mx-6 px-6 lg:mx-0 lg:px-0">
             {tabs.map((item) => (
               <button
                 key={item.label}
                 onClick={() => setActiveTab(item.label)}
-                className={`flex-shrink-0 flex items-center gap-3 px-4 py-2.5 rounded-xl text-[13.5px] font-bold border-0 cursor-pointer transition-all ${activeTab === item.label
-                  ? "bg-[#36C5F0]/10 text-[#36C5F0] shadow-sm"
-                  : "bg-transparent text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium border-0 cursor-pointer transition-all ${activeTab === item.label
+                  ? "bg-indigo-50 text-[#4F46E5]"
+                  : "bg-transparent text-gray-500 hover:bg-gray-100 hover:text-gray-900"
                   }`}
               >
                 <item.icon size={16} />
                 <span className="whitespace-nowrap">{item.label}</span>
               </button>
             ))}
-            <div className="hidden lg:block pt-6 mt-6 border-t border-gray-100/50">
+            <div className="hidden lg:block pt-4 mt-4 border-t border-gray-100">
               <button
                 onClick={handleSignOut}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-[13.5px] font-bold text-red-500 border-0 bg-transparent cursor-pointer hover:bg-red-50/50 transition-all"
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium text-red-600 border-0 bg-transparent cursor-pointer hover:bg-red-50 transition-all"
               >
                 <LogOut size={16} />
                 Sign Out
@@ -328,73 +328,72 @@ export default function SettingsPage() {
         </aside>
 
         {/* Main content */}
-        <div className="lg:col-span-3 space-y-6 min-w-0">
+        <div className="flex-1 w-full max-w-3xl space-y-6 min-w-0">
           <AnimatePresence mode="wait">
 
             {/* ── Profile ── */}
             {activeTab === "Profile" && (
               <motion.section
                 key="profile"
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.98 }}
-                className="bg-white/70 backdrop-blur-xl border border-gray-200/50 rounded-[32px] p-8 lg:p-10 shadow-xl shadow-gray-200/20"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="bg-white border border-[#E5E7EB] rounded-2xl p-6 shadow-[0_1px_2px_rgba(0,0,0,0.05)]"
               >
-                <h3 className="text-[18px] font-black text-gray-900 mb-6">Personal Information</h3>
+                <h3 className="text-[15px] font-bold text-gray-900 mb-4 border-b border-gray-100 pb-3">Personal Information</h3>
 
-                {/* Avatar */}
-                <div className="flex items-center gap-6 mb-8">
-                  <div className="relative group">
-                    <Avatar url={profile?.avatar_url} name={fullName} email={email} role="You" size={80} className="rounded-2xl" />
-                    <label className="absolute -bottom-2 -right-2 p-2 bg-white rounded-xl border border-gray-100 shadow-lg text-gray-500 hover:text-[#36C5F0] transition-all cursor-pointer group-hover:scale-110">
-                      <Camera size={16} />
+                <div className="flex items-center gap-5 mb-6">
+                  <div className="relative group flex-shrink-0">
+                    <Avatar url={profile?.avatar_url} name={fullName} email={email} role="You" size={64} className="rounded-2xl shadow-sm" />
+                    <label className="absolute -bottom-2 -right-2 p-1.5 bg-white rounded-lg border border-gray-200 shadow-sm text-gray-500 hover:text-[#4F46E5] transition-all cursor-pointer group-hover:scale-105">
+                      <Camera size={14} />
                       <input type="file" className="hidden" accept="image/*" onChange={handleAvatarUpload} />
                     </label>
                   </div>
                   <div>
-                    <h4 className="text-[16px] font-bold text-gray-900">Profile Photo</h4>
-                    <p className="text-[13px] text-gray-400">Click to upload a new avatar.</p>
+                    <h4 className="text-[14px] font-semibold text-gray-900">Profile Photo</h4>
+                    <p className="text-[12px] text-gray-500 mt-0.5">Click to upload a new avatar.</p>
                   </div>
                 </div>
 
-                <div className="space-y-5">
-                  <div className="space-y-2">
-                    <label className="text-[11px] font-black uppercase tracking-widest text-gray-400">Full Name</label>
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[12px] font-semibold text-gray-700">Full Name</label>
                     <div className="relative">
-                      <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
                       <input
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
-                        className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-[14px] font-medium outline-none focus:border-[#36C5F0] transition-all"
+                        className="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-lg text-[13px] font-medium outline-none focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] transition-all shadow-sm"
                       />
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-[11px] font-black uppercase tracking-widest text-gray-400">Email Address</label>
+                  <div className="space-y-1.5">
+                    <label className="text-[12px] font-semibold text-gray-700">Email Address</label>
                     <div className="relative">
-                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                      <input value={email} disabled className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-[14px] font-medium outline-none opacity-60 cursor-not-allowed" />
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                      <input value={email} disabled className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium outline-none opacity-70 cursor-not-allowed shadow-sm" />
                     </div>
-                    <p className="text-[11px] text-gray-400 italic">Contact support to change your primary email.</p>
+                    <p className="text-[11px] text-gray-400">Contact support to change your primary email.</p>
                   </div>
                 </div>
 
-                <div className="mt-4 pt-4 border-t border-gray-50 flex flex-col sm:flex-row items-center justify-between gap-4">
-                  <div className="flex items-center gap-3 w-full sm:w-auto">
+                <div className="mt-5 pt-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
                     <button
                       onClick={handleSave}
                       disabled={saving || fullName === profile?.full_name}
-                      className="flex-1 sm:flex-none px-6 py-2.5 bg-[#0D0D0D] text-white rounded-xl text-[13.5px] font-bold border-0 cursor-pointer disabled:opacity-50 hover:bg-gray-800 transition-all flex items-center justify-center gap-2"
+                      className="flex-1 sm:flex-none px-4 py-1.5 bg-gray-900 text-white rounded-lg text-[13px] font-semibold border-0 cursor-pointer disabled:opacity-50 hover:bg-black transition-all flex items-center justify-center gap-1.5 shadow-sm"
                     >
-                      {saving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
+                      {saving ? <Loader2 size={14} className="animate-spin" /> : null}
                       Save Changes
                     </button>
                     <button
                       onClick={() => setFullName(profile?.full_name ?? "")}
                       disabled={saving || fullName === profile?.full_name}
-                      className="flex-1 sm:flex-none px-6 py-2.5 bg-gray-50 text-gray-500 rounded-xl text-[13.5px] font-bold border-0 cursor-pointer disabled:opacity-50 hover:bg-gray-100 transition-all"
+                      className="flex-1 sm:flex-none px-4 py-1.5 bg-white text-gray-700 border border-gray-200 rounded-lg text-[13px] font-semibold cursor-pointer disabled:opacity-50 hover:bg-gray-50 transition-all shadow-sm"
                     >
-                      Discard
+                      Cancel
                     </button>
                   </div>
                   {success && (
@@ -411,26 +410,26 @@ export default function SettingsPage() {
             {activeTab === "Workspace" && (
               <motion.section
                 key="workspace"
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.98 }}
-                className="bg-white/70 backdrop-blur-xl border border-gray-200/50 rounded-[32px] p-8 lg:p-10 shadow-xl shadow-gray-200/20"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="bg-white border border-[#E5E7EB] rounded-2xl p-6 shadow-[0_1px_2px_rgba(0,0,0,0.05)]"
               >
                 {/* Header */}
-                <div className="flex items-center justify-between mb-8">
-                  <h3 className="text-[18px] font-black text-gray-900">Workspace Settings</h3>
+                <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-3">
+                  <h3 className="text-[15px] font-bold text-gray-900">Workspace Settings</h3>
                   <button
                     onClick={() => setShowCreateModal(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-[#36C5F0]/10 text-[#36C5F0] rounded-xl text-[13px] font-bold border-0 cursor-pointer hover:bg-[#36C5F0]/20 transition-all"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-[#4F46E5] rounded-lg text-[12px] font-semibold border-0 cursor-pointer hover:bg-indigo-100 transition-all"
                   >
-                    <Plus size={16} /> New Workspace
+                    <Plus size={14} /> New Workspace
                   </button>
                 </div>
 
                 {/* Workspace picker */}
-                <div className="mb-8">
-                  <p className="text-[11px] font-black uppercase tracking-widest text-gray-400 mb-3">Your Workspaces</p>
-                  <div className="flex flex-wrap gap-3">
+                <div className="mb-5">
+                  <p className="text-[12px] font-semibold text-gray-700 mb-2">Your Workspaces</p>
+                  <div className="flex flex-wrap gap-2">
                     {workspaces.map((ws) => {
                       const initials = ws.name.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase();
                       const isEditing = editingWorkspace?.id === ws.id;
@@ -438,64 +437,64 @@ export default function SettingsPage() {
                         <button
                           key={ws.id}
                           onClick={() => handleSelectWorkspace(ws)}
-                          className={`flex items-center gap-3 px-4 py-3 rounded-2xl border transition-all cursor-pointer ${isEditing
-                            ? "bg-[#36C5F0]/5 border-[#36C5F0] shadow-sm"
-                            : "bg-white border-gray-100 hover:border-gray-200"
+                          className={`flex items-center gap-2.5 px-3 py-1.5 rounded-lg border transition-all cursor-pointer ${isEditing
+                            ? "bg-indigo-50/50 border-[#4F46E5] shadow-sm"
+                            : "bg-white border-gray-200 hover:border-gray-300 shadow-sm"
                             }`}
                         >
                           {/* Logo or gradient initial */}
-                          <div className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center flex-shrink-0"
-                            style={{ background: ws.logo_url ? "transparent" : "linear-gradient(135deg,#36C5F0,#2EB67D)" }}>
+                          <div className="w-7 h-7 rounded-md overflow-hidden flex items-center justify-center flex-shrink-0"
+                            style={{ background: ws.logo_url ? "transparent" : "linear-gradient(135deg, #4F46E5, #6366F1)" }}>
                             {ws.logo_url
                               ? <img src={ws.logo_url} alt={ws.name} className="w-full h-full object-cover" />
-                              : <span className="text-white text-[11px] font-black">{initials}</span>
+                              : <span className="text-white text-[10px] font-bold">{initials}</span>
                             }
                           </div>
                           <div className="text-left">
-                            <p className={`text-[13.5px] font-bold ${isEditing ? "text-[#36C5F0]" : "text-gray-900"}`}>
+                            <p className={`text-[12.5px] font-semibold ${isEditing ? "text-[#4F46E5]" : "text-gray-900"}`}>
                               {ws.name}
                             </p>
-                            <p className="text-[10px] text-gray-400 capitalize">{ws.plan} Plan</p>
+                            <p className="text-[10px] text-gray-500 capitalize leading-none mt-0.5">{ws.plan} Plan</p>
                           </div>
                         </button>
                       );
                     })}
                     <button
                       onClick={() => setShowCreateModal(true)}
-                      className="flex items-center gap-2 px-4 py-3 rounded-2xl border border-dashed border-gray-200 text-gray-400 hover:text-[#36C5F0] hover:border-[#36C5F0] transition-all cursor-pointer bg-transparent"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-dashed border-gray-300 text-gray-500 hover:text-[#4F46E5] hover:border-[#4F46E5] transition-all cursor-pointer bg-gray-50"
                     >
-                      <Plus size={18} />
-                      <span className="text-[13px] font-bold">Add</span>
+                      <Plus size={14} />
+                      <span className="text-[12px] font-semibold">Add</span>
                     </button>
                   </div>
                 </div>
 
                 {/* Logo upload */}
-                <div className="flex items-center gap-6 mb-8 p-5 bg-gray-50 rounded-2xl border border-gray-100">
+                <div className="flex items-center gap-4 mb-5 p-3 bg-gray-50 rounded-xl border border-gray-200">
                   <div className="relative group flex-shrink-0">
-                    <div className="w-[72px] h-[72px] rounded-2xl border border-gray-200 flex items-center justify-center overflow-hidden bg-white shadow-sm">
+                    <div className="w-[48px] h-[48px] rounded-lg border border-gray-200 flex items-center justify-center overflow-hidden bg-white shadow-sm">
                       {wsLogoUrl
                         ? <img src={wsLogoUrl} className="w-full h-full object-cover" alt="Logo" />
                         : (
                           <div className="w-full h-full flex items-center justify-center"
-                            style={{ background: "linear-gradient(135deg,#36C5F0,#2EB67D)" }}>
-                            <span className="text-white text-[18px] font-black">
+                            style={{ background: "linear-gradient(135deg, #4F46E5, #6366F1)" }}>
+                            <span className="text-white text-[14px] font-bold">
                               {editingWorkspace?.name?.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase()}
                             </span>
                           </div>
                         )
                       }
                     </div>
-                    <label className="absolute -bottom-2 -right-2 p-2 bg-white rounded-xl border border-gray-100 shadow-lg text-gray-500 hover:text-[#36C5F0] transition-all cursor-pointer group-hover:scale-110">
-                      <Camera size={14} />
+                    <label className="absolute -bottom-1.5 -right-1.5 p-1 bg-white rounded-md border border-gray-200 shadow-sm text-gray-500 hover:text-[#4F46E5] transition-all cursor-pointer group-hover:scale-105">
+                      <Camera size={12} />
                       <input type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} />
                     </label>
                   </div>
                   <div>
-                    <h4 className="text-[15px] font-bold text-gray-900">Workspace Logo</h4>
-                    <p className="text-[12px] text-gray-400 mt-0.5">Shown in the sidebar and workspace switcher.</p>
+                    <h4 className="text-[13px] font-semibold text-gray-900">Workspace Logo</h4>
+                    <p className="text-[11px] text-gray-500 mt-0.5">Shown in the sidebar and workspace switcher.</p>
                     {wsSaving && (
-                      <p className="text-[12px] text-[#36C5F0] mt-1 flex items-center gap-1">
+                      <p className="text-[12px] text-[#4F46E5] mt-1 flex items-center gap-1">
                         <Loader2 size={12} className="animate-spin" /> Uploading…
                       </p>
                     )}
@@ -503,49 +502,37 @@ export default function SettingsPage() {
                 </div>
 
                 {/* Edit fields */}
-                <div className="space-y-5">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div className="space-y-2">
-                      <label className="text-[11px] font-black uppercase tracking-widest text-gray-400">Workspace Name</label>
+                <div className="space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="text-[12px] font-semibold text-gray-700">Workspace Name</label>
                       <div className="relative">
-                        <Building className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                        <Building className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
                         <input
                           value={wsName}
                           onChange={(e) => setWsName(e.target.value)}
                           placeholder="My Workspace"
-                          className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-[14px] font-medium outline-none focus:border-[#36C5F0] transition-all"
+                          className="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-lg text-[13px] font-medium outline-none focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] transition-all shadow-sm"
                         />
                       </div>
                     </div>
-                    <div className="space-y-2">
-                      <label className="text-[11px] font-black uppercase tracking-widest text-gray-400">Slug</label>
+                    <div className="space-y-1.5">
+                      <label className="text-[12px] font-semibold text-gray-700">Slug</label>
                       <div className="relative">
-                        <Globe className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                        <Globe className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
                         <input
                           value={wsSlug}
                           onChange={(e) => setWsSlug(e.target.value)}
                           placeholder="my-workspace"
-                          className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-[14px] font-medium outline-none focus:border-[#36C5F0] transition-all"
+                          className="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-lg text-[13px] font-medium outline-none focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] transition-all shadow-sm"
                         />
                       </div>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[11px] font-black uppercase tracking-widest text-gray-400">Logo URL</label>
-                    <div className="relative">
-                      <Link className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                      <input
-                        value={wsLogoUrl}
-                        onChange={(e) => setWsLogoUrl(e.target.value)}
-                        placeholder="https://example.com/logo.png"
-                        className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-[14px] font-medium outline-none focus:border-[#36C5F0] transition-all"
-                      />
                     </div>
                   </div>
                 </div>
 
                 {/* Save */}
-                <div className="mt-8 pt-8 border-t border-gray-50 flex flex-col sm:flex-row items-center gap-4">
+                <div className="mt-5 pt-4 border-t border-gray-100 flex flex-col sm:flex-row items-center gap-3">
                   <button
                     onClick={handleSaveWorkspace}
                     disabled={
@@ -554,10 +541,10 @@ export default function SettingsPage() {
                         wsSlug === editingWorkspace?.slug &&
                         wsLogoUrl === (editingWorkspace?.logo_url ?? ""))
                     }
-                    className="w-full sm:w-auto px-6 py-2.5 bg-[#0D0D0D] text-white rounded-xl text-[13.5px] font-bold border-0 cursor-pointer disabled:opacity-50 hover:bg-gray-800 transition-all flex items-center justify-center gap-2"
+                    className="w-full sm:w-auto px-4 py-1.5 bg-gray-900 text-white rounded-lg text-[13px] font-semibold border-0 cursor-pointer disabled:opacity-50 hover:bg-black transition-all flex items-center justify-center gap-1.5 shadow-sm"
                   >
-                    {wsSaving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
-                    Update Workspace
+                    {wsSaving ? <Loader2 size={14} className="animate-spin" /> : null}
+                    Save Changes
                   </button>
                   {success && (
                     <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }}
@@ -568,12 +555,14 @@ export default function SettingsPage() {
                 </div>
 
                 {/* Danger zone */}
-                <div className="mt-12 pt-8 border-t border-red-50">
-                  <h4 className="text-[14px] font-black text-red-600 mb-2 uppercase tracking-widest">Danger Zone</h4>
-                  <p className="text-[13px] text-gray-400 mb-4">Once you delete a workspace, there is no going back.</p>
+                <div className="mt-5 pt-4 border-t border-red-100 flex items-center justify-between gap-4">
+                  <div>
+                    <h4 className="text-[13px] font-semibold text-red-600 mb-0.5">Danger Zone</h4>
+                    <p className="text-[12px] text-gray-500">Once you delete a workspace, there is no going back.</p>
+                  </div>
                   <button
                     onClick={() => setShowDeleteConfirm(true)}
-                    className="px-6 py-3 bg-red-50 text-red-600 rounded-xl text-[13px] font-bold border border-red-100 hover:bg-red-600 hover:text-white transition-all cursor-pointer"
+                    className="flex-shrink-0 px-3 py-1.5 bg-white text-red-600 rounded-lg text-[12px] font-semibold border border-red-200 hover:bg-red-50 hover:border-red-300 transition-all cursor-pointer shadow-sm"
                   >
                     Delete Workspace
                   </button>
@@ -583,25 +572,25 @@ export default function SettingsPage() {
 
             {/* ── Notifications ── */}
             {activeTab === "Notifications" && (
-              <motion.section key="notifications" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98 }}
-                className="bg-white/70 backdrop-blur-xl border border-gray-200/50 rounded-[32px] p-8 lg:p-10 shadow-xl shadow-gray-200/20">
-                <h3 className="text-[18px] font-black text-gray-900 mb-6">Notification Preferences</h3>
-                <div className="space-y-6">
+              <motion.section key="notifications" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
+                className="bg-white border border-[#E5E7EB] rounded-2xl p-6 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
+                <h3 className="text-[15px] font-bold text-gray-900 mb-4 border-b border-gray-100 pb-3">Notification Preferences</h3>
+                <div className="space-y-5">
                   {([
                     { key: "email" as const, title: "Email Notifications", desc: "Receive daily summary and direct mentions." },
                     { key: "push" as const, title: "Push Notifications", desc: "Get real-time updates in your browser." },
                     { key: "tasks" as const, title: "Task Assignments", desc: "Notify me when a task is assigned to me." },
                   ]).map((pref) => (
-                    <div key={pref.key} className="flex items-center justify-between pb-6 border-b border-gray-50 last:border-0">
+                    <div key={pref.key} className="flex items-center justify-between pb-5 border-b border-gray-100 last:border-0 last:pb-0">
                       <div>
-                        <h4 className="text-[14px] font-bold text-gray-900">{pref.title}</h4>
-                        <p className="text-[12px] text-gray-400">{pref.desc}</p>
+                        <h4 className="text-[14px] font-semibold text-gray-900">{pref.title}</h4>
+                        <p className="text-[13px] text-gray-500 mt-0.5">{pref.desc}</p>
                       </div>
                       <div
                         onClick={() => setNotificationPrefs((p) => ({ ...p, [pref.key]: !p[pref.key] }))}
-                        className={`w-12 h-6 rounded-full relative cursor-pointer p-1 transition-all ${notificationPrefs[pref.key] ? "bg-[#36C5F0]" : "bg-gray-200"}`}
+                        className={`w-10 h-5 rounded-full relative cursor-pointer p-0.5 transition-all shadow-inner border border-black/5 ${notificationPrefs[pref.key] ? "bg-[#4F46E5]" : "bg-gray-200"}`}
                       >
-                        <motion.div animate={{ x: notificationPrefs[pref.key] ? 24 : 0 }} className="w-4 h-4 bg-white rounded-full" />
+                        <motion.div animate={{ x: notificationPrefs[pref.key] ? 20 : 0 }} className="w-4 h-4 bg-white rounded-full shadow-sm" />
                       </div>
                     </div>
                   ))}
@@ -611,73 +600,61 @@ export default function SettingsPage() {
 
             {/* ── Security ── */}
             {activeTab === "Security" && (
-              <motion.section key="security" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98 }}
-                className="bg-white/70 backdrop-blur-xl border border-gray-200/50 rounded-[32px] p-8 lg:p-10 shadow-xl shadow-gray-200/20">
-                <h3 className="text-[18px] font-black text-gray-900 mb-6">Security Settings</h3>
-                <div className="space-y-6">
-                  <div className="space-y-2">
-                    <label className="text-[11px] font-black uppercase tracking-widest text-gray-400">New Password</label>
+              <motion.section key="security" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
+                className="bg-white border border-[#E5E7EB] rounded-2xl p-6 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
+                <h3 className="text-[15px] font-bold text-gray-900 mb-4 border-b border-gray-100 pb-3">Security Settings</h3>
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[12px] font-semibold text-gray-700">New Password</label>
                     <input
                       type="password" value={passwords.new}
                       onChange={(e) => setPasswords((p) => ({ ...p, new: e.target.value }))}
                       placeholder="••••••••"
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-[14px] outline-none focus:border-[#36C5F0] transition-colors"
+                      className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-[13px] font-medium outline-none focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] transition-all shadow-sm"
                     />
                   </div>
-                  <div className="flex items-center justify-between pt-4">
+                  <div className="flex items-center justify-between pt-2">
                     <button
                       onClick={handleUpdatePassword}
                       disabled={securityLoading || !passwords.new}
-                      className="px-6 py-2.5 bg-[#0D0D0D] text-white rounded-xl text-[13.5px] font-bold border-0 cursor-pointer disabled:opacity-50 hover:bg-gray-800 transition-all flex items-center gap-2"
+                      className="px-4 py-2 bg-gray-900 text-white rounded-lg text-[13px] font-semibold border-0 cursor-pointer disabled:opacity-50 hover:bg-black transition-all flex items-center gap-1.5 shadow-sm"
                     >
-                      {securityLoading && <Loader2 size={16} className="animate-spin" />}
+                      {securityLoading && <Loader2 size={14} className="animate-spin" />}
                       Change Password
                     </button>
-                    {success && <span className="text-emerald-600 text-[13px] font-bold">Updated successfully</span>}
+                    {success && <span className="text-emerald-600 text-[13px] font-semibold">Updated successfully</span>}
                   </div>
                 </div>
               </motion.section>
             )}
           </AnimatePresence>
-
-          {/* Workspace sync notice */}
-          <section className="bg-amber-50 border border-amber-100 rounded-2xl p-6 flex gap-4">
-            <Avatar url={profile?.avatar_url} name={profile?.full_name} email={profile?.email} role="You" size={32} fallbackColor="#36C5F0" />
-            <div>
-              <h4 className="text-[14px] font-black text-amber-900 mb-1">Workspace Sync</h4>
-              <p className="text-[12.5px] text-amber-800 leading-relaxed">
-                Changes made to your profile affect all projects in the{" "}
-                <span className="font-bold">{editingWorkspace?.name}</span> workspace.
-              </p>
-            </div>
-          </section>
         </div>
       </div>
 
       {/* ── Delete confirm modal ── */}
       <AnimatePresence>
         {activeTab === "Workspace" && showDeleteConfirm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl space-y-4">
-              <h3 className="text-[20px] font-black text-red-600">Delete Workspace?</h3>
-              <p className="text-[14px] text-gray-500 leading-relaxed">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
+            <motion.div initial={{ scale: 0.98, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.98, opacity: 0 }}
+              className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl space-y-4 border border-gray-200">
+              <h3 className="text-[16px] font-bold text-gray-900">Delete Workspace?</h3>
+              <p className="text-[13px] text-gray-500 leading-relaxed">
                 This action is permanent. Type{" "}
-                <span className="font-bold text-gray-900">{editingWorkspace?.name}</span> to confirm.
+                <span className="font-semibold text-gray-900">{editingWorkspace?.name}</span> to confirm.
               </p>
               <input
                 value={deleteInput}
                 onChange={(e) => setDeleteInput(e.target.value)}
                 placeholder="Workspace Name"
-                className="w-full px-4 py-3 bg-gray-50 border border-red-100 rounded-xl text-[14px] outline-none focus:border-red-500"
+                className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-[13px] font-medium outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 shadow-sm transition-all"
               />
-              <div className="flex gap-3 pt-4">
+              <div className="flex gap-2 pt-2">
                 <button onClick={() => { setShowDeleteConfirm(false); setDeleteInput(""); }}
-                  className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold text-[14px] hover:bg-gray-200 transition-all border-0 cursor-pointer">
+                  className="flex-1 py-2 bg-white text-gray-700 border border-gray-200 rounded-lg font-semibold text-[13px] hover:bg-gray-50 transition-all cursor-pointer shadow-sm">
                   Cancel
                 </button>
                 <button onClick={handleDeleteWorkspace} disabled={deleteInput !== editingWorkspace?.name}
-                  className="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold text-[14px] hover:bg-red-700 transition-all border-0 cursor-pointer disabled:opacity-50">
+                  className="flex-1 py-2 bg-red-600 text-white rounded-lg font-semibold text-[13px] hover:bg-red-700 transition-all border-0 cursor-pointer disabled:opacity-50 shadow-sm">
                   Delete Forever
                 </button>
               </div>
@@ -689,44 +666,44 @@ export default function SettingsPage() {
       {/* ── Create workspace modal ── */}
       <AnimatePresence>
         {showCreateModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-[32px] p-8 w-full max-w-md shadow-2xl space-y-6">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
+            <motion.div initial={{ scale: 0.98, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.98, opacity: 0 }}
+              className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl space-y-5 border border-gray-200">
               <div className="flex items-center justify-between">
-                <h3 className="text-[20px] font-black text-gray-900">Create Workspace</h3>
+                <h3 className="text-[16px] font-bold text-gray-900">Create Workspace</h3>
                 <button onClick={() => setShowCreateModal(false)}
-                  className="p-2 hover:bg-gray-100 rounded-full border-0 bg-transparent cursor-pointer">
-                  <X size={20} />
+                  className="p-1.5 hover:bg-gray-100 rounded-md border-0 bg-transparent cursor-pointer text-gray-500 transition-colors">
+                  <X size={16} />
                 </button>
               </div>
               <div className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-[11px] font-black uppercase tracking-widest text-gray-400">Name</label>
+                <div className="space-y-1.5">
+                  <label className="text-[12px] font-semibold text-gray-700">Name</label>
                   <input
                     value={newWs.name}
                     onChange={(e) => setNewWs({ ...newWs, name: e.target.value })}
                     placeholder="Engineering Team"
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-[14px] outline-none focus:border-[#36C5F0]"
+                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-[13px] font-medium outline-none focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] shadow-sm transition-all"
                   />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[11px] font-black uppercase tracking-widest text-gray-400">Slug</label>
+                <div className="space-y-1.5">
+                  <label className="text-[12px] font-semibold text-gray-700">Slug</label>
                   <input
                     value={newWs.slug}
                     onChange={(e) => setNewWs({ ...newWs, slug: e.target.value.toLowerCase().replace(/ /g, "-") })}
                     placeholder="engineering-team"
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-[14px] outline-none focus:border-[#36C5F0]"
+                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-[13px] font-medium outline-none focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] shadow-sm transition-all"
                   />
                 </div>
               </div>
-              <div className="flex gap-3 pt-2">
+              <div className="flex gap-2 pt-2">
                 <button onClick={() => setShowCreateModal(false)}
-                  className="flex-1 py-3 bg-gray-50 text-gray-500 rounded-xl font-bold text-[14px] hover:bg-gray-100 border-0 cursor-pointer">
+                  className="flex-1 py-2 bg-white text-gray-700 border border-gray-200 rounded-lg font-semibold text-[13px] hover:bg-gray-50 cursor-pointer shadow-sm transition-all">
                   Cancel
                 </button>
                 <button onClick={handleCreateWorkspace} disabled={wsSaving || !newWs.name || !newWs.slug}
-                  className="flex-1 py-3 bg-[#0D0D0D] text-white rounded-xl font-bold text-[14px] hover:bg-gray-800 border-0 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2">
-                  {wsSaving ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
+                  className="flex-1 py-2 bg-[#4F46E5] text-white rounded-lg font-semibold text-[13px] hover:bg-[#4338CA] border-0 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5 shadow-sm transition-all">
+                  {wsSaving ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
                   Create
                 </button>
               </div>

@@ -1,90 +1,194 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { motion, useScroll, useSpring, useInView, useMotionValue, useAnimationFrame } from "framer-motion";
+import { motion, useScroll, useSpring, useInView } from "framer-motion";
+import Link from "next/link";
+import { Twitter, Github } from "lucide-react";
 
-const PX = "clamp(24px, 5vw, 80px)";
-
-// NEOBRUTALIST COLORS
-const N_BLUE = "#4D9FFF";
-const N_GREEN = "#23CE6B";
-const N_YELLOW = "#FFD23F";
-const N_PINK = "#F45B69";
-
-export function NudgeLogo({ scale = 1 }: { scale?: number }) {
+// --- EXISTING COMPONENTS ---
+export function NudgeLogo({ dark = false }: { dark?: boolean }) {
   return (
-    <svg width={150 * scale} height={40 * scale} viewBox="0 0 150 40" fill="none" style={{ display: "block" }}>
-      {/* Pushing block */}
-      <rect x="4" y="10" width="16" height="20" fill="#FFD23F" stroke="#000" strokeWidth="3" />
-      {/* Nudged block (tilted) */}
-      <rect x="24" y="6" width="16" height="28" fill="#4D9FFF" stroke="#000" strokeWidth="3" transform="rotate(12 32 20)" />
-      {/* Stark Text */}
-      <text x="52" y="30" fontFamily="'Bricolage Grotesque', sans-serif" fontWeight="800" fontSize="26" fill="#000" letterSpacing="-1.5">NUDGE</text>
-    </svg>
+    <div className="flex items-center gap-0">
+      <svg
+        style={{ height: "24px", width: "auto", marginRight: "2px" }}
+        viewBox="21 21 58 58"
+        fill="none"
+      >
+        <path
+          d="M28 72V28"
+          stroke={dark ? "#FFFFFF" : "#000000"}
+          strokeWidth="14"
+          strokeLinecap="round"
+        />
+        <path
+          d="M72 72V28"
+          stroke={dark ? "#FFFFFF" : "#000000"}
+          strokeWidth="14"
+          strokeLinecap="round"
+        />
+        <path
+          d="M28 28L72 72"
+          stroke="#4F46E5"
+          strokeWidth="14"
+          strokeLinecap="round"
+        />
+      </svg>
+      <span
+        className="text-[28px] md:text-[32px] font-[900] tracking-tighter leading-none uppercase"
+        style={{
+          fontFamily: "'Bricolage Grotesque', sans-serif",
+          color: dark ? "#FFFFFF" : "#000000",
+        }}
+      >
+        udge
+      </span>
+    </div>
   );
 }
 
 export function ScrollBar() {
   const { scrollYProgress } = useScroll();
   const scaleY = useSpring(scrollYProgress, { stiffness: 100, damping: 30 });
-  return <motion.div style={{ position: "fixed", top: 0, bottom: 0, right: 0, width: 12, zIndex: 9999, background: N_PINK, borderLeft: "3px solid #000", scaleY, transformOrigin: "top" }} />;
+  return (
+    <motion.div
+      className="fixed top-0 bottom-0 right-0 w-1.5 z-[9999] bg-[#CCFF00] border-l-[3px] border-black origin-top"
+      style={{ scaleY }}
+    />
+  );
 }
 
-
-
-export function Reveal({ children, delay = 0, y = 40 }: { children: React.ReactNode; delay?: number; y?: number }) {
+export function Reveal({
+  children,
+  delay = 0,
+  y = 40,
+}: {
+  children: React.ReactNode;
+  delay?: number;
+  y?: number;
+}) {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-10% 0px" });
   return (
-    <motion.div ref={ref}
+    <motion.div
+      ref={ref}
       initial={{ opacity: 0, y }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] }}
-    >{children}</motion.div>
-  );
-}
-
-export function CountUp({ to }: { to: number }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const inView = useInView(ref, { once: true });
-  const [val, setVal] = useState(0);
-  useEffect(() => {
-    if (!inView) return;
-    const start = performance.now();
-    const tick = (now: number) => { const p = Math.min((now - start) / 1000, 1); setVal(Math.round(p * to)); if (p < 1) requestAnimationFrame(tick); };
-    requestAnimationFrame(tick);
-  }, [inView, to]);
-  return <span ref={ref}>{val.toLocaleString()}</span>;
-}
-
-export function NeoButton({ children, color = N_GREEN, onClick }: { children: React.ReactNode; color?: string; onClick?: () => void }) {
-  return (
-    <motion.button 
-      onClick={onClick}
-      whileHover={{ x: -2, y: -2, boxShadow: "6px 6px 0px #000" }}
-      whileTap={{ x: 4, y: 4, boxShadow: "0px 0px 0px #000" }}
-      style={{
-        padding: "16px 32px", fontSize: 16, fontWeight: 800, color: "#000", 
-        background: color, border: "3px solid #000", borderRadius: 0, 
-        cursor: "pointer", boxShadow: "4px 4px 0px #000", textTransform: "uppercase",
-        transition: "background 0.2s ease"
-      }}
-    >
-      {children}
-    </motion.button>
-  );
-}
-
-export function NeoCard({ children, bg = "#fff", rotate = 0 }: { children: React.ReactNode, bg?: string, rotate?: number }) {
-  return (
-    <motion.div 
-      initial={{ rotate: 0 }}
-      whileHover={{ rotate, y: -4, boxShadow: "8px 8px 0px #000" }}
-      style={{
-        padding: 32, background: bg, border: "3px solid #000", 
-        boxShadow: "4px 4px 0px #000", display: "flex", flexDirection: "column"
-      }}
     >
       {children}
     </motion.div>
   );
 }
+
+// --- NEW SHARED COMPONENTS FOR MARKETING PAGES ---
+
+export const GrainOverlay = () => (
+  <div
+    className="pointer-events-none fixed inset-0 z-[9999] opacity-[0.04]"
+    style={{
+      backgroundImage: "url('https://grainy-gradients.vercel.app/noise.svg')",
+    }}
+  />
+);
+
+export const Nav = () => (
+  <header className="fixed top-0 left-0 right-0 z-50 bg-[#F4F4F0] border-b-[3px] border-black">
+    <div className="flex h-[72px] items-stretch">
+      <div className="flex-1 flex items-center px-6 lg:px-12 border-r-[3px] border-black">
+        <Link href="/" className="flex items-center gap-0">
+          <svg
+            style={{ height: "24px", width: "auto", marginRight: "2px" }}
+            viewBox="21 21 58 58"
+            fill="none"
+          >
+            <path
+              d="M28 72V28"
+              stroke="#000"
+              strokeWidth="14"
+              strokeLinecap="round"
+            />
+            <path
+              d="M72 72V28"
+              stroke="#000"
+              strokeWidth="14"
+              strokeLinecap="round"
+            />
+            <path
+              d="M28 28L72 72"
+              stroke="#4F46E5"
+              strokeWidth="14"
+              strokeLinecap="round"
+            />
+          </svg>
+          <span
+            className="text-3xl font-[900] tracking-tighter text-black uppercase"
+            style={{ fontFamily: "'Bricolage Grotesque', sans-serif" }}
+          >
+            udge
+          </span>
+        </Link>
+      </div>
+      <Link
+        href="/manifesto"
+        className="hidden sm:flex items-center px-8 border-r-[3px] border-black bg-[#CCFF00] hover:bg-[#b3e600] transition-colors cursor-pointer text-sm font-[800] uppercase tracking-wider text-black"
+      >
+        Manifesto
+      </Link>
+      <Link
+        href="/product"
+        className="hidden sm:flex items-center px-8 border-r-[3px] border-black hover:bg-[#FF007F] hover:text-white transition-colors cursor-pointer group text-sm font-[800] uppercase tracking-wider text-black group-hover:text-white"
+      >
+        Product
+      </Link>
+      <div className="flex items-center">
+        <Link
+          href="/sign-in"
+          className="hidden sm:flex h-full items-center px-8 text-sm font-[800] uppercase tracking-wider text-black hover:bg-black hover:text-white transition-colors border-r-[3px] border-black"
+        >
+          Login
+        </Link>
+        <Link
+          href="/get-started"
+          className="flex h-full items-center px-8 text-sm font-[900] uppercase tracking-wider text-white bg-[#0047FF] hover:bg-black transition-colors"
+        >
+          Start for Free
+        </Link>
+      </div>
+    </div>
+  </header>
+);
+
+export const Footer = () => (
+  <footer className="bg-black text-white px-6 py-12 lg:p-20 flex flex-col md:flex-row justify-between items-start md:items-center gap-12">
+    <div>
+      <h2
+        className="text-[12vw] lg:text-[8vw] leading-[0.8] font-[900] tracking-tighter uppercase mb-4"
+        style={{ fontFamily: "'Bricolage Grotesque', sans-serif" }}
+      >
+        Nudge
+      </h2>
+      <p className="text-gray-400 font-mono text-sm">
+        © {new Date().getFullYear()} NUDGE OS. All rights reserved.
+      </p>
+    </div>
+
+    <div className="flex flex-col items-start md:items-end gap-6">
+      <Link href="/get-started">
+        <motion.button
+          whileHover={{ x: -4, y: -4, boxShadow: "8px 8px 0px 0px #FF007F" }}
+          whileTap={{ x: 0, y: 0, boxShadow: "0px 0px 0px 0px #FF007F" }}
+          className="bg-white text-black border-[3px] border-black px-8 py-4 text-xl font-[900] uppercase tracking-wider transition-all"
+        >
+          Start Building
+        </motion.button>
+      </Link>
+      <div className="flex gap-6">
+        <a href="#" className="hover:text-[#CCFF00] transition-colors">
+          <Twitter size={24} />
+        </a>
+        <a href="#" className="hover:text-[#CCFF00] transition-colors">
+          <Github size={24} />
+        </a>
+      </div>
+    </div>
+  </footer>
+);

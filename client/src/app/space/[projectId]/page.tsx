@@ -697,15 +697,14 @@ export default function SpacePage() {
 
   return (
     <div
-      className="flex h-full overflow-hidden rounded-2xl border border-gray-100 shadow-sm bg-white"
-      style={{ maxHeight: "calc(100vh - 40px)", fontFamily: "'Sora', sans-serif" }}
+      className="flex h-full overflow-hidden rounded-2xl border border-gray-200 shadow-sm bg-white"
       onClick={() => { if (deleteConfirmId) setDeleteConfirmId(null); }}
     >
       <AnimatePresence>
         {sidebarOpen && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/40 z-30 lg:hidden"
+            className="fixed inset-0 bg-gray-900/40 z-30 lg:hidden"
             onClick={() => setSidebarOpen(false)}
           />
         )}
@@ -727,28 +726,26 @@ export default function SpacePage() {
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <div
-          className="flex-shrink-0 px-3 sm:px-5 flex items-center justify-between border-b border-gray-100 bg-white"
+          className="flex-shrink-0 px-4 sm:px-6 flex items-center justify-between border-b border-gray-200 bg-white"
           style={{ height: 52 }}
         >
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <button
-              className="lg:hidden border-0 bg-transparent cursor-pointer p-1 -ml-1 text-gray-500"
+              className="lg:hidden border-0 bg-transparent cursor-pointer p-1 -ml-1 text-gray-500 hover:text-gray-900 transition-colors"
               onClick={() => setSidebarOpen(true)}
             >
               <Menu size={18} />
             </button>
-            {tab === "chat" && <Hash size={14} className="text-gray-300 flex-shrink-0" />}
-            <h2 className="text-[14px] font-black text-gray-900 capitalize truncate">
+            {tab === "chat" && <Hash size={14} className="text-gray-400 flex-shrink-0" />}
+            <h2 className="text-[14px] font-bold text-gray-900 capitalize truncate">
               {tab === "chat" ? (activeChannel?.name ?? "chat") : tab}
             </h2>
-
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             {tab === "tasks" && (
               <button
                 onClick={() => setShowNewTask(true)}
-                className="px-3 py-1.5 rounded-lg text-[12px] font-bold text-white cursor-pointer flex items-center gap-1 border-0"
-                style={{ background: "#0D0D0D", fontFamily: "'Sora',sans-serif" }}
+                className="px-3 py-1.5 rounded-lg text-[12px] font-semibold text-white bg-[#4F46E5] hover:bg-[#4338CA] transition-all cursor-pointer flex items-center gap-1.5 border-0 shadow-sm"
               >
                 <Plus size={13} /><span className="hidden sm:inline">New task</span>
               </button>
@@ -756,8 +753,7 @@ export default function SpacePage() {
             {tab === "team" && (
               <button
                 onClick={() => { setShowInvite(true); setInviteError(""); setInviteSent(false); }}
-                className="px-3 py-1.5 rounded-lg text-[12px] font-bold text-white cursor-pointer flex items-center gap-1 border-0"
-                style={{ background: "#0D0D0D", fontFamily: "'Sora',sans-serif" }}
+                className="px-3 py-1.5 rounded-lg text-[12px] font-semibold text-white bg-[#4F46E5] hover:bg-[#4338CA] transition-all cursor-pointer flex items-center gap-1.5 border-0 shadow-sm"
               >
                 <Mail size={13} /><span className="hidden sm:inline">Invite</span>
               </button>
@@ -765,18 +761,16 @@ export default function SpacePage() {
             {tab === "resources" && (
               <button
                 onClick={() => setShowNewResource(true)}
-                className="px-3 py-1.5 rounded-lg text-[12px] font-bold text-white cursor-pointer flex items-center gap-1 border-0"
-                style={{ background: "#0D0D0D", fontFamily: "'Sora',sans-serif" }}
+                className="px-3 py-1.5 rounded-lg text-[12px] font-semibold text-white bg-[#4F46E5] hover:bg-[#4338CA] transition-all cursor-pointer flex items-center gap-1.5 border-0 shadow-sm"
               >
                 <Plus size={13} /><span className="hidden sm:inline">Add</span>
               </button>
             )}
             <Link
               href={`/space/video-call?room=project-${projectId}`}
-              className="px-3 py-1.5 rounded-lg text-[12px] font-bold cursor-pointer flex items-center gap-1.5 border border-[#EBEBEB] bg-white text-gray-900 hover:text-[#36C5F0] hover:border-[#36C5F0]/30 shadow-sm transition-all no-underline"
-              style={{ fontFamily: "'Sora',sans-serif" }}
+              className="px-3 py-1.5 rounded-lg text-[12px] font-semibold cursor-pointer flex items-center gap-1.5 border border-gray-200 bg-white text-gray-700 hover:text-[#4F46E5] hover:border-indigo-200 hover:bg-indigo-50 shadow-sm transition-all no-underline"
             >
-              <Video size={13} className="text-[#36C5F0]" /><span className="hidden sm:inline">Meet</span>
+              <Video size={13} className="text-[#4F46E5]" /><span className="hidden sm:inline">Meet</span>
             </Link>
             <div className="flex -space-x-1.5">
               {team.slice(0, 3).map((m, i) => {
@@ -788,7 +782,7 @@ export default function SpacePage() {
                 );
               })}
             </div>
-            <span className="text-[11px] text-gray-400 hidden sm:block">{team.length}</span>
+            <span className="text-[12px] font-medium text-gray-500 hidden sm:block">{team.length}</span>
           </div>
         </div>
 

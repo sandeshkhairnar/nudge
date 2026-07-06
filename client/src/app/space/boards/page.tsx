@@ -55,7 +55,7 @@ export default function BoardsPage() {
             avatar_url: t.assignee?.avatar_url,
             email: t.assignee?.email,
             role: wsMember?.role || "Member",
-            tags: [], 
+            tags: [],
             stalled: t.stalled_days > 3,
             dueDate: t.due_date,
             status: t.status
@@ -78,27 +78,25 @@ export default function BoardsPage() {
 
   if (loading) return (
     <div className="flex items-center justify-center h-[400px]">
-      <Loader2 className="animate-spin text-[#36C5F0]" size={32} />
+      <Loader2 className="animate-spin text-indigo-500" size={32} />
     </div>
   );
 
   return (
-    <div className="flex flex-col h-full bg-transparent p-4 sm:p-6 lg:p-8 overflow-hidden">
-      <div className="flex items-start justify-between mb-6 sm:mb-8 flex-shrink-0">
-        <div>
-          <h1 className="text-[28px] font-[800] text-[#111111] tracking-[-0.02em]">Boards</h1>
-          <p className="text-[14px] text-[#A0A09B] font-[600] mt-1 tracking-tight">
-            {tasks.length} total tasks · {tasks.filter(t => t.status === "in_progress").length} in progress
-          </p>
-        </div>
+    <div className="flex flex-col h-full bg-transparent overflow-hidden w-full">
+      <div className="flex items-center justify-between px-2 mb-4 flex-shrink-0">
+        <h1 className="text-[20px] font-bold text-gray-900 tracking-tight">Boards</h1>
+        <p className="text-[13px] text-gray-500 font-medium">
+          {tasks.length} total tasks · {tasks.filter(t => t.status === "in_progress").length} in progress
+        </p>
       </div>
 
-      <div className="flex-1 min-h-0">
-        <TaskBoard 
-          tasks={tasks} 
-          projects={projects} 
-          members={members} 
-          onRefresh={() => loadData(true)} 
+      <div className="flex-1 min-h-0 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <TaskBoard
+          tasks={tasks}
+          projects={projects}
+          members={members}
+          onRefresh={() => loadData(true)}
         />
       </div>
     </div>

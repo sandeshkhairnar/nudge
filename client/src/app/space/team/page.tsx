@@ -189,95 +189,95 @@ export default function TeamPage() {
 
   if (loading) return (
     <div className="flex items-center justify-center h-[400px]">
-      <Loader2 className="animate-spin text-[#36C5F0]" size={32} />
+      <Loader2 className="animate-spin text-indigo-500" size={32} />
     </div>
   );
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="w-full flex flex-col font-sans bg-transparent pb-12">
+      <div className="pb-6 mb-6 w-full flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-200">
         <div>
-          <h1 className="text-[24px] sm:text-[28px] font-black text-gray-900 tracking-tight">Team Members</h1>
-          <p className="text-gray-500 text-[13px] sm:text-[14px]">Manage your workspace access and roles.</p>
+          <h1 className="text-[24px] font-bold text-gray-900 tracking-tight">Team Members</h1>
+          <p className="text-[13px] text-gray-500 font-medium mt-1">Manage your workspace access and roles.</p>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <div className="relative w-full sm:w-[240px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
             <input 
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search members..."
-              className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-[13.5px] outline-none focus:border-[#36C5F0] transition-all"
+              className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-[13px] font-medium text-gray-900 placeholder:text-gray-400 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all shadow-sm"
             />
           </div>
           <button 
             onClick={() => setShowInvite(true)}
-            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-[#0D0D0D] text-white rounded-xl text-[13.5px] font-bold hover:bg-gray-800 transition-all border-0 cursor-pointer shadow-lg shadow-black/5"
+            className="flex items-center justify-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-[12px] font-semibold transition-colors border-0 cursor-pointer shadow-sm"
           >
-            <UserPlus size={16} />
+            <UserPlus size={14} />
             Invite Member
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-4">
-          <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
+          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
             {/* Desktop Table View */}
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left min-w-[600px]">
                 <thead>
-                  <tr className="bg-gray-50/50 border-b border-gray-100">
-                    <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-gray-400">Member</th>
-                    <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-gray-400">Projects</th>
-                    <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-gray-400">Invited By</th>
-                    <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-gray-400">Role</th>
+                  <tr className="bg-gray-50 border-b border-gray-200">
+                    <th className="px-6 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-gray-500">Member</th>
+                    <th className="px-6 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-gray-500">Projects</th>
+                    <th className="px-6 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-gray-500">Invited By</th>
+                    <th className="px-6 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-gray-500">Role</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-50">
+                <tbody className="divide-y divide-gray-100">
                   {filteredMembers.map((m) => (
-                    <tr key={m.id} className="hover:bg-gray-50/30 transition-colors">
-                      <td className="px-6 py-5">
+                    <tr key={m.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <Avatar 
                             url={m.profiles.avatar_url} 
                             name={m.profiles.full_name || m.profiles.email} 
                             email={m.profiles.email}
                             role={m.role}
-                            size={40} 
-                            className="border border-gray-100 shadow-sm"
+                            size={36} 
+                            className="border border-gray-200 shadow-sm"
                           />
                           <div className="min-w-0">
-                            <p className="text-[14px] font-bold text-gray-900 truncate max-w-[150px] lg:max-w-none">{m.profiles.full_name ?? "Pending Name"}</p>
-                            <p className="text-[12px] text-gray-400 truncate max-w-[150px] lg:max-w-none">{m.profiles.email}</p>
+                            <p className="text-[13.5px] font-bold text-gray-900 truncate">{m.profiles.full_name ?? "Pending Name"}</p>
+                            <p className="text-[12px] font-medium text-gray-500 truncate">{m.profiles.email}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-5">
+                      <td className="px-6 py-4">
                         <div className="flex flex-wrap gap-1.5">
                           {m.projects.length > 0 ? (
                             m.projects.map(proj => (
                               <span 
                                 key={proj.id}
-                                className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider border border-gray-100 flex items-center gap-1"
-                                style={{ background: `${proj.color}10`, color: proj.color }}
+                                className="px-2 py-0.5 rounded-md text-[11px] font-semibold border flex items-center gap-1.5"
+                                style={{ background: `${proj.color}10`, color: proj.color, borderColor: `${proj.color}25` }}
                               >
-                                <div className="w-1 h-1 rounded-full" style={{ background: proj.color }} />
+                                <div className="w-1.5 h-1.5 rounded-full" style={{ background: proj.color }} />
                                 {proj.name}
                               </span>
                             ))
                           ) : (
-                            <span className="text-[11px] text-gray-400 italic">No projects</span>
+                            <span className="text-[12px] font-medium text-gray-400 italic">No projects</span>
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-5">
-                        <span className="text-[12px] font-medium text-gray-500">{m.invited_by}</span>
+                      <td className="px-6 py-4">
+                        <span className="text-[12.5px] font-medium text-gray-700">{m.invited_by}</span>
                       </td>
-                      <td className="px-6 py-5">
-                        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-100 w-fit">
-                          {m.role === 'admin' ? <ShieldCheck size={12} className="text-[#36C5F0]" /> : <Shield size={12} className="text-gray-400" />}
-                          <span className="text-[11.5px] font-bold capitalize text-gray-600">{m.role}</span>
+                      <td className="px-6 py-4">
+                        <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md w-fit border ${m.role === 'admin' ? 'bg-indigo-50 border-indigo-100' : 'bg-gray-50 border-gray-200'}`}>
+                          {m.role === 'admin' ? <ShieldCheck size={12} className="text-indigo-600" /> : <Shield size={12} className="text-gray-500" />}
+                          <span className={`text-[11px] font-semibold capitalize ${m.role === 'admin' ? 'text-indigo-700' : 'text-gray-600'}`}>{m.role}</span>
                         </div>
                       </td>
                     </tr>
@@ -289,7 +289,7 @@ export default function TeamPage() {
             {/* Mobile Card View */}
             <div className="md:hidden divide-y divide-gray-100">
               {filteredMembers.map((m) => (
-                <div key={m.id} className="p-5 space-y-4">
+                <div key={m.id} className="p-4 space-y-4">
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
                       <Avatar 
@@ -297,46 +297,46 @@ export default function TeamPage() {
                         name={m.profiles.full_name || m.profiles.email} 
                         email={m.profiles.email}
                         role={m.role}
-                        size={44} 
-                        className="border border-gray-100 shadow-sm"
+                        size={40} 
+                        className="border border-gray-200 shadow-sm"
                       />
                       <div className="min-w-0">
-                        <p className="text-[15px] font-bold text-gray-900 truncate">{m.profiles.full_name ?? "Pending Name"}</p>
-                        <p className="text-[12px] text-gray-400 truncate">{m.profiles.email}</p>
+                        <p className="text-[14px] font-bold text-gray-900 truncate">{m.profiles.full_name ?? "Pending Name"}</p>
+                        <p className="text-[12px] font-medium text-gray-500 truncate">{m.profiles.email}</p>
                       </div>
                     </div>
                     <div className="flex-shrink-0">
-                      <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-100 text-[11px] font-bold capitalize text-gray-600">
-                        {m.role === 'admin' ? <ShieldCheck size={12} className="text-[#36C5F0]" /> : <Shield size={12} className="text-gray-400" />}
-                        {m.role}
+                      <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md border ${m.role === 'admin' ? 'bg-indigo-50 border-indigo-100' : 'bg-gray-50 border-gray-200'}`}>
+                        {m.role === 'admin' ? <ShieldCheck size={12} className="text-indigo-600" /> : <Shield size={12} className="text-gray-500" />}
+                        <span className={`text-[11px] font-semibold capitalize ${m.role === 'admin' ? 'text-indigo-700' : 'text-gray-600'}`}>{m.role}</span>
                       </div>
                     </div>
                   </div>
 
                   <div className="flex flex-col gap-3 pt-2">
                     <div className="flex flex-col gap-1.5">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Projects</p>
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">Projects</p>
                       <div className="flex flex-wrap gap-1.5">
                         {m.projects.length > 0 ? (
                           m.projects.map(proj => (
                             <span 
                               key={proj.id}
-                              className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider border border-gray-100 flex items-center gap-1"
-                              style={{ background: `${proj.color}10`, color: proj.color }}
+                              className="px-2 py-0.5 rounded-md text-[11px] font-semibold border flex items-center gap-1.5"
+                              style={{ background: `${proj.color}10`, color: proj.color, borderColor: `${proj.color}25` }}
                             >
-                              <div className="w-1 h-1 rounded-full" style={{ background: proj.color }} />
+                              <div className="w-1.5 h-1.5 rounded-full" style={{ background: proj.color }} />
                               {proj.name}
                             </span>
                           ))
                         ) : (
-                          <span className="text-[11px] text-gray-400 italic">No projects assigned</span>
+                          <span className="text-[12px] font-medium text-gray-400 italic">No projects assigned</span>
                         )}
                       </div>
                     </div>
                     
-                    <div className="pt-2 border-t border-gray-50 flex items-center justify-between">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Invited By</p>
-                      <p className="text-[12px] font-medium text-gray-500">{m.invited_by}</p>
+                    <div className="pt-2 border-t border-gray-100 flex items-center justify-between">
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">Invited By</p>
+                      <p className="text-[12.5px] font-medium text-gray-700">{m.invited_by}</p>
                     </div>
                   </div>
                 </div>
@@ -346,39 +346,39 @@ export default function TeamPage() {
         </div>
 
         <div className="space-y-6">
-          <div className="bg-[#F9F9F7] border border-gray-100 rounded-2xl p-6">
-            <h3 className="text-[14px] sm:text-[15px] font-black text-gray-900 mb-4 flex items-center gap-2">
-              <Mail size={18} className="text-[#36C5F0]" />
+          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+            <h3 className="text-[14px] font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <Mail size={16} className="text-indigo-500" />
               Pending Invites
             </h3>
             <div className="space-y-3">
               {invites.length === 0 ? (
-                <p className="text-[13px] text-gray-400 italic">No pending invitations.</p>
+                <p className="text-[13px] font-medium text-gray-400 italic">No pending invitations.</p>
               ) : (
                 invites.map((inv) => {
                   const invObj = (inv.inviter as any)?.[0] || (inv.inviter as any);
                   const inviterName = invObj?.full_name || invObj?.email;
                   return (
-                    <div key={inv.id} className="bg-white border border-gray-100 rounded-xl p-3.5 flex items-center justify-between">
+                    <div key={inv.id} className="bg-gray-50 border border-gray-200 rounded-lg p-3.5 flex items-center justify-between shadow-sm">
                       <div className="min-w-0">
                         <p className="text-[13px] font-bold text-gray-800 truncate">{inv.invitee_email}</p>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-[10px] font-black uppercase tracking-wider text-[#36C5F0]">{inv.role}</span>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-[10px] font-semibold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100">{inv.role}</span>
                           <span className="text-[10px] text-gray-300">•</span>
-                          <span className="text-[10px] font-bold text-gray-400">By {inviterName || "Admin"}</span>
+                          <span className="text-[11px] font-medium text-gray-500">By {inviterName || "Admin"}</span>
                         </div>
                         {inv.project_name && (
-                          <div className="flex items-center gap-1.5 mt-1.5 px-2 py-0.5 bg-gray-50 border border-gray-100 rounded-lg w-fit">
-                            <Briefcase size={10} className="text-gray-400" />
-                            <span className="text-[10px] font-bold text-gray-500">{inv.project_name}</span>
+                          <div className="flex items-center gap-1.5 mt-2 px-2 py-0.5 bg-white border border-gray-200 rounded-md w-fit shadow-sm">
+                            <Briefcase size={10} className="text-gray-500" />
+                            <span className="text-[11px] font-medium text-gray-600">{inv.project_name}</span>
                           </div>
                         )}
                       </div>
                       <button 
                         onClick={() => handleRevokeInvite(inv.id)}
-                        className="p-1.5 text-gray-300 hover:text-red-500 transition-colors border-0 bg-transparent cursor-pointer"
+                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-white rounded-md transition-colors border border-transparent hover:border-gray-200 cursor-pointer"
                       >
-                        <X size={16} />
+                        <X size={14} />
                       </button>
                     </div>
                   );
@@ -397,66 +397,66 @@ export default function TeamPage() {
               animate={{ opacity: 1 }} 
               exit={{ opacity: 0 }}
               onClick={() => setShowInvite(false)}
-              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+              className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm"
             />
             <motion.div 
               initial={{ scale: 0.95, opacity: 0, y: 10 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-md relative shadow-2xl mx-4"
+              className="bg-white rounded-2xl p-6 sm:p-8 w-full max-w-md relative shadow-xl mx-4 border border-gray-200"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-2">
-                <h2 className="text-[20px] sm:text-[22px] font-black text-gray-900">Invite to Team</h2>
-                <button onClick={() => setShowInvite(false)} className="sm:hidden p-2 text-gray-400 hover:text-gray-900 bg-transparent border-0 cursor-pointer">
-                  <X size={20} />
+                <h2 className="text-[18px] font-bold text-gray-900">Invite to Team</h2>
+                <button onClick={() => setShowInvite(false)} className="w-8 h-8 rounded-full flex items-center justify-center bg-transparent border-0 hover:bg-gray-100 cursor-pointer text-gray-400 transition-colors">
+                  <X size={16} />
                 </button>
               </div>
-              <p className="text-gray-500 text-[13px] sm:text-[14px] mb-6">Send an invitation to join your workspace.</p>
+              <p className="text-gray-500 text-[13px] font-medium mb-6">Send an invitation to join your workspace.</p>
               
               <div className="space-y-4">
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 block">Email Address</label>
+                  <label className="text-[11px] font-semibold uppercase tracking-wider text-gray-600 mb-1.5 block">Email Address</label>
                   <input 
                     value={inviteEmail}
                     onChange={(e) => setInviteEmail(e.target.value)}
                     placeholder="email@example.com"
                     autoFocus
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-[14px] font-medium outline-none focus:border-[#36C5F0] transition-all"
+                    className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-[13px] font-medium text-gray-900 placeholder:text-gray-400 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all shadow-sm"
                   />
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 block">Project Access (Optional)</label>
+                  <label className="text-[11px] font-semibold uppercase tracking-wider text-gray-600 mb-1.5 block">Project Access (Optional)</label>
                   <div className="relative">
                     <select
                       value={selectedProjectId}
                       onChange={(e) => setSelectedProjectId(e.target.value)}
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-[14px] font-medium outline-none focus:border-[#36C5F0] transition-all appearance-none cursor-pointer"
+                      className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-[13px] font-medium text-gray-900 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all appearance-none cursor-pointer shadow-sm"
                     >
                       <option value="">Full Workspace Access</option>
                       {projects.map(p => (
                         <option key={p.id} value={p.id}>{p.name}</option>
                       ))}
                     </select>
-                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
+                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={14} />
                   </div>
-                  <p className="text-[11px] text-gray-400 mt-1.5 italic">
+                  <p className="text-[11.5px] text-gray-500 font-medium mt-1.5">
                     {selectedProjectId ? "User will only see this project." : "User will see all projects in workspace."}
                   </p>
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 block">Role</label>
+                  <label className="text-[11px] font-semibold uppercase tracking-wider text-gray-600 mb-1.5 block">Role</label>
                   <div className="flex gap-2">
                     {["member", "admin"].map((r) => (
                       <button 
                         key={r}
                         onClick={() => setInviteRole(r)}
-                        className={`flex-1 py-3 rounded-xl text-[13px] font-bold border transition-all capitalize cursor-pointer ${
+                        className={`flex-1 py-2 rounded-lg text-[13px] font-semibold border transition-colors capitalize cursor-pointer shadow-sm ${
                           inviteRole === r 
-                            ? "bg-[#0D0D0D] text-white border-[#0D0D0D]" 
-                            : "bg-white text-gray-500 border-gray-100 hover:border-gray-300"
+                            ? "bg-indigo-50 text-indigo-700 border-indigo-200" 
+                            : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
                         }`}
                       >
                         {r}
@@ -466,25 +466,25 @@ export default function TeamPage() {
                 </div>
 
                 {error && (
-                  <div className="flex items-center gap-2 p-3 bg-red-50 text-red-600 rounded-xl text-[12px] font-semibold">
-                    <AlertCircle size={14} />
+                  <div className="flex items-center gap-2 p-3 bg-red-50 text-red-700 rounded-lg border border-red-100 text-[12.5px] font-semibold shadow-sm">
+                    <AlertCircle size={14} className="flex-shrink-0" />
                     {error}
                   </div>
                 )}
 
-                <div className="pt-2 flex flex-col sm:flex-row gap-3">
+                <div className="pt-4 flex justify-end gap-3">
                   <button 
                     onClick={() => setShowInvite(false)}
-                    className="order-2 sm:order-1 flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl text-[13px] font-bold border-0 cursor-pointer hover:bg-gray-200 transition-colors"
+                    className="px-4 py-2 bg-white text-gray-700 border border-gray-200 rounded-lg text-[12.5px] font-semibold cursor-pointer hover:bg-gray-50 transition-colors shadow-sm"
                   >
                     Cancel
                   </button>
                   <button 
                     onClick={handleSendInvite}
                     disabled={inviteLoading || !inviteEmail.trim()}
-                    className="order-1 sm:order-2 flex-1 py-3 bg-[#36C5F0] text-white rounded-xl text-[13px] font-bold border-0 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 active:scale-[0.98] transition-all"
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-[12.5px] font-semibold border-0 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5 hover:bg-indigo-700 transition-colors shadow-sm min-w-[110px]"
                   >
-                    {inviteLoading ? <Loader2 size={16} className="animate-spin" /> : <UserPlus size={16} />}
+                    {inviteLoading ? <Loader2 size={14} className="animate-spin" /> : <UserPlus size={14} />}
                     {inviteLoading ? "Sending..." : "Send Invite"}
                   </button>
                 </div>

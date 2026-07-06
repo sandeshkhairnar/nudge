@@ -27,14 +27,14 @@ export default function DonutCard({ stats, donutS }: DonutCardProps) {
               show: true, 
               label: "TOTAL", 
               fontSize: "10px", 
-              fontWeight: "900", 
-              color: "#A0A09B", 
+              fontWeight: "600", 
+              color: "#9CA3AF", 
               formatter: () => stats.total.toString() 
             },
             value: {
               fontSize: "24px",
-              fontWeight: "900",
-              color: "#111111",
+              fontWeight: "700",
+              color: "#111827",
               offsetY: 2
             }
           } 
@@ -68,10 +68,10 @@ export default function DonutCard({ stats, donutS }: DonutCardProps) {
             ["Review", donutS[2], "#ECB22E"],
             ["To Do", donutS[3], "#E0E0D8"]
           ].map(([l, n, c]) => (
-            <div key={l as string} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#F9F9F8] border border-[#F4F4F0]">
+            <div key={l as string} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-50 border border-gray-200">
               <div className="w-2 h-2 rounded-full shadow-sm" style={{ background: c as string }} />
-              <span className="text-[10px] font-[800] text-[#A0A09B] flex-1 truncate uppercase tracking-[0.05em]">{l as string}</span>
-              <span className="text-[12px] font-[800] text-[#111111]">{n as number}</span>
+              <span className="text-[10px] font-semibold text-gray-500 flex-1 truncate uppercase tracking-wider">{l as string}</span>
+              <span className="text-[12px] font-bold text-gray-900">{n as number}</span>
             </div>
           ))}
         </div>

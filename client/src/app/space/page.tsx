@@ -194,42 +194,42 @@ export default function DashboardPage() {
     <div className="flex flex-col gap-5 pb-8 relative min-h-full">
       {/* <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-[#36C5F0]/[0.08] to-transparent pointer-events-none -z-10" /> */}
       <div className="absolute top-0 left-0 w-full h-[600px] pointer-events-none -z-10" />
-      <div className="absolute top-20 right-10 w-[600px] h-[600px] bg-[#2EB67D]/[0.05] blur-[120px] rounded-full pointer-events-none -z-10" />
-      <div className="absolute top-80 left-10 w-[500px] h-[500px] bg-[#A259FF]/[0.05] blur-[120px] rounded-full pointer-events-none -z-10" />
+      <div className="absolute top-20 right-10 w-[600px] h-[600px] bg-emerald-500/[0.05] blur-[120px] rounded-full pointer-events-none -z-10" />
+      <div className="absolute top-80 left-10 w-[500px] h-[500px] bg-purple-500/[0.05] blur-[120px] rounded-full pointer-events-none -z-10" />
 
       {/* Greeting Skeleton */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 py-2 border-b border-black/[0.02] pb-6 mb-2">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-5 border-b border-gray-200">
         <div className="space-y-3">
-          <div className="h-3 w-40 bg-black/[0.04] rounded-full animate-pulse" />
-          <div className="h-8 w-72 bg-black/[0.04] rounded-full animate-pulse" />
+          <div className="h-3 w-40 bg-gray-100 rounded-full animate-pulse" />
+          <div className="h-8 w-72 bg-gray-100 rounded-full animate-pulse" />
         </div>
-        <div className="h-16 w-48 bg-black/[0.04] rounded-2xl animate-pulse" />
+        <div className="h-10 w-48 bg-gray-100 rounded-lg animate-pulse" />
       </div>
 
       {/* StatsRow Skeleton */}
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
         {[...Array(6)].map((_, i) => (
-          <div key={i} className="h-28 bg-black/[0.03] rounded-2xl animate-pulse" />
+          <div key={i} className="h-28 bg-gray-50 rounded-xl border border-gray-100 animate-pulse" />
         ))}
       </div>
 
       {/* Velocity & AI Skeleton */}
       <div className="grid grid-cols-12 gap-4 items-stretch">
-        <div className="col-span-12 lg:col-span-8 h-[400px] bg-black/[0.03] rounded-[22px] animate-pulse" />
-        <div className="col-span-12 lg:col-span-4 h-[500px] lg:h-auto bg-black/[0.03] rounded-[22px] animate-pulse" />
+        <div className="col-span-12 lg:col-span-8 h-[400px] bg-gray-50 border border-gray-100 rounded-xl animate-pulse" />
+        <div className="col-span-12 lg:col-span-4 h-[500px] lg:h-auto bg-gray-50 border border-gray-100 rounded-xl animate-pulse" />
       </div>
 
       {/* Tasks & Feed Skeleton */}
       <div className="grid grid-cols-12 gap-4 items-stretch">
-        <div className="col-span-12 lg:col-span-8 h-[400px] bg-black/[0.03] rounded-[22px] animate-pulse" />
-        <div className="col-span-12 lg:col-span-4 h-[400px] bg-black/[0.03] rounded-[22px] animate-pulse" />
+        <div className="col-span-12 lg:col-span-8 h-[400px] bg-gray-50 border border-gray-100 rounded-xl animate-pulse" />
+        <div className="col-span-12 lg:col-span-4 h-[400px] bg-gray-50 border border-gray-100 rounded-xl animate-pulse" />
       </div>
 
       {/* Bottom Row Skeleton */}
       <div className="grid grid-cols-12 gap-4 items-stretch">
-        <div className="col-span-12 md:col-span-6 lg:col-span-4 h-[350px] bg-black/[0.03] rounded-[22px] animate-pulse" />
-        <div className="col-span-12 md:col-span-6 lg:col-span-4 h-[350px] bg-black/[0.03] rounded-[22px] animate-pulse" />
-        <div className="col-span-12 lg:col-span-4 h-[350px] bg-black/[0.03] rounded-[22px] animate-pulse" />
+        <div className="col-span-12 md:col-span-6 lg:col-span-4 h-[350px] bg-gray-50 border border-gray-100 rounded-xl animate-pulse" />
+        <div className="col-span-12 md:col-span-6 lg:col-span-4 h-[350px] bg-gray-50 border border-gray-100 rounded-xl animate-pulse" />
+        <div className="col-span-12 lg:col-span-4 h-[350px] bg-gray-50 border border-gray-100 rounded-xl animate-pulse" />
       </div>
     </div>
   );
@@ -238,31 +238,31 @@ export default function DashboardPage() {
     <div className="flex flex-col gap-5 pb-8 relative min-h-full">
       {/* Ambient Dashboard Background Glows */}
       <div className="absolute top-0 left-0 w-full h-[600px] pointer-events-none -z-10" />
-      <div className="absolute top-20 right-10 w-[600px] h-[600px] bg-[#2EB67D]/[0.05] blur-[120px] rounded-full pointer-events-none -z-10" />
-      <div className="absolute top-80 left-10 w-[500px] h-[500px] bg-[#A259FF]/[0.05] blur-[120px] rounded-full pointer-events-none -z-10" />
+      <div className="absolute top-20 right-10 w-[600px] h-[600px] bg-indigo-600/[0.04] blur-[120px] rounded-full pointer-events-none -z-10" />
+      <div className="absolute top-80 left-10 w-[500px] h-[500px] bg-sky-500/[0.04] blur-[120px] rounded-full pointer-events-none -z-10" />
 
       {/* ── ROW 1: Greeting ── */}
       <Reveal>
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 py-2 border-b border-[#F4F4F0] pb-6 mb-3">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-5 border-b border-gray-200">
           <div>
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#2EB67D] shadow-[0_0_8px_rgba(46,182,125,0.4)] relative">
-                <span className="absolute inset-0 rounded-full bg-[#2EB67D] animate-ping opacity-50" />
+            <div className="flex items-center gap-2 mb-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_4px_rgba(16,185,129,0.4)] relative">
+                <span className="absolute inset-0 rounded-full bg-emerald-500 animate-ping opacity-50" />
               </span>
-              <p className="text-[10px] text-[#A0A09B] font-[800] uppercase tracking-[0.15em]">
+              <p className="text-[12px] font-medium text-gray-500">
                 {new Date().toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}
               </p>
             </div>
-            <h1 className="text-[28px] font-[800] text-[#111111] tracking-[-0.03em] leading-none">
+            <h1 className="text-2xl font-bold text-gray-900 tracking-tight leading-none">
               {greeting}, {me?.full_name?.split(" ")[0] ?? "there"}
             </h1>
           </div>
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-3 bg-white border border-[#F4F4F0] rounded-2xl px-4 py-2.5 shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
-              <div className="relative w-8 h-8 flex items-center justify-center">
-                <svg width="32" height="32" viewBox="0 0 32 32" className="absolute inset-0 -rotate-90">
-                  <circle cx="16" cy="16" r="14" fill="none" stroke="#F4F4F0" strokeWidth="4" />
-                  <motion.circle cx="16" cy="16" r="14" fill="none" stroke="#2EB67D" strokeWidth="4"
+            <div className="flex items-center gap-3 bg-white border border-gray-200 rounded-lg px-3 py-2 shadow-sm">
+              <div className="relative w-7 h-7 flex items-center justify-center">
+                <svg width="28" height="28" viewBox="0 0 32 32" className="absolute inset-0 -rotate-90">
+                  <circle cx="16" cy="16" r="14" fill="none" stroke="#F3F4F6" strokeWidth="4" />
+                  <motion.circle cx="16" cy="16" r="14" fill="none" stroke="#10B981" strokeWidth="4"
                     strokeLinecap="round" strokeDasharray={88}
                     initial={{ strokeDashoffset: 88 }}
                     animate={{ strokeDashoffset: 88 - (pct / 100) * 88 }}
@@ -271,25 +271,25 @@ export default function DashboardPage() {
                 </svg>
               </div>
               <div>
-                <p className="text-[9px] text-[#A0A09B] font-[800] uppercase tracking-wider mb-0.5">Workspace Health</p>
+                <p className="text-[10px] text-gray-500 font-semibold uppercase tracking-wide mb-0.5">Workspace Health</p>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-[16px] font-[800] text-[#111111] leading-none">{pct}%</span>
-                  <span className="text-[10px] font-[600] text-[#A0A09B]">done</span>
+                  <span className="text-[14px] font-bold text-gray-900 leading-none">{pct}%</span>
+                  <span className="text-[11px] font-medium text-gray-400">done</span>
                 </div>
               </div>
             </div>
             {stats.stalled > 0 && (
               <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-                className="flex items-center gap-2.5 bg-white border border-[#F4F4F0] rounded-2xl px-4 py-2.5 shadow-[0_2px_12px_rgba(236,178,46,0.08)]">
-                <div className="w-8 h-8 rounded-full bg-[#ECB22E]/10 flex items-center justify-center">
+                className="flex items-center gap-2.5 bg-white border border-amber-200 rounded-lg px-3 py-2 shadow-sm">
+                <div className="w-7 h-7 rounded-md bg-amber-50 flex items-center justify-center">
                   <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 2, repeat: Infinity }}
-                    className="w-2.5 h-2.5 rounded-full bg-[#ECB22E] shadow-[0_0_10px_rgba(236,178,46,0.4)]" />
+                    className="w-2 h-2 rounded-full bg-amber-600 shadow-[0_0_8px_rgba(217,119,6,0.4)]" />
                 </div>
                 <div>
-                  <p className="text-[9px] font-[800] uppercase tracking-wider text-[#ECB22E] mb-0.5">Attention Needed</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-amber-600 mb-0.5">Attention Needed</p>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-[16px] font-[800] text-[#111111] leading-none">{stats.stalled}</span>
-                    <span className="text-[10px] font-[600] text-[#A0A09B]">stalled</span>
+                    <span className="text-[14px] font-bold text-amber-900 leading-none">{stats.stalled}</span>
+                    <span className="text-[11px] font-medium text-amber-700">stalled</span>
                   </div>
                 </div>
               </motion.div>
