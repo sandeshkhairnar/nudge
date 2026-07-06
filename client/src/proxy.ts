@@ -10,9 +10,10 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Match ALL paths except static assets.
+     * Match ALL paths except static assets AND PWA files.
      * ✅ This correctly covers /space, /dashboard, /api, etc.
+     * ✅ sw.js and manifest.json must NOT be intercepted (PWA requirement)
      */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|sw\\.js|manifest\\.json|icon-.*\\.png|apple-touch-icon\\.png|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

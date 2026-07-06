@@ -1,6 +1,6 @@
 {
   "name": "nudge-desktop",
-  "version": "1.0.0",
+  "version": "2.0.1",
   "description": "Nudge Desktop Application",
   "main": "main.js",
   "scripts": {
@@ -25,7 +25,7 @@
         "nsis",
         "portable"
       ],
-      "icon": "build/icon.ico"
+      "icon": "build/icon.png"
     },
     "mac": {
       "category": "public.app-category.productivity",
@@ -33,7 +33,7 @@
         "dmg",
         "zip"
       ],
-      "icon": "build/icon.icns"
+      "icon": "build/icon.png"
     },
     "linux": {
       "target": [

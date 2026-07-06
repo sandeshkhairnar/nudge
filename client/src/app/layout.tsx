@@ -27,7 +27,9 @@ import { PwaRegistrar } from "@/components/global/PwaRegistrar";
 import type { Viewport } from "next";
 
 export const viewport: Viewport = {
-  themeColor: "#CCFF00",
+  themeColor: "#4F46E5",
+  width: "device-width",
+  initialScale: 1,
 };
 
 export const metadata: Metadata = {
@@ -38,10 +40,19 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Nudge OS",
+    title: "Nudge",
   },
   formatDetection: {
     telephone: false,
+  },
+  icons: {
+    icon: [
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
   },
 };
 

@@ -44,6 +44,18 @@ export async function updateSession(request: NextRequest) {
 
   const isSpaceRoute = pathname.startsWith("/space");
 
+  const isStaticFile =
+    pathname === "/sw.js" ||
+    pathname === "/manifest.json" ||
+    pathname === "/apple-touch-icon.png" ||
+    pathname.startsWith("/icon-") ||
+    pathname.startsWith("/sounds/");
+
+  // ✅ Always serve static/PWA files directly — never redirect them
+  if (isStaticFile) {
+    return supabaseResponse;
+  }
+
   // ❌ Block /space if user not logged in
   if (!user && isSpaceRoute) {
     const url = request.nextUrl.clone();
