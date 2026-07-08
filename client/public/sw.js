@@ -25,13 +25,16 @@ self.addEventListener("push", function (event) {
     const data = event.data.json();
     const options = {
       body: data.body,
-      icon: data.icon || "/icon.svg",
-      badge: "/icon.svg",
+      icon: data.icon || "/icon-192.png",
+      badge: "/icon-192.png",
       vibrate: [100, 50, 100],
+      requireInteraction: false,
+      actions: [
+        { action: "open", title: "View Details" },
+        { action: "close", title: "Dismiss" }
+      ],
       data: {
-        dateOfArrival: Date.now(),
-        primaryKey: "2",
-        url: data.url || "/",
+        url: data.url || "/space/inbox",
       },
     };
     event.waitUntil(self.registration.showNotification(data.title, options));
@@ -40,7 +43,27 @@ self.addEventListener("push", function (event) {
 
 self.addEventListener("notificationclick", function (event) {
   event.notification.close();
-  if (event.notification.data && event.notification.data.url) {
-    event.waitUntil(clients.openWindow(event.notification.data.url));
+
+  if (event.action === "close") {
+    return;
   }
+
+  // Open the URL or focus existing tab if it's open
+  const urlToOpen = new URL(event.notification.data.url, self.location.origin).href;
+
+  event.waitUntil(
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then((windowClients) => {
+      // Focus existing tab if open
+      for (let i = 0; i < windowClients.length; i++) {
+        const client = windowClients[i];
+        if (client.url === urlToOpen && "focus" in client) {
+          return client.focus();
+        }
+      }
+      // Otherwise open new tab
+      if (clients.openWindow) {
+        return clients.openWindow(urlToOpen);
+      }
+    })
+  );
 });

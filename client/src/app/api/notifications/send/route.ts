@@ -16,7 +16,23 @@ const supabase = createClient(
 
 export async function POST(request: Request) {
   try {
-    const { userId, title, body, url } = await request.json();
+    const payloadBody = await request.json();
+    let userId, title, body, url;
+
+    // Check if this is a Supabase Database Webhook payload
+    if (payloadBody.type === "INSERT" && payloadBody.record) {
+      const record = payloadBody.record;
+      userId = record.recipient_id;
+      title = "New " + (record.type || "Notification");
+      body = record.preview || record.content || "You have a new notification.";
+      url = record.project_id ? `/space/${record.project_id}` : "/space/inbox";
+      
+      // Optional security: Ensure it's actually coming from Supabase
+      // In production, you'd check a secret header here.
+    } else {
+      // Standard direct fetch from frontend
+      ({ userId, title, body, url } = payloadBody);
+    }
 
     if (!userId) {
       return NextResponse.json({ error: "Missing userId" }, { status: 400 });
