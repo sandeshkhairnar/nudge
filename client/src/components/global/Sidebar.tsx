@@ -273,12 +273,12 @@ function NavItem({
                 fontSize: collapsed ? 9 : 10,
                 paddingLeft: 4,
                 paddingRight: 4,
-                background: "linear-gradient(135deg, #4F46E5, #10B981)",
+                background: "#EF4444",
                 position: collapsed ? "absolute" : "relative",
                 top: collapsed ? 4 : "auto",
                 right: collapsed ? 4 : "auto",
                 marginLeft: collapsed ? 0 : "auto",
-                boxShadow: "0 2px 8px rgba(54,197,240,0.4)",
+                boxShadow: "0 2px 8px rgba(239, 68, 68, 0.4)",
               }}
             >
               {item.badge > 99 ? "99+" : item.badge}

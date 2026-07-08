@@ -70,7 +70,7 @@ export function renderMarkdown(text: string): string {
     )
     .replace(
       /\[(.*?)\]\((.*?)\)/g,
-      '<a href="$2" style="color:#3B82F6;font-weight:700;text-decoration:none;hover:underline">$1</a>'
+      '<a href="$2" target="_blank" rel="noopener noreferrer" style="color:#3B82F6;font-weight:700;text-decoration:none;hover:underline">$1</a>'
     )
     .replace(/\n/g, "<br/>");
 }

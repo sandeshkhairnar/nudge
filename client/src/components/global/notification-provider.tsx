@@ -149,16 +149,20 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
             playSound(shaped.type);
 
-            if (
-              typeof window !== "undefined" &&
-              "Notification" in window &&
-              Notification.permission === "granted" &&
-              document.visibilityState !== "visible"
-            ) {
-              new Notification(shaped.sender?.full_name ?? "Nudge", {
-                body: shaped.preview,
-                icon: "/favicon.ico",
-              });
+            // Send push notification via service worker (works in background/PWA)
+            if (userId) {
+              fetch("/api/notifications/send", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  userId,
+                  title: shaped.sender?.full_name ?? "Nudge",
+                  body: shaped.preview ?? "You have a new notification.",
+                  url: shaped.project_id
+                    ? `/space/${shaped.project_id}`
+                    : "/space/inbox",
+                }),
+              }).catch(console.error);
             }
           }
         }
