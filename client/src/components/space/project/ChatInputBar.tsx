@@ -235,22 +235,45 @@ export default function ChatInputBar({
               </motion.button>
             </div>
 
-            <textarea
-              ref={textareaRef}
-              value={input}
-              onChange={(e) => onInputChange(e.target.value, e.target.selectionEnd)}
-              onKeyDown={onKeyDown}
-              onPaste={onPaste}
-              placeholder={`Message #${activeChannelName ?? "general"}`}
-              rows={1}
-              className="flex-1 bg-transparent border-none outline-none resize-none text-[13px] text-gray-900 placeholder-gray-400 font-medium leading-relaxed"
-              style={{
-                minHeight: 28,
-                maxHeight: 140,
-                paddingTop: 4,
-                paddingBottom: 4,
-              }}
-            />
+            {/* Mention highlight overlay + textarea stack */}
+            <div className="flex-1 relative" style={{ minHeight: 28, maxHeight: 140 }}>
+              {/* Highlight mirror layer - renders @mentions with color */}
+              <div
+                aria-hidden
+                className="absolute inset-0 pointer-events-none text-[13px] font-medium leading-relaxed break-words whitespace-pre-wrap"
+                style={{
+                  paddingTop: 4,
+                  paddingBottom: 4,
+                  color: "transparent",
+                  wordBreak: "break-word",
+                  overflowWrap: "break-word",
+                  overflow: "hidden",
+                }}
+                dangerouslySetInnerHTML={{
+                  __html: input.replace(
+                    /@(\w+)/g,
+                    '<mark style="background:rgba(79,70,229,0.12);color:transparent;border-radius:4px;padding:1px 0;">@$1</mark>'
+                  ) + "\u200b",
+                }}
+              />
+              <textarea
+                ref={textareaRef}
+                value={input}
+                onChange={(e) => onInputChange(e.target.value, e.target.selectionEnd)}
+                onKeyDown={onKeyDown}
+                onPaste={onPaste}
+                placeholder={`Message #${activeChannelName ?? "general"}`}
+                rows={1}
+                className="relative w-full bg-transparent border-none outline-none resize-none text-[13px] text-gray-900 placeholder-gray-400 font-medium leading-relaxed"
+                style={{
+                  minHeight: 28,
+                  maxHeight: 140,
+                  paddingTop: 4,
+                  paddingBottom: 4,
+                  caretColor: "#4F46E5",
+                }}
+              />
+            </div>
 
             <div className="flex items-center gap-1 flex-shrink-0 mb-0.5">
               <div className="relative">

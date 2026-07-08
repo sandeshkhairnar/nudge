@@ -1,8 +1,12 @@
 import hmac
 import hashlib
+import logging
 from fastapi import APIRouter, Request, Header, HTTPException
 from config import get_settings
 from agent.agent import run_agent
+from database.supabase_client import get_supabase
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["Webhooks"])
 
@@ -58,5 +62,10 @@ async def handle_github_webhook(request: Request, x_hub_signature_256: str = Hea
         "timestamp": "now"
     }
     
+    if project_id:
+        print(f"\\n[GITHUB WEBHOOK] Mapped repo '{repo_name}' to Project: {project_id} (Workspace: {workspace_id})\\n")
+    else:
+        print(f"\\n[GITHUB WEBHOOK WARNING] Repo '{repo_name}' not mapped to any project! Event will run in 'global-github' workspace.\\n")
+
     await run_agent(event)
     return {"status": "received"}

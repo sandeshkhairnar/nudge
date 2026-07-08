@@ -64,7 +64,7 @@ export default function VelocityCard({ tasks, weekly }: VelocityCardProps) {
   ];
 
   return (
-    <Card className="flex flex-col flex-1 min-h-[360px] sm:min-h-[400px]">
+    <Card className="flex flex-col h-full w-full">
       <CardHeader
         title="Task Velocity"
         sub="Weekly distribution"

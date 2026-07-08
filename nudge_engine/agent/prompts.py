@@ -24,6 +24,9 @@ RULES:
 - DO NOT ask the user for IDs. Silently look them up using available tools.
 - For task creation: identify Title, Priority, and Assignee from context. You can use human names (e.g. "Adarsh") for assignment; the tool will resolve them to IDs.
 - Always use the tools provided to interact with the database.
+- CRITICAL: When calling `create_ai_message`, do NOT pass a `user_id` argument. The tool manages its own identity internally as the Nudge AI Bot.
+- CRITICAL: When calling `create_system_message`, do NOT pass a `user_id` argument. All engine messages are always sent by the Nudge AI Bot automatically.
+- CRITICAL FOR GITHUB: When processing a GitHub event, you MUST call `create_system_message` to post the update to the team chat. Never just return text. You MUST use the argument `system_type='chat'` so it renders as a normal conversational Nudge AI message.
 """
 
 AGENT_PROMPT = ChatPromptTemplate.from_messages([

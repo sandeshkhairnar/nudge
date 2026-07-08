@@ -61,11 +61,9 @@ export default function Avatar({
     <div 
       ref={containerRef}
       className="relative inline-block"
-      onMouseEnter={() => { updateCoords(); setIsHovered(true); }}
-      onMouseLeave={() => setIsHovered(false)}
     >
       <div 
-        className={`relative inline-flex items-center justify-center rounded-full overflow-hidden shrink-0 border-2 border-white shadow-sm transition-transform duration-200 ${isHovered ? 'scale-105' : 'scale-100'} ${className}`}
+        className={`relative inline-flex items-center justify-center rounded-full overflow-hidden shrink-0 border-2 border-white shadow-sm ${className}`}
         style={{ 
           width: size, 
           height: size, 
@@ -120,44 +118,6 @@ export default function Avatar({
         </div>
       )}
 
-      <AnimatePresence>
-        {isHovered && (name || email || role) && (
-          <Portal>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 10, x: "-50%" }}
-              animate={{ opacity: 1, scale: 1, y: 0, x: "-50%" }}
-              exit={{ opacity: 0, scale: 0.95, y: 10, x: "-50%" }}
-              className="fixed z-[99999] pointer-events-none"
-              style={{ 
-                top: coords.top - 12, 
-                left: coords.left
-              }}
-            >
-              <div className="bg-[#0D0D0D] text-white p-3 rounded-xl shadow-2xl border border-white/10 min-w-[160px] text-center relative overflow-visible" style={{ transform: "translateY(-100%)" }}>
-                <div className="absolute inset-0 bg-gradient-to-br from-[#36C5F0]/10 to-transparent pointer-events-none rounded-xl" />
-                
-                <p className="relative z-10 text-[13px] font-black tracking-tight mb-0.5">{name}</p>
-                
-                {email && (
-                  <p className="relative z-10 text-[10px] font-medium text-white/50 truncate max-w-[180px]">
-                    {email}
-                  </p>
-                )}
-                
-                {role && (
-                  <div className="relative z-10 mt-2">
-                    <span className="inline-block px-2 py-0.5 rounded-full bg-white/10 text-[9px] font-black uppercase tracking-wider text-[#36C5F0]">
-                      {role}
-                    </span>
-                  </div>
-                )}
-                
-                <div className="absolute top-full left-1/2 -translate-x-1/2 w-3 h-3 bg-[#0D0D0D] rotate-45 border-r border-b border-white/10 -mt-1.5" />
-              </div>
-            </motion.div>
-          </Portal>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

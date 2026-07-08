@@ -304,23 +304,25 @@ export default function DashboardPage() {
       </Reveal>
 
       {/* ── ROW 3: Velocity (8) | NudgeAI (4) ── */}
-      <div className="grid grid-cols-12 gap-4 items-stretch">
-        <Reveal delay={0.04} className="col-span-12 lg:col-span-8 flex">
+      <div className="grid grid-cols-12 gap-4 lg:h-[450px]">
+        <Reveal delay={0.04} className="col-span-12 lg:col-span-8 flex h-full">
           <VelocityCard tasks={tasks} weekly={weekly} />
         </Reveal>
-        <Reveal delay={0.08} className="col-span-12 lg:col-span-4">
-          <NudgeAiCard
-            messages={messages}
-            input={aiInput}
-            loading={isAiTyping}
-            onInputChange={setAiInput}
-            onSend={() => handleAiSend()}
-            onKeyDown={e => e.key === "Enter" && !e.shiftKey && handleAiSend()}
-            onSuggestionClick={(p) => handleAiSend(p)}
-            me={me}
-            chatContainerRef={chatContainerRef}
-            onClear={() => setMessages([{ role: "ai", content: "Hello! I'm your Nudge AI assistant. Ask me about tasks, projects, or team status — I can help!" }])}
-          />
+        <Reveal delay={0.08} className="col-span-12 lg:col-span-4 flex h-full min-h-[400px] lg:min-h-0">
+          <div className="w-full h-full">
+            <NudgeAiCard
+              messages={messages}
+              input={aiInput}
+              loading={isAiTyping}
+              onInputChange={setAiInput}
+              onSend={() => handleAiSend()}
+              onKeyDown={e => e.key === "Enter" && !e.shiftKey && handleAiSend()}
+              onSuggestionClick={(p) => handleAiSend(p)}
+              me={me}
+              chatContainerRef={chatContainerRef}
+              onClear={() => setMessages([{ role: "ai", content: "Hello! I'm your Nudge AI assistant. Ask me about tasks, projects, or team status — I can help!" }])}
+            />
+          </div>
         </Reveal>
       </div>
 

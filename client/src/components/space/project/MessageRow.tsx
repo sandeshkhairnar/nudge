@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Loader2, FileText, CornerDownRight, Trash2, MessageCircle,
   Smile, CheckCircle2, Video, Calendar, ClipboardList, Zap,
+  AlignLeft, PenTool, CheckSquare
 } from "lucide-react";
 import GlobalAvatar from "@/components/global/Avatar";
 import { strColor } from "@/lib/utils/color";
@@ -147,14 +148,14 @@ export default function MessageRow({
         : parsed.text.replace("[MOM_CARD]\n", "");
 
     // Parse markdown sections into structured data
-    const sections: { heading: string; icon: string; items: string[] }[] = [];
+    const sections: { heading: string; icon: React.ReactNode; items: string[] }[] = [];
     const lines = rawMarkdown.split("\n");
-    let currentSection: { heading: string; icon: string; items: string[] } | null = null;
+    let currentSection: { heading: string; icon: React.ReactNode; items: string[] } | null = null;
 
-    const sectionIcons: Record<string, string> = {
-      summary: "🤔",
-      "key decisions": "📝",
-      "action items": "📋",
+    const sectionIcons: Record<string, React.ReactNode> = {
+      summary: <AlignLeft size={14} className="text-indigo-500" />,
+      "key decisions": <PenTool size={14} className="text-indigo-500" />,
+      "action items": <CheckSquare size={14} className="text-indigo-500" />,
     };
 
     for (const line of lines) {
@@ -173,7 +174,7 @@ export default function MessageRow({
         }
         currentSection = {
           heading: headingText,
-          icon: sectionIcons[key] ?? "•",
+          icon: sectionIcons[key] ?? <AlignLeft size={14} className="text-indigo-500" />,
           items: [],
         };
       } else if (bullet && currentSection) {
@@ -231,9 +232,9 @@ export default function MessageRow({
             {sections.map((section, si) => (
               <div key={si}>
                 {/* Section heading */}
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-[13px]">{section.icon}</span>
-                  <span className="text-[11.5px] font-black text-[#0D0D0D] uppercase tracking-wide">
+                <div className="flex items-center gap-2 mb-3 mt-1">
+                  {section.icon}
+                  <span className="text-[11.5px] font-black text-gray-800 uppercase tracking-wide">
                     {section.heading}
                   </span>
                 </div>
@@ -275,7 +276,7 @@ export default function MessageRow({
       onMouseEnter={() => onHover(m.id)}
       onMouseLeave={() => onHover(null)}
     >
-      <div style={{ width: 40, flexShrink: 0, paddingTop: 2 }}>
+      <div style={{ width: 40, flexShrink: 0, paddingTop: 2, position: "relative" }}>
         {!sameSender ? (
           <GlobalAvatar
             url={m.profiles?.avatar_url}
@@ -286,8 +287,7 @@ export default function MessageRow({
           />
         ) : isHovered ? (
           <span
-            className="text-[10px] text-gray-300 block text-right pr-1 leading-loose select-none"
-            style={{ paddingTop: 5 }}
+            className="text-[10px] text-gray-300 block text-right pr-1.5 select-none absolute right-0 top-1.5 leading-none"
           >
             {new Date(m.created_at).toLocaleTimeString("en-US", {
               hour: "2-digit",
@@ -411,43 +411,43 @@ export default function MessageRow({
       <AnimatePresence>
         {isHovered && !showDeleteConfirm && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 4 }}
+            initial={{ opacity: 0, scale: 0.96, y: 2 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ duration: 0.1 }}
-            className="absolute right-3 -top-4 flex items-center gap-0.5 bg-white border border-gray-200 rounded-xl shadow-lg px-1.5 py-1 z-10"
+            exit={{ opacity: 0, scale: 0.96 }}
+            transition={{ duration: 0.12, ease: "easeOut" }}
+            className="absolute right-4 -top-3.5 flex items-center gap-0.5 bg-white/90 backdrop-blur-md border border-gray-100 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] p-1 z-10"
           >
             {QUICK_EMOJIS.slice(0, 5).map((emoji) => (
               <button
                 key={emoji}
                 onClick={() => onToggleReaction(m.id, emoji)}
-                className="text-base w-7 h-7 flex items-center justify-center hover:bg-gray-100 rounded-lg cursor-pointer border-0 bg-transparent hover:scale-110 transition-all"
+                className="text-base w-7 h-7 flex items-center justify-center hover:bg-gray-100/80 rounded-lg cursor-pointer border-0 bg-transparent transition-colors duration-150"
               >
                 {emoji}
               </button>
             ))}
-            <div className="w-px h-4 bg-gray-200 mx-0.5" />
+            <div className="w-px h-4 bg-gray-200 mx-1" />
             {!isThread && (
               <button
                 onClick={() => onOpenThread?.(m.id)}
                 title="Reply in thread"
-                className="w-7 h-7 flex items-center justify-center hover:bg-gray-100 rounded-lg cursor-pointer border-0 bg-transparent text-gray-400 hover:text-gray-700 transition-colors"
+                className="w-7 h-7 flex items-center justify-center hover:bg-gray-100/80 rounded-lg cursor-pointer border-0 bg-transparent text-gray-500 hover:text-gray-900 transition-colors duration-150"
               >
-                <MessageCircle size={13} />
+                <MessageCircle size={13.5} />
               </button>
             )}
-            <button className="w-7 h-7 flex items-center justify-center hover:bg-gray-100 rounded-lg cursor-pointer border-0 bg-transparent text-gray-400">
-              <Smile size={13} />
+            <button className="w-7 h-7 flex items-center justify-center hover:bg-gray-100/80 rounded-lg cursor-pointer border-0 bg-transparent text-gray-500 hover:text-gray-900 transition-colors duration-150">
+              <Smile size={13.5} />
             </button>
             {isSelf && (
               <>
-                <div className="w-px h-4 bg-gray-200 mx-0.5" />
+                <div className="w-px h-4 bg-gray-200 mx-1" />
                 <button
                   onClick={() => onDeleteRequest(m.id)}
                   title="Delete message"
-                  className="w-7 h-7 flex items-center justify-center hover:bg-red-50 rounded-lg cursor-pointer border-0 bg-transparent text-gray-300 hover:text-red-500 transition-colors"
+                  className="w-7 h-7 flex items-center justify-center hover:bg-red-50 rounded-lg cursor-pointer border-0 bg-transparent text-gray-400 hover:text-red-500 transition-colors duration-150"
                 >
-                  <Trash2 size={13} />
+                  <Trash2 size={13.5} />
                 </button>
               </>
             )}

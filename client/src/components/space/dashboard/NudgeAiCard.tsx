@@ -32,12 +32,12 @@ export default function NudgeAiCard({
   onClear
 }: NudgeAiCardProps) {
   return (
-    <Card className="flex flex-col relative overflow-hidden group/chat h-full min-h-[400px]">
+    <Card className="flex flex-col relative overflow-hidden group/chat h-full w-full">
       {/* Dynamic background glow */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-[#4F46E5] opacity-[0.03] rounded-full blur-[60px] pointer-events-none group-hover/chat:opacity-[0.05] transition-all duration-700" />
       <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#0EA5E9] opacity-[0.03] rounded-full blur-[60px] pointer-events-none group-hover/chat:opacity-[0.05] transition-all duration-700" />
 
-      <div className="relative flex flex-col p-5 h-full overflow-hidden z-10">
+      <div className="relative flex flex-col p-5 flex-1 min-h-0 overflow-hidden z-10">
         {/* Header with clear chat */}
         <div className="flex items-center gap-3 pb-4 border-b border-[#E5E7EB] flex-shrink-0">
           <div className="relative">
@@ -74,7 +74,7 @@ export default function NudgeAiCard({
         </div>
 
         {/* Messages area */}
-        <div ref={chatContainerRef} style={{ flex: 1, minHeight: 0, overflowY: "auto" }} className="py-4 space-y-4 scrollbar-hide pr-1">
+        <div ref={chatContainerRef} style={{ flex: 1, minHeight: 0, overflowY: "auto" }} className="py-4 space-y-4 pr-2 custom-scrollbar">
           {messages.map((m, i) => (
             <motion.div
               key={i}

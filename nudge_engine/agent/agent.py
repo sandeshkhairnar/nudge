@@ -83,7 +83,13 @@ def prepare_agent_input(event: Dict[str, Any]) -> str:
     
     if event_type == "message":
         user_msg = payload.get("content", "")
-        return context_prefix + f"A user sent a message in channel {payload.get('channel_id')}: '{user_msg}'. Analyze if this is a task request or needs a reply."
+        channel_id = payload.get("channel_id", "")
+        return context_prefix + (
+            f"A user mentioned @nudge in channel {channel_id} and asked: '{user_msg}'. "
+            f"Answer their question thoughtfully using available tools if needed. "
+            f"You MUST call 'create_system_message' with system_type='chat' to post your reply directly in channel {channel_id}. "
+            "Keep your response concise, friendly, and professional."
+        )
     elif event_type == "stall":
         return context_prefix + (
             f"STALL ALERT: Task '{payload.get('task_title')}' (ID: {payload.get('task_id')}) "
@@ -93,7 +99,11 @@ def prepare_agent_input(event: Dict[str, Any]) -> str:
             "Be encouraging but firm about project velocity."
         )
     elif event_type == "github":
-        return context_prefix + f"GitHub event {payload.get('event_name')} received for repo {payload.get('repository')}. Details: {payload.get('data')}. Process this update."
+        return context_prefix + (
+            f"GitHub event '{payload.get('event_name')}' received for repo {payload.get('repository')}. Details: {payload.get('data')}. "
+            "You MUST process this update and use the 'create_system_message' tool to post a summary to the project chat, "
+            "EVEN IF it is just a 'ping' or setup event."
+        )
     elif event_type == "mom_generation":
         project_name = payload.get("project_name", payload.get("room_name"))
         return context_prefix + (

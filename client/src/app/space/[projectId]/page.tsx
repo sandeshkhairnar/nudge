@@ -284,6 +284,21 @@ export default function SpacePage() {
         const message = payload as Message;
         setMessages((prev) => prev.some((m) => m.id === message.id) ? prev : [message, ...prev]);
       })
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `channel_id=eq.${channelId}` }, (payload) => {
+        const row = payload.new as any;
+        if (row.parent_id) return; // Ignore thread messages here, handle in thread panel if needed
+        
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === row.id)) return prev;
+          const msg: Message = {
+            ...row,
+            profiles: row.is_ai 
+              ? { id: row.user_id, full_name: "Nudge AI", avatar_url: "https://api.dicebear.com/7.x/bottts/svg?seed=NudgeAI&backgroundColor=4F46E5" } 
+              : { id: row.user_id, full_name: "Unknown", avatar_url: "" }
+          };
+          return [msg, ...prev];
+        });
+      })
       .on("broadcast", { event: "new_reply" }, ({ payload }) => {
         const message = payload as Message;
         setReplyCounts((prev) => ({
@@ -349,9 +364,21 @@ export default function SpacePage() {
       setMentionIndex(0);
       setIsThreadMention(isThread);
       const members = getMentionMembers();
-      setMentionSuggestions(members.filter((m) =>
-        m.full_name?.toLowerCase().includes(query) || m.email.toLowerCase().includes(query)
-      ).slice(0, 6));
+
+      // Add Nudge AI bot as a special mention option
+      const NUDGE_BOT: MentionSuggestion = {
+        id: "6e6cb238-3601-4873-8e92-9a0c54614991",
+        full_name: "Nudge AI",
+        email: "nudge-ai@bot",
+        avatar_url: "https://api.dicebear.com/7.x/bottts/svg?seed=NudgeAI&backgroundColor=4F46E5",
+      };
+      const allSuggestions: MentionSuggestion[] = [
+        ...( ("nudge ai".includes(query) || "nudge".startsWith(query)) ? [NUDGE_BOT] : []),
+        ...members.filter((m) =>
+          m.full_name?.toLowerCase().includes(query) || m.email.toLowerCase().includes(query)
+        ),
+      ];
+      setMentionSuggestions(allSuggestions.slice(0, 6));
     } else {
       setMentionQuery(null);
       setMentionSuggestions([]);
@@ -493,6 +520,21 @@ export default function SpacePage() {
         event: "new_message",
         payload: realMsg,
       });
+
+      // ── @nudge mention: trigger the AI Engine ──────────────────────────────
+      if (text.toLowerCase().includes("@nudge")) {
+        const workspaceData = project?.workspace_id;
+        fetch("/api/nudge-mention", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            message: text.replace(/@nudge/gi, "").trim(),
+            channelId: activeChannel.id,
+            workspaceId: workspaceData ?? null,
+            projectId: projectId,
+          }),
+        }).catch(console.error);
+      }
     }
   };
 
