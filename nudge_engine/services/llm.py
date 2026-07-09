@@ -4,6 +4,7 @@ from typing import Optional
 from langchain_anthropic import ChatAnthropic
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
+from langchain_groq import ChatGroq
 from langchain_core.language_models.chat_models import BaseChatModel
 
 from config import get_settings
@@ -41,10 +42,9 @@ def get_llm(provider: Optional[str] = None, use_fast: bool = False, streaming: b
         )
     elif target_provider == "groq":
         model = settings.groq_fast_model if use_fast else settings.groq_model
-        return ChatOpenAI(
-            model=model,
-            api_key=settings.groq_api_key,
-            base_url="https://api.groq.com/openai/v1",
+        return ChatGroq(
+            model_name=model,
+            groq_api_key=settings.groq_api_key,
             streaming=streaming
         )
     else:

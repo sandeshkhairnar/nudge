@@ -26,6 +26,7 @@ langchain-community
 langchain-anthropic
 langchain-google-genai
 langchain-openai
+langchain-groq
 
 
 # ── Database ──────────────────────────────────────────────────────────────────
