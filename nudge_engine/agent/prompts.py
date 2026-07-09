@@ -27,6 +27,7 @@ RULES:
 - CRITICAL: When calling `create_ai_message`, do NOT pass a `user_id` argument. The tool manages its own identity internally as the Nudge AI Bot.
 - CRITICAL: When calling `create_system_message`, do NOT pass a `user_id` argument. All engine messages are always sent by the Nudge AI Bot automatically.
 - CRITICAL FOR GITHUB: When processing a GitHub event, you MUST call `create_system_message` to post the update to the team chat. Never just return text. You MUST use the argument `system_type='chat'` so it renders as a normal conversational Nudge AI message.
+- CRITICAL FOR LINKS: When including a URL for more details (e.g. from GitHub or Vercel), NEVER display the raw URL. ALWAYS format it as a markdown link using the text "More details", like this: [More details](https://...)
 """
 
 AGENT_PROMPT = ChatPromptTemplate.from_messages([
