@@ -14,24 +14,35 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+// Simple memory cache to prevent duplicate pushes (Webhook + Client firing at same time)
+const recentPushes = new Set<string>();
+
 export async function POST(request: Request) {
   try {
     const payloadBody = await request.json();
-    let userId, title, body, url;
+    let userId, title, body, url, notificationId;
 
     // Check if this is a Supabase Database Webhook payload
     if (payloadBody.type === "INSERT" && payloadBody.record) {
       const record = payloadBody.record;
       userId = record.recipient_id;
+      notificationId = record.id;
       title = "New " + (record.type || "Notification");
       body = record.preview || record.content || "You have a new notification.";
       url = record.project_id ? `/space/${record.project_id}` : "/space/inbox";
-      
-      // Optional security: Ensure it's actually coming from Supabase
-      // In production, you'd check a secret header here.
     } else {
       // Standard direct fetch from frontend
-      ({ userId, title, body, url } = payloadBody);
+      ({ userId, notificationId, title, body, url } = payloadBody);
+    }
+
+    // Deduplication check
+    if (notificationId) {
+      if (recentPushes.has(notificationId)) {
+        return NextResponse.json({ success: true, cached: true });
+      }
+      recentPushes.add(notificationId);
+      // Clean up cache to prevent memory leak
+      setTimeout(() => recentPushes.delete(notificationId), 10000);
     }
 
     if (!userId) {
