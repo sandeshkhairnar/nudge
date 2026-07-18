@@ -113,6 +113,11 @@ export function TaskBoard({
   const [memberFilter, setMemberFilter] = useState("all");
   useEffect(() => { setLocalTasks(initialTasks); }, [initialTasks]);
 
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setViewMode("list");
+    }
+  }, []);
   const [search, setSearch] = useState("");
   const [openTask, setOpenTask] = useState<Task | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -220,6 +225,7 @@ export function TaskBoard({
       setLocalTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
       if (openTask?.id === taskId) setOpenTask(prev => prev ? { ...prev, status: newStatus } : null);
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      window.dispatchEvent(new CustomEvent("nudge_tasks_updated"));
       onRefresh();
     }
   };
@@ -374,12 +380,16 @@ export function TaskBoard({
 
     if (projectId) {
       // If we're in a project view, use the tanstack query mutation which handles cache updates and rollbacks automatically!
-      updateTaskStatus({ taskId: draggableId, status: newStatus });
+      updateTaskStatus(
+        { taskId: draggableId, status: newStatus },
+        { onSettled: () => { window.dispatchEvent(new CustomEvent("nudge_tasks_updated")); onRefresh(); } }
+      );
     } else {
       // Legacy manual update for boards view
       try {
         await updateTask(draggableId, { status: newStatus }, "workspace");
         queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+        window.dispatchEvent(new CustomEvent("nudge_tasks_updated"));
         onRefresh();
       } catch (e) {
         console.error("Failed to update status", e);
@@ -429,7 +439,7 @@ export function TaskBoard({
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex bg-gray-100 p-0.5 rounded-lg border border-gray-200">
+          <div className="hidden md:flex bg-gray-100 p-0.5 rounded-lg border border-gray-200">
             {(["board", "list"] as const).map((v) => (
               <button
                 key={v}

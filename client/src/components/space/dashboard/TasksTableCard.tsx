@@ -67,7 +67,7 @@ export default function TasksTableCard({ tasks, tab, onTabChange }: TasksTableCa
       />
       
       <div className="flex-1 overflow-x-auto min-h-0 px-2">
-        <table className="w-full border-separate border-spacing-0 table-fixed">
+        <table className="w-full border-separate border-spacing-0 table-fixed min-w-[600px]">
           <thead className="sticky top-0 z-10 bg-white">
             <tr>
               {[
@@ -102,7 +102,7 @@ export default function TasksTableCard({ tasks, tab, onTabChange }: TasksTableCa
               ) : (
                 <motion.tr key={`page-${currentPage}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                   <td colSpan={5} className="p-0">
-                    <table className="w-full border-collapse border-0 table-fixed">
+                    <table className="w-full border-collapse border-0 table-fixed min-w-[600px]">
                       <tbody>
                         {currentTasks.map((task, i) => {
                           const s = STATUS_META[task.status];

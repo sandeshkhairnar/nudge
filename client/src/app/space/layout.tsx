@@ -104,7 +104,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             projectColor={projectColor}
             onOpenCreate={() => setOpen(true)}
           />
-          <div className={`flex-1 overflow-y-auto overflow-x-hidden relative z-0 ${isProjectRoute ? 'p-4 md:p-5' : 'p-6 md:p-8'}`}>
+          <div className={`flex-1 overflow-y-auto overflow-x-hidden relative ${isProjectRoute ? 'p-4 md:p-5' : 'p-6 md:p-8'}`}>
             <div className={pathname === "/space" ? "mt-2" : (isProjectRoute ? "h-full" : "")}>
               {children}
             </div>

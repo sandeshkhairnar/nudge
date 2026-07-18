@@ -125,8 +125,9 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
       setUserId(user.id);
       fetchNotifications(user.id);
 
+      const channelName = `notifications:${user.id}:${Math.random().toString(36).substring(7)}`;
       realtimeChannel = supabase
-        .channel(`notifications:${user.id}`)
+        .channel(channelName)
         .on(
           "postgres_changes",
           {
@@ -191,7 +192,7 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
     });
 
     return () => {
-      realtimeChannel?.unsubscribe();
+      if (realtimeChannel) supabase.removeChannel(realtimeChannel);
     };
   }, [fetchNotifications, supabase]);
 

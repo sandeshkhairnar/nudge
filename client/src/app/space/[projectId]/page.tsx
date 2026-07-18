@@ -781,7 +781,7 @@ export default function SpacePage() {
       </AnimatePresence>
 
       <ProjectSidebar
-        project={project}
+        project={project ? { ...project, progress: tasks.length > 0 ? Math.round((tasks.filter(t => t.status === "done").length / tasks.length) * 100) : 0 } : null}
         tab={tab}
         sidebarOpen={sidebarOpen}
         channels={channels}

@@ -511,34 +511,72 @@ export default function Sidebar({ onOpenCreate }: { onOpenCreate?: () => void })
       .select("project_id, projects!project_members_project_id_fkey(id, name, color, progress, workspace_id, avatar_url)")
       .eq("user_id", currentUserId);
     if (error || !data) return;
-    const filtered: Project[] = (data as any[])
+    
+    const rawProjects = (data as any[])
       .map((row) => row.projects)
-      .filter((p) => p && p.workspace_id === workspace.id)
-      .map((p) => ({
+      .filter((p) => p && p.workspace_id === workspace.id);
+
+    if (rawProjects.length === 0) {
+      setStoreProjects([], workspace.id);
+      setLoadingProjects(false);
+      return;
+    }
+
+    const { data: tasksData, error: tasksError } = await supabase
+      .from("tasks")
+      .select("project_id, status")
+      .in("project_id", rawProjects.map(p => p.id));
+
+    const filtered: Project[] = rawProjects.map((p) => {
+      let progress = p.progress;
+      if (!tasksError && tasksData) {
+        const pTasks = tasksData.filter(t => t.project_id === p.id);
+        if (pTasks.length > 0) {
+          const doneTasks = pTasks.filter(t => t.status === "done").length;
+          progress = Math.round((doneTasks / pTasks.length) * 100);
+        } else {
+          progress = 0;
+        }
+      }
+      return {
         id: p.id,
         name: p.name,
         color: p.color,
-        progress: p.progress,
+        progress,
         avatar_url: p.avatar_url,
-      }));
+      };
+    });
+    
     setStoreProjects(filtered, workspace.id);
     setLoadingProjects(false);
   }, [workspace?.id, currentUserId]);
 
   useEffect(() => {
+    if (!workspace?.id || !currentUserId) return;
+    
     loadProjects();
+    const channelName = `sidebar-projects:${workspace.id}:${currentUserId}:${Math.random().toString(36).substring(7)}`;
     const channel = supabase
-      .channel(`sidebar-projects:${workspace?.id}:${currentUserId}`)
+      .channel(channelName)
       .on("postgres_changes", { event: "*", schema: "public", table: "project_members", filter: `user_id=eq.${currentUserId}` }, () => loadProjects())
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "projects" }, () => loadProjects())
+      .on("postgres_changes", { event: "*", schema: "public", table: "tasks" }, () => loadProjects())
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [workspace?.id, currentUserId, loadProjects]);
 
   useEffect(() => {
+    const handleTasksUpdate = () => loadProjects();
+    window.addEventListener("nudge_tasks_updated", handleTasksUpdate);
+    return () => window.removeEventListener("nudge_tasks_updated", handleTasksUpdate);
+  }, [loadProjects]);
+
+  useEffect(() => {
     if (!currentUserId) return;
+    
+    const channelName = `sidebar-workspaces:${currentUserId}:${Math.random().toString(36).substring(7)}`;
     const wsChannel = supabase
-      .channel(`sidebar-workspaces:${currentUserId}`)
+      .channel(channelName)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "workspace_members", filter: `user_id=eq.${currentUserId}` },
@@ -884,28 +922,29 @@ export default function Sidebar({ onOpenCreate }: { onOpenCreate?: () => void })
     return (
       <>
         <motion.button
-          whileTap={{ scale: 0.93 }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           onClick={() => setMobileOpen(true)}
-          className="fixed top-3.5 left-4 z-50 flex items-center justify-center rounded-[10px]"
-          style={{
-            width: 36,
-            height: 36,
-            background: "#0A0A0A",
-            border: "1px solid rgba(255,255,255,0.1)",
-            color: "white",
-          }}
+          className="fixed top-[12px] left-4 z-[100] flex items-center justify-center w-9 h-9 rounded-xl border border-transparent bg-[#F9F9F7] text-[#4B5563] hover:border-gray-200 hover:bg-white hover:shadow-sm cursor-pointer transition-all"
         >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-            <path d="M3 12h18M3 6h18M3 18h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          {unreadCount > 0 && (
-            <motion.span
-              animate={{ scale: [1, 1.3, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="absolute top-1 right-1 w-2 h-2 rounded-full"
-              style={{ background: "#4F46E5" }}
-            />
-          )}
+          <AnimatePresence>
+            {unreadCount > 0 && (
+              <motion.span
+                key="badge"
+                initial={{ scale: 0 }}
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 3 }}
+                className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-indigo-600 border-2 border-white flex items-center justify-center shadow-sm"
+              >
+                <span className="text-[9px] font-bold text-white leading-none">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              </motion.span>
+            )}
+          </AnimatePresence>
         </motion.button>
 
         <AnimatePresence>
@@ -916,7 +955,7 @@ export default function Sidebar({ onOpenCreate }: { onOpenCreate?: () => void })
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setMobileOpen(false)}
-                className="fixed inset-0 z-40"
+                className="fixed inset-0 z-[100]"
                 style={{ background: "rgba(0,0,0,0.65)", backdropFilter: "blur(6px)" }}
               />
               <motion.div
@@ -924,7 +963,7 @@ export default function Sidebar({ onOpenCreate }: { onOpenCreate?: () => void })
                 animate={{ x: 0 }}
                 exit={{ x: -EXPANDED_W }}
                 transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-                className="fixed top-0 left-0 h-screen z-50"
+                className="fixed top-0 left-0 h-screen z-[101]"
               >
                 {sidebarContent}
               </motion.div>
