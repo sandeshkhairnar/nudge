@@ -6,37 +6,37 @@ import { motion, AnimatePresence } from "framer-motion";
 interface Props {
   open: boolean;
   onClose: () => void;
-  onCreate: (name: string, description: string) => Promise<void>;
+  onCreate: (name: string, description: string, color: string) => Promise<void>;
 }
 
 export default function CreateProjectModal({ open, onClose, onCreate }: Props) {
   const [name, setName]           = useState("");
   const [description, setDesc]    = useState("");
   const [loading, setLoading]     = useState(false);
-  const [nameFocused, setNF]      = useState(false);
-  const [descFocused, setDF]      = useState(false);
 
   const valid = name.trim().length > 0;
 
   async function handleSubmit() {
     if (!valid || loading) return;
     setLoading(true);
-    await onCreate(name.trim(), description.trim());
+    await onCreate(name.trim(), description.trim(), accent);
     setLoading(false);
     setName("");
     setDesc("");
+    setAccent("#4F46E5");
   }
 
   function handleClose() {
     if (loading) return;
     setName("");
     setDesc("");
+    setAccent("#4F46E5");
     onClose();
   }
 
-  /* Accent colours to pick from */
-  const COLORS = ["#36C5F0", "#2EB67D", "#ECB22E", "#E01E5A", "#A259FF", "#FF6B6B"];
-  const [accent, setAccent] = useState("#36C5F0");
+  /* Refined, modern SaaS accent colours */
+  const COLORS = ["#4F46E5", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899"];
+  const [accent, setAccent] = useState("#4F46E5");
 
   return (
     <AnimatePresence>
@@ -48,183 +48,157 @@ export default function CreateProjectModal({ open, onClose, onCreate }: Props) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.3 }}
             onClick={handleClose}
-            className="fixed inset-0 bg-black/30 z-[200] backdrop-blur-[2px]"
+            className="fixed inset-0 bg-[#09090B]/40 z-[200] backdrop-blur-[4px]"
           />
 
           {/* Modal */}
           <motion.div
             key="modal"
-            initial={{ opacity: 0, scale: 0.94, y: 16 }}
+            initial={{ opacity: 0, scale: 0.96, y: 16 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.96, y: 8 }}
-            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed inset-0 flex items-center justify-center z-[201] pointer-events-none"
+            exit={{ opacity: 0, scale: 0.96, y: 16 }}
+            transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+            className="fixed inset-0 flex items-center justify-center z-[201] pointer-events-none p-4"
           >
             <div
-              className="w-[460px] bg-white rounded-2xl overflow-hidden pointer-events-auto"
-              style={{ boxShadow: "0 24px 64px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.06)" }}
+              className="w-full max-w-[480px] bg-white rounded-[24px] overflow-hidden pointer-events-auto border border-white/20"
+              style={{ boxShadow: "0 20px 60px -10px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05)" }}
             >
               {/* Header */}
-              <div className="flex items-center justify-between px-6 py-5 border-b border-[#F0F0EC]">
-                <div>
-                  <h2 className="text-[16px] font-black text-[#0D0D0D] tracking-[-0.02em]">
-                    New project
-                  </h2>
-                  <p className="text-[12px] text-[#9CA3AF] mt-0.5">
-                    Set up a workspace for your team
-                  </p>
-                </div>
+              <div className="px-8 pt-8 pb-6 relative">
                 <motion.button
-                  whileHover={{ scale: 1.1, background: "#F5F5F2" }}
-                  whileTap={{ scale: 0.9 }}
+                  whileHover={{ scale: 1.1, background: "rgba(0,0,0,0.04)" }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={handleClose}
-                  className="w-8 h-8 rounded-xl flex items-center justify-center text-[#9CA3AF] hover:text-[#374151] border-0 bg-transparent cursor-pointer transition-colors"
+                  className="absolute top-6 right-6 w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors cursor-pointer border-0 bg-transparent"
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                    <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
                   </svg>
                 </motion.button>
+
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-50 to-blue-50/50 flex items-center justify-center mb-5 border border-indigo-100/50">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-indigo-600">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M3 9h18" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M9 21V9" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+                
+                <h2 className="text-[22px] font-extrabold text-gray-900 tracking-tight leading-tight" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                  Start a new project
+                </h2>
+                <p className="text-[14px] text-gray-500 mt-1.5 font-medium">
+                  Organize your tasks, teammates, and timelines.
+                </p>
               </div>
 
               {/* Body */}
-              <div className="px-6 py-5 space-y-4">
+              <div className="px-8 space-y-6 pb-8">
 
                 {/* Project name */}
                 <div>
-                  <label className="text-[11px] font-black uppercase tracking-[0.1em] text-[#9CA3AF] block mb-2">
-                    Project name <span className="text-[#E01E5A]">*</span>
+                  <label className="text-[12px] font-bold text-gray-700 mb-2 block uppercase tracking-wider">
+                    Project name <span className="text-red-500">*</span>
                   </label>
-                  <motion.div
-                    animate={{
-                      boxShadow: nameFocused
-                        ? "0 0 0 2px rgba(54,197,240,0.25)"
-                        : "0 0 0 1px #E8E8E2",
-                    }}
-                    transition={{ duration: 0.15 }}
-                    className="rounded-xl overflow-hidden"
-                  >
-                    <input
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      onFocus={() => setNF(true)}
-                      onBlur={() => setNF(false)}
-                      onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-                      placeholder="e.g. Q3 Launch, API v2…"
-                      maxLength={60}
-                      autoFocus
-                      className="w-full px-4 py-3 text-[14px] font-semibold text-[#0D0D0D] bg-white border-0 outline-none placeholder-[#C4C4BC]"
-                    />
-                  </motion.div>
+                  <input
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+                    placeholder="e.g. Q3 Marketing Launch"
+                    maxLength={60}
+                    autoFocus
+                    className="w-full px-4 py-3.5 text-[14px] font-semibold text-gray-900 bg-gray-50 hover:bg-gray-100/50 focus:bg-white border border-gray-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 rounded-xl outline-none transition-all placeholder:text-gray-400 placeholder:font-medium"
+                  />
                 </div>
 
                 {/* Description */}
                 <div>
-                  <label className="text-[11px] font-black uppercase tracking-[0.1em] text-[#9CA3AF] block mb-2">
-                    Description <span className="text-[#C4C4BC] font-medium normal-case tracking-normal">optional</span>
+                  <label className="text-[12px] font-bold text-gray-700 mb-2 flex items-center justify-between uppercase tracking-wider">
+                    Description
+                    <span className="text-gray-400 font-semibold text-[10px] bg-gray-100 px-2 py-0.5 rounded-full">OPTIONAL</span>
                   </label>
-                  <motion.div
-                    animate={{
-                      boxShadow: descFocused
-                        ? "0 0 0 2px rgba(54,197,240,0.25)"
-                        : "0 0 0 1px #E8E8E2",
-                    }}
-                    transition={{ duration: 0.15 }}
-                    className="rounded-xl overflow-hidden"
-                  >
-                    <textarea
-                      value={description}
-                      onChange={(e) => setDesc(e.target.value)}
-                      onFocus={() => setDF(true)}
-                      onBlur={() => setDF(false)}
-                      placeholder="What is this project about?"
-                      rows={3}
-                      maxLength={200}
-                      className="w-full px-4 py-3 text-[13px] font-medium text-[#374151] bg-white border-0 outline-none resize-none placeholder-[#C4C4BC]"
-                      style={{ fontFamily: "'Sora', sans-serif" }}
-                    />
-                  </motion.div>
-                  <p className="text-[11px] text-[#C4C4BC] text-right mt-1">
-                    {description.length}/200
-                  </p>
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDesc(e.target.value)}
+                    placeholder="What's the goal of this project?"
+                    rows={2}
+                    maxLength={200}
+                    className="w-full px-4 py-3 text-[14px] font-medium text-gray-700 bg-gray-50 hover:bg-gray-100/50 focus:bg-white border border-gray-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 rounded-xl outline-none transition-all resize-none placeholder:text-gray-400"
+                  />
                 </div>
 
                 {/* Accent colour */}
                 <div>
-                  <label className="text-[11px] font-black uppercase tracking-[0.1em] text-[#9CA3AF] block mb-2">
-                    Colour
+                  <label className="text-[12px] font-bold text-gray-700 mb-3 block uppercase tracking-wider">
+                    Theme Color
                   </label>
-                  <div className="flex gap-2">
+                  <div className="flex gap-3">
                     {COLORS.map((c) => (
-                      <motion.button
+                      <button
                         key={c}
-                        whileHover={{ scale: 1.15 }}
-                        whileTap={{ scale: 0.9 }}
                         onClick={() => setAccent(c)}
-                        className="w-7 h-7 rounded-full border-0 cursor-pointer flex items-center justify-center"
+                        className="relative w-8 h-8 rounded-full border-0 cursor-pointer flex items-center justify-center transition-transform hover:scale-110 active:scale-95"
                         style={{ background: c }}
                       >
-                        <AnimatePresence>
-                          {accent === c && (
-                            <motion.svg
-                              key="check"
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              exit={{ scale: 0 }}
-                              width="12" height="12" viewBox="0 0 24 24" fill="none"
-                            >
-                              <path d="M5 12l5 5L20 7" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                            </motion.svg>
-                          )}
-                        </AnimatePresence>
-                      </motion.button>
+                        {accent === c && (
+                          <motion.div
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1.3, opacity: 1 }}
+                            className="absolute inset-0 rounded-full"
+                            style={{ border: `2px solid ${c}` }}
+                          />
+                        )}
+                        {accent === c && (
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" className="z-10 relative">
+                            <path d="M5 12l5 5L20 7" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        )}
+                      </button>
                     ))}
                   </div>
                 </div>
               </div>
 
               {/* Footer */}
-              <div className="flex items-center justify-between px-6 py-4 border-t border-[#F0F0EC] bg-[#FAFAF8]">
+              <div className="flex items-center justify-end gap-3 px-8 py-5 bg-gray-50/80 border-t border-gray-100">
                 <button
                   onClick={handleClose}
                   disabled={loading}
-                  className="text-[13px] font-semibold text-[#9CA3AF] hover:text-[#6B7280] border-0 bg-transparent cursor-pointer transition-colors"
+                  className="px-5 py-2.5 text-[14px] font-bold text-gray-500 hover:text-gray-800 hover:bg-gray-200/50 rounded-xl border-0 bg-transparent cursor-pointer transition-colors"
                 >
                   Cancel
                 </button>
 
-                <motion.button
-                  whileHover={valid ? { y: -1, boxShadow: "0 6px 20px rgba(0,0,0,0.18)" } : {}}
-                  whileTap={valid ? { scale: 0.97 } : {}}
+                <button
                   onClick={handleSubmit}
                   disabled={!valid || loading}
-                  className="h-9 px-5 rounded-xl text-[13px] font-black text-white border-0 flex items-center gap-2 transition-all"
-                  style={{
-                    background: valid ? "#0D0D0D" : "#E5E7EB",
-                    color: valid ? "#fff" : "#9CA3AF",
-                    cursor: valid ? "pointer" : "not-allowed",
-                    boxShadow: valid ? "0 2px 8px rgba(0,0,0,0.12)" : "none",
-                  }}
+                  className="relative px-6 py-2.5 rounded-xl text-[14px] font-bold text-white border-0 overflow-hidden group disabled:cursor-not-allowed disabled:opacity-50 transition-all shadow-sm"
+                  style={{ background: valid ? accent : "#9CA3AF" }}
                 >
-                  {loading ? (
-                    <>
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 0.7, repeat: Infinity, ease: "linear" }}
-                        className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white"
-                      />
-                      Creating…
-                    </>
-                  ) : (
-                    <>
-                      Create project
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                        <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </>
+                  <div className="flex items-center gap-2 relative z-10">
+                    {loading ? (
+                      <>
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                          className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white"
+                        />
+                        Creating...
+                      </>
+                    ) : (
+                      <>
+                        Create Project
+                      </>
+                    )}
+                  </div>
+                  {/* Hover effect overlay */}
+                  {valid && (
+                    <div className="absolute inset-0 bg-black/10 translate-y-full group-hover:translate-y-0 transition-transform duration-200 ease-out" />
                   )}
-                </motion.button>
+                </button>
               </div>
             </div>
           </motion.div>

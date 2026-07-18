@@ -25,7 +25,7 @@ export default function DashboardPage() {
   const [tasks, setTasks] = useState<any[]>([]);
   const [nudges, setNudges] = useState<any[]>([]);
   const [team, setTeam] = useState<any[]>([]);
-  const [weekly, setWeekly] = useState<{ week: string; done: number; inProgress: number; todo: number }[]>([]);
+  const [weekly, setWeekly] = useState<{ week: string; done: number; inProgress: number; review: number; todo: number }[]>([]);
   const [loading, setLoading] = useState(true);
   const [me, setMe] = useState<any>(null);
   const [engineActive, setEngineActive] = useState(false);
@@ -151,12 +151,13 @@ export default function DashboardPage() {
       });
 
       const WEEKS = ["W-5", "W-4", "W-3", "W-2", "W-1", "Now"];
-      const wk = WEEKS.map(w => ({ week: w, done: 0, inProgress: 0, todo: 0 }));
+      const wk = WEEKS.map(w => ({ week: w, done: 0, inProgress: 0, review: 0, todo: 0 }));
       const bs = Math.max(Math.ceil(shaped.length / 6), 1);
       shaped.forEach((t, i) => {
         const b = Math.min(Math.floor(i / bs), 5);
         if (t.status === "done") wk[b].done++;
         else if (t.status === "in_progress") wk[b].inProgress++;
+        else if (t.status === "review") wk[b].review++;
         else wk[b].todo++;
       });
 

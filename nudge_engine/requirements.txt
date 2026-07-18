@@ -8,6 +8,7 @@
 # ── Web framework ─────────────────────────────────────────────────────────────
 fastapi
 uvicorn[standard]
+python-multipart
 gunicorn
 
 

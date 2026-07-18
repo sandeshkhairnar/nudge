@@ -22,6 +22,7 @@ from routers.nudge_router import router as nudge_router
 from routers.github_router import router as github_router
 from routers.analytics_router import router as analytics_router
 from routers.video_call_router import router as video_call_router
+from routers.task_router import router as task_router
 
 
 # ── Infrastructure imports ────────────────────────────────────────────────────
@@ -88,6 +89,7 @@ def create_app() -> FastAPI:
     app.include_router(github_router)          # POST /webhooks/github
     app.include_router(analytics_router)       # GET  /analytics
     app.include_router(video_call_router)      # GET  /video/token
+    app.include_router(task_router)            # POST /task/extract
 
 
 

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useWorkspaceStore } from "@/store/workspace-store";
 import { Check, ChevronDown, Building } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface Props {
   collapsed: boolean;
@@ -14,8 +15,23 @@ export function WorkspaceSwitcher({ collapsed }: Props) {
   const workspaces = useWorkspaceStore((s) => s.workspaces);
   const setWorkspace = useWorkspaceStore((s) => s.setWorkspace);
   const [open, setOpen] = useState(false);
+  const router = useRouter();
 
-  if (!workspace) return null;
+  if (!workspace) {
+    return (
+      <div className="relative pointer-events-none">
+        <div className={`w-full flex items-center gap-2.5 border-0 bg-transparent rounded-xl ${collapsed ? "py-2 justify-center" : "px-2.5 py-2 justify-start"}`}>
+          <div className="flex-shrink-0 rounded-lg w-7 h-7 bg-white/5 animate-pulse border border-white/5" />
+          {!collapsed && (
+            <div className="flex-1 flex flex-col gap-1.5">
+              <div className="w-[65%] h-[13px] bg-white/5 rounded animate-pulse" />
+              <div className="w-[40%] h-[10px] bg-white/5 rounded animate-pulse" />
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   const initials = workspace.name
     .split(" ")
@@ -123,6 +139,7 @@ export function WorkspaceSwitcher({ collapsed }: Props) {
                         setWorkspace(ws);
                         localStorage.setItem("lastWorkspaceId", ws.id);
                         setOpen(false);
+                        router.push("/space");
                       }}
                       className={`w-full flex items-center gap-3 px-2.5 py-2 rounded-lg border-0 cursor-pointer transition-all text-left ${
                         isActive ? "bg-indigo-50" : "bg-transparent hover:bg-gray-50"

@@ -34,7 +34,7 @@ export default function Avatar({
   const [isHovered, setIsHovered] = useState(false);
   const [coords, setCoords] = useState({ top: 0, left: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
-  const initials = (name || "U").slice(0, 1).toUpperCase();
+  const initials = (typeof name === "string" ? name : "U").slice(0, 1).toUpperCase();
 
   const updateCoords = () => {
     if (containerRef.current) {

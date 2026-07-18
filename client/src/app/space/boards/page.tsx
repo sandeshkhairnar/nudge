@@ -13,6 +13,7 @@ export default function BoardsPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
   const [members, setMembers] = useState<any[]>([]);
+  const [resources, setResources] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -37,10 +38,11 @@ export default function BoardsPage() {
 
     const projectIds = validProjects.map((p: any) => p.id);
     if (projectIds.length > 0) {
-      const { data: taskRows } = await supabase
+      const { data: taskRows, error: taskError } = await supabase
         .from("tasks")
-        .select("*, assignee:profiles!tasks_assignee_id_fkey(id, full_name, avatar_url, email), projects!tasks_project_id_fkey(id, name, color)")
+        .select("*, assignee:profiles!tasks_assignee_id_fkey(id, full_name, avatar_url, email), projects!tasks_project_id_fkey(id, name, color), attachments:task_attachments(*), task_resources(resources(*)), subtasks(*, assignee:profiles!subtasks_assignee_id_fkey(id, full_name, avatar_url, email), attachments:task_attachments(*), task_resources(resources(*)))")
         .in("project_id", projectIds);
+      console.log("Boards Fetch Result:", { taskRows, taskError });
 
       if (taskRows) {
         const hydratedTasks = taskRows.map((t: any) => {
@@ -63,8 +65,12 @@ export default function BoardsPage() {
         });
         setTasks(hydratedTasks as Task[]);
       }
+
+      const { data: resRows } = await supabase.from("resources").select("*").in("project_id", projectIds);
+      setResources(resRows || []);
     } else {
       setTasks([]);
+      setResources([]);
     }
     if (!isBackgroundRefresh) setLoading(false);
   };
@@ -96,6 +102,7 @@ export default function BoardsPage() {
           tasks={tasks}
           projects={projects}
           members={members}
+          resources={resources}
           onRefresh={() => loadData(true)}
         />
       </div>

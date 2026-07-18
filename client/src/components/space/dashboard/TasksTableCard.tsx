@@ -67,11 +67,17 @@ export default function TasksTableCard({ tasks, tab, onTabChange }: TasksTableCa
       />
       
       <div className="flex-1 overflow-x-auto min-h-0 px-2">
-        <table className="w-full border-separate border-spacing-0">
-          <thead className="sticky top-0 z-10">
+        <table className="w-full border-separate border-spacing-0 table-fixed">
+          <thead className="sticky top-0 z-10 bg-white">
             <tr>
-              {["Task", "Project", "Assignee", "Status", "Age"].map(h => (
-                <th key={h} className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500 border-b border-gray-200">{h}</th>
+              {[
+                { label: "Task", w: "40%" }, 
+                { label: "Project", w: "20%" }, 
+                { label: "Assignee", w: "15%" }, 
+                { label: "Status", w: "15%" }, 
+                { label: "Age", w: "10%" }
+              ].map(h => (
+                <th key={h.label} className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500 border-b border-gray-200" style={{ width: h.w }}>{h.label}</th>
               ))}
             </tr>
           </thead>
@@ -96,7 +102,7 @@ export default function TasksTableCard({ tasks, tab, onTabChange }: TasksTableCa
               ) : (
                 <motion.tr key={`page-${currentPage}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                   <td colSpan={5} className="p-0">
-                    <table className="w-full border-collapse border-0">
+                    <table className="w-full border-collapse border-0 table-fixed">
                       <tbody>
                         {currentTasks.map((task, i) => {
                           const s = STATUS_META[task.status];
@@ -107,22 +113,22 @@ export default function TasksTableCard({ tasks, tab, onTabChange }: TasksTableCa
                               transition={{ delay: i * 0.03, duration: 0.3 }}
                               whileHover={{ background: "#FAFAFA" }}
                               className="group cursor-default">
-                                <td className="px-5 py-3 border-b border-gray-100 group-last:border-0">
-                                  <div className="flex items-center gap-3">
+                                <td className="px-5 py-3 border-b border-gray-100 group-last:border-0 truncate" style={{ width: "40%" }}>
+                                  <div className="flex items-center gap-3 min-w-0">
                                     <div className="w-2 h-2 rounded-full flex-shrink-0 shadow-sm" style={{ background: task.project_color ?? "#9CA3AF" }} />
-                                    <span className="text-[13px] font-medium text-gray-900 tracking-tight truncate max-w-[150px]">{task.title}</span>
-                                    {task.stalled_days >= 5 && (
+                                    <span className="text-[13px] font-medium text-gray-900 tracking-tight truncate flex-1">{task.title}</span>
+                                    {task.stalled_days >= 3 && (
                                       <motion.span animate={{ scale: [1, 1.15, 1], opacity: [1, 0.7, 1] }} transition={{ duration: 2, repeat: Infinity }}
-                                        className="text-[10px] bg-amber-50 text-amber-600 px-1.5 py-0.5 rounded-md border border-amber-200 font-semibold">STALLED</motion.span>
+                                        className="text-[10px] bg-amber-50 text-amber-600 px-1.5 py-0.5 rounded-md border border-amber-200 font-semibold flex-shrink-0">STALLED</motion.span>
                                     )}
                                   </div>
                                 </td>
-                                <td className="px-5 py-3 border-b border-gray-100 group-last:border-0">
-                                  <span className="text-[12px] text-gray-500 font-medium truncate max-w-[90px] block">{task.project_name ?? "—"}</span>
+                                <td className="px-5 py-3 border-b border-gray-100 group-last:border-0 truncate" style={{ width: "20%" }}>
+                                  <span className="text-[12px] text-gray-500 font-medium truncate block">{task.project_name ?? "—"}</span>
                                 </td>
-                                <td className="px-5 py-3 border-b border-gray-100 group-last:border-0">
+                                <td className="px-5 py-3 border-b border-gray-100 group-last:border-0 truncate" style={{ width: "15%" }}>
                                   {task.assignee_id ? (
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2 truncate">
                                       <Avatar
                                         url={task.assignee_avatar_url}
                                         name={task.assignee_name || "Unknown"}
@@ -130,18 +136,18 @@ export default function TasksTableCard({ tasks, tab, onTabChange }: TasksTableCa
                                         size={24}
                                         fallbackColor={strColor(task.assignee_id)}
                                       />
-                                      <span className="text-[12px] text-gray-900 font-medium truncate max-w-[60px]">{task.assignee_name?.split(" ")[0]}</span>
+                                      <span className="text-[12px] text-gray-900 font-medium truncate">{task.assignee_name?.split(" ")[0]}</span>
                                     </div>
                                   ) : <span className="text-[12px] text-gray-300">—</span>}
                                 </td>
-                                <td className="px-5 py-3 border-b border-gray-100 group-last:border-0">
+                                <td className="px-5 py-3 border-b border-gray-100 group-last:border-0" style={{ width: "15%" }}>
                                   <span className="text-[11px] font-semibold px-2 py-1 rounded-md shadow-sm inline-block tracking-tight" 
                                     style={{ color: s.fg, background: s.bg, border: `1px solid color-mix(in srgb, ${s.fg}, transparent 85%)` }}>
                                     {s.label}
                                   </span>
                                 </td>
-                                <td className="px-5 py-3 border-b border-gray-100 group-last:border-0 text-[12px] font-semibold"
-                                  style={{ color: age >= 5 ? "#D97706" : "#9CA3AF" }}>
+                                <td className="px-5 py-3 border-b border-gray-100 group-last:border-0 text-[12px] font-semibold" 
+                                  style={{ width: "10%", color: age >= 5 ? "#D97706" : "#9CA3AF" }}>
                                   {age === 0 ? "TODAY" : `${age}D`}
                                 </td>
                             </motion.tr>

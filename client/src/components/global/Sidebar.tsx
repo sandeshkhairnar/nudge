@@ -318,12 +318,14 @@ function ProjectRow({
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: index * 0.05, duration: 0.25 }}
         whileTap={{ scale: 0.98 }}
-        className="flex items-center rounded-xl cursor-pointer transition-all duration-150"
+        className="flex items-center rounded-lg cursor-pointer transition-all duration-150 group/proj"
         style={{
-          gap: 9,
-          padding: collapsed ? "8px 10px" : "7px 11px",
+          gap: 12,
+          padding: collapsed ? "8px" : "8px 10px",
           justifyContent: collapsed ? "center" : "flex-start",
-          background: active ? "#4F46E5" : "transparent",
+          background: active ? "rgba(255,255,255,0.08)" : "transparent",
+          border: "1px solid transparent",
+          borderColor: active ? "rgba(255,255,255,0.04)" : "transparent",
         }}
         onMouseEnter={(e) => {
           if (!active)
@@ -343,21 +345,25 @@ function ProjectRow({
             />
           ) : (
             <div
-              className="w-2 h-2 rounded-full"
+              className="w-full h-full rounded-md flex items-center justify-center text-[11px] font-extrabold"
               style={{
-                background: project.color,
-                boxShadow: active ? `0 0 6px ${project.color}90` : "none",
+                background: `${project.color}25`,
+                color: project.color,
+                border: `1px solid ${project.color}40`,
+                boxShadow: active ? `0 0 8px ${project.color}60` : "none",
               }}
-            />
+            >
+              {project.name.charAt(0).toUpperCase()}
+            </div>
           )}
         </div>
 
         {!collapsed && (
           <>
             <span
-              className="text-[12.5px] flex-1 truncate"
+              className="text-[12.5px] flex-1 truncate transition-colors"
               style={{
-                fontWeight: active ? 700 : 500,
+                fontWeight: active ? 600 : 500,
                 color: active ? "#FFFFFF" : "#9CA3AF",
                 fontFamily: "'Plus Jakarta Sans', sans-serif",
                 letterSpacing: "-0.01em",
@@ -366,25 +372,28 @@ function ProjectRow({
               {project.name}
             </span>
 
-            <div
-              className="rounded-full overflow-hidden flex-shrink-0"
-              style={{ width: 32, height: 3, background: "rgba(255,255,255,0.1)" }}
-            >
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${project.progress}%` }}
-                transition={{ duration: 0.6, delay: index * 0.05, ease: "easeOut" }}
-                className="h-full rounded-full"
-                style={{ background: project.color }}
-              />
+            {/* Circular Progress Ring */}
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              {project.progress > 0 && (
+                <div className="relative w-[14px] h-[14px] flex items-center justify-center">
+                  <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                    <circle cx="18" cy="18" r="14" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="5" />
+                    <circle
+                      cx="18" cy="18" r="14" fill="none" stroke={project.color} strokeWidth="5" strokeLinecap="round"
+                      strokeDasharray="87.96"
+                      strokeDashoffset={87.96 - (project.progress / 100) * 87.96}
+                      style={{ transition: "stroke-dashoffset 0.8s ease-out" }}
+                    />
+                  </svg>
+                </div>
+              )}
+              <span
+                className="text-[10px] font-bold tabular-nums flex-shrink-0"
+                style={{ color: active ? "#FFFFFF" : (project.progress === 0 ? "#4B5563" : "#6B7280"), minWidth: 22, textAlign: "right" }}
+              >
+                {project.progress}%
+              </span>
             </div>
-
-            <span
-              className="text-[10px] font-bold tabular-nums flex-shrink-0"
-              style={{ color: "#9CA3AF", minWidth: 24, textAlign: "right" }}
-            >
-              {project.progress}%
-            </span>
           </>
         )}
       </motion.div>
@@ -395,11 +404,30 @@ function ProjectRow({
   return inner;
 }
 
-export default function Sidebar() {
+function ProjectRowSkeleton({ collapsed }: { collapsed: boolean }) {
+  return (
+    <div
+      className="flex items-center rounded-lg pointer-events-none"
+      style={{
+        gap: 12,
+        padding: collapsed ? "8px" : "8px 10px",
+        justifyContent: collapsed ? "center" : "flex-start",
+      }}
+    >
+      <div className="relative flex-shrink-0 w-5 h-5 rounded-md bg-white/5 animate-pulse" />
+      {!collapsed && (
+        <div className="flex-1 h-[12px] rounded bg-white/5 animate-pulse" style={{ maxWidth: "65%" }} />
+      )}
+    </div>
+  );
+}
+
+export default function Sidebar({ onOpenCreate }: { onOpenCreate?: () => void }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [canScrollDown, setCanScrollDown] = useState(false);
+  const [loadingProjects, setLoadingProjects] = useState(true);
 
   const navRef = useRef<HTMLElement>(null);
 
@@ -494,6 +522,7 @@ export default function Sidebar() {
         avatar_url: p.avatar_url,
       }));
     setStoreProjects(filtered, workspace.id);
+    setLoadingProjects(false);
   }, [workspace?.id, currentUserId]);
 
   useEffect(() => {
@@ -537,6 +566,7 @@ export default function Sidebar() {
 
   const sidebarContent = (
     <motion.aside
+      initial={false}
       animate={{ width: isMobile ? EXPANDED_W : (collapsed ? COLLAPSED_W : EXPANDED_W) }}
       transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
       className="h-screen flex flex-col flex-shrink-0 relative overflow-hidden select-none"
@@ -610,20 +640,17 @@ export default function Sidebar() {
         )}
       </div>
 
-      {workspace && (
-        <div style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-          <WorkspaceSwitcher collapsed={collapsed && !isMobile} />
-        </div>
-      )}
+      <div style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+        <WorkspaceSwitcher collapsed={collapsed && !isMobile} />
+      </div>
 
       <div className="flex-1 relative min-h-0">
         <nav
           ref={navRef}
-          className="h-full flex flex-col overflow-y-auto overflow-x-hidden"
+          className="h-full flex flex-col overflow-y-auto overflow-x-hidden no-scrollbar"
           style={{
             padding: collapsed && !isMobile ? "10px 8px" : "10px 10px",
             gap: 1,
-            scrollbarWidth: "none",
           }}
         >
           <div className="flex flex-col gap-0.5">
@@ -643,7 +670,7 @@ export default function Sidebar() {
           </div>
 
           <AnimatePresence>
-            {!(collapsed && !isMobile) && projects.length > 0 && (
+            {!(collapsed && !isMobile) && (projects.length > 0 || loadingProjects) && (
               <motion.div
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -658,7 +685,7 @@ export default function Sidebar() {
                   >
                     Projects
                   </span>
-                  <Link href="/space/new" className="no-underline">
+                  <button onClick={onOpenCreate} className="border-0 bg-transparent p-0 m-0 outline-none">
                     <motion.div
                       whileHover={{ scale: 1.15, color: "#111827" }}
                       className="flex items-center justify-center rounded cursor-pointer"
@@ -668,41 +695,49 @@ export default function Sidebar() {
                         <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" />
                       </svg>
                     </motion.div>
-                  </Link>
+                  </button>
                 </div>
 
                 <div className="flex flex-col gap-0.5">
-                  {projects.map((p, i) => (
-                    <ProjectRow
-                      key={p.id}
-                      project={p}
-                      index={i}
-                      active={pathname === `/space/${p.id}`}
-                      collapsed={collapsed && !isMobile}
-                      onClick={isMobile ? () => setMobileOpen(false) : undefined}
-                    />
-                  ))}
+                  {loadingProjects ? (
+                    [1, 2, 3].map((i) => <ProjectRowSkeleton key={`sk-${i}`} collapsed={collapsed && !isMobile} />)
+                  ) : (
+                    projects.map((p, i) => (
+                      <ProjectRow
+                        key={p.id}
+                        project={p}
+                        index={i}
+                        active={pathname === `/space/${p.id}`}
+                        collapsed={collapsed && !isMobile}
+                        onClick={isMobile ? () => setMobileOpen(false) : undefined}
+                      />
+                    ))
+                  )}
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
 
-          {(collapsed && !isMobile) && projects.length > 0 && (
+          {(collapsed && !isMobile) && (projects.length > 0 || loadingProjects) && (
             <div className="mt-4 flex flex-col gap-1 items-center">
               <div
                 className="w-5 h-px mb-1.5"
                 style={{ background: "rgba(255,255,255,0.1)" }}
               />
-              {projects.slice(0, 6).map((p, i) => (
-                <ProjectRow
-                  key={p.id}
-                  project={p}
-                  index={i}
-                  active={pathname === `/space/${p.id}`}
-                  collapsed
-                  onClick={undefined}
-                />
-              ))}
+              {loadingProjects ? (
+                [1, 2, 3].map((i) => <ProjectRowSkeleton key={`sk-col-${i}`} collapsed={true} />)
+              ) : (
+                projects.slice(0, 6).map((p, i) => (
+                  <ProjectRow
+                    key={p.id}
+                    project={p}
+                    index={i}
+                    active={pathname === `/space/${p.id}`}
+                    collapsed
+                    onClick={undefined}
+                  />
+                ))
+              )}
             </div>
           )}
         </nav>

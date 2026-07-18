@@ -143,7 +143,11 @@ export default function SpacePage() {
       if (proj) setProject(proj);
       const { data: ch } = await supabase.from("channels").select("*").eq("project_id", projectId).order("created_at");
       if (ch?.length) { setChannels(ch); setActiveChannel(ch[0]); }
-      const { data: ts } = await supabase.from("tasks").select("*,assignee:profiles!tasks_assignee_id_fkey(id,full_name,avatar_url,email),projects!tasks_project_id_fkey(id,name,color)").eq("project_id", projectId).order("created_at");
+      const { data: ts, error: tsError } = await supabase.from("tasks")
+        .select("*,assignee:profiles!tasks_assignee_id_fkey(id,full_name,avatar_url,email),projects!tasks_project_id_fkey(id,name,color),attachments:task_attachments(*),task_resources(resources(*)),subtasks(*, assignee:profiles!subtasks_assignee_id_fkey(id, full_name, avatar_url, email), attachments:task_attachments(*), task_resources(resources(*)))")
+        .eq("project_id", projectId)
+        .order("created_at");
+      console.log("Tasks Fetch Result:", { ts, tsError });
       if (ts) setTasks(ts as Task[]);
       const { members } = await getProjectMembers(projectId);
       if (members) setTeam(members as unknown as TeamMember[]);
@@ -865,8 +869,12 @@ export default function SpacePage() {
                 project={project}
                 team={team}
                 projectId={projectId}
+                resources={resources}
                 onRefresh={async () => {
-                  const { data: ts } = await supabase.from("tasks").select("*,assignee:profiles!tasks_assignee_id_fkey(id,full_name,avatar_url,email),projects!tasks_project_id_fkey(id,name,color)").eq("project_id", projectId).order("created_at");
+                  const { data: ts } = await supabase.from("tasks")
+                    .select("*,assignee:profiles!tasks_assignee_id_fkey(id,full_name,avatar_url,email),projects!tasks_project_id_fkey(id,name,color),attachments:task_attachments(id,file_name,file_url,file_type,file_size,created_at),task_resources(resources(*))")
+                    .eq("project_id", projectId)
+                    .order("created_at");
                   if (ts) setTasks(ts as Task[]);
                 }}
               />

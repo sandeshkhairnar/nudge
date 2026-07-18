@@ -1,4 +1,5 @@
 export type TaskStatus = "todo" | "in_progress" | "review" | "done";
+export type TaskType = "task" | "bug" | "feature" | "improvement" | "epic" | "question" | "documentation";
 
 export type Tab = "chat" | "tasks" | "team" | "resources" | "integrations" | "settings";
 
@@ -35,12 +36,15 @@ export interface Message {
   reply_count?: number;
 }
 
-export interface Task {
+export interface Subtask {
   id: string;
+  parent_task_id: string;
   title: string;
+  description?: string | null;
   status: TaskStatus;
+  type: TaskType;
+  priority?: "high" | "medium" | "low";
   assignee_id: string | null;
-  stalled_days: number;
   due_date: string | null;
   created_at: string;
   assignee?: {
@@ -49,7 +53,46 @@ export interface Task {
     avatar_url: string | null;
     email: string;
   } | null;
+  attachments?: TaskAttachment[];
+  linked_resources?: Resource[];
+}
+
+export interface Task {
+  id: string;
+  title: string;
+  description?: string | null;
+  status: TaskStatus;
+  type: TaskType;
+  priority?: "high" | "medium" | "low";
+  assignee_id: string | null;
+  stalled_days: number;
+  due_date: string | null;
+  created_at: string;
+  project_id: string;
+  parent_task_id?: string | null;
+  assignee?: {
+    id: string;
+    full_name: string | null;
+    avatar_url: string | null;
+    email: string;
+  } | null;
   projects?: { id: string; name: string; color: string } | null;
+  subtasks?: Subtask[];
+  attachments?: TaskAttachment[];
+  linked_resources?: Resource[];
+  _subtask_count?: number;
+}
+
+export interface TaskAttachment {
+  id: string;
+  task_id?: string | null;
+  subtask_id?: string | null;
+  uploaded_by: string;
+  file_name: string;
+  file_url: string;
+  file_type: string;
+  file_size: number;
+  created_at: string;
 }
 
 export interface TeamMember {
@@ -118,6 +161,16 @@ export const STATUS_CONFIG: Record<TaskStatus, { label: string; bg: string; fg: 
   in_progress: { label: "In Progress", bg: "#EFF9FE", fg: "#36C5F0" },
   review: { label: "Review", bg: "#FFFBEB", fg: "#D97706" },
   done: { label: "Done", bg: "#ECFDF5", fg: "#059669" },
+};
+
+export const TASK_TYPE_CONFIG: Record<TaskType, { label: string; color: string; bg: string; icon: string }> = {
+  task:          { label: 'Task',          color: 'text-gray-700',   bg: 'bg-gray-100',    icon: '○' },
+  bug:           { label: 'Bug',           color: 'text-red-700',    bg: 'bg-red-50',      icon: '🐛' },
+  feature:       { label: 'Feature',       color: 'text-purple-700', bg: 'bg-purple-50',   icon: '✨' },
+  improvement:   { label: 'Improvement',   color: 'text-blue-700',   bg: 'bg-blue-50',     icon: '⚡' },
+  epic:          { label: 'Epic',          color: 'text-indigo-700', bg: 'bg-indigo-50',   icon: '🚀' },
+  question:      { label: 'Question',      color: 'text-amber-700',  bg: 'bg-amber-50',    icon: '?' },
+  documentation: { label: 'Docs',          color: 'text-teal-700',   bg: 'bg-teal-50',     icon: '📄' },
 };
 
 export const QUICK_EMOJIS = ["👍", "❤️", "😂", "🔥", "✅", "🎉", "👀", "🚀", "💯", "⚡", "😮", "🙏"];

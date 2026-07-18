@@ -113,7 +113,7 @@ function SearchBar() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [loading, setLoading] = useState(false);
-  
+
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -220,7 +220,7 @@ function SearchBar() {
         ) : (
           <Search size={15} className="text-[#9CA3AF] flex-shrink-0" />
         )}
-        
+
         <input
           ref={inputRef}
           value={search}
@@ -302,7 +302,7 @@ function SearchBar() {
                         }}
                         className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all ${isSelected ? 'bg-[#F4F4F1]' : 'hover:bg-[#F9F9F7]'}`}
                       >
-                        <div 
+                        <div
                           className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                           style={{
                             background: res.color ? `${res.color}15` : '#F4F4F1',
@@ -391,9 +391,8 @@ function NotificationBell() {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setOpen((o) => !o)}
-        className={`w-9 h-9 rounded-xl flex items-center justify-center relative cursor-pointer transition-all border ${
-          open ? "bg-white shadow-sm border-gray-200" : "bg-[#F9F9F7] border-transparent hover:border-gray-200 hover:bg-white hover:shadow-sm"
-        }`}
+        className={`w-9 h-9 rounded-xl flex items-center justify-center relative cursor-pointer transition-all border ${open ? "bg-white shadow-sm border-gray-200" : "bg-[#F9F9F7] border-transparent hover:border-gray-200 hover:bg-white hover:shadow-sm"
+          }`}
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
           <path
@@ -490,7 +489,7 @@ function NotificationBell() {
                       >
                         {/* Unread dot indicator */}
                         <div className="absolute left-2 top-[28px] w-1.5 h-1.5 rounded-full bg-indigo-500" />
-                        
+
                         {/* Icon / avatar */}
                         <div
                           className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm border border-black/5"
@@ -757,7 +756,7 @@ interface TopbarProps {
 export default function Topbar({ title, projectColor, onOpenCreate }: TopbarProps) {
   return (
     <header
-      className="h-[60px] border-b border-[#EBEBEB] flex items-center px-4 md:px-7 gap-3 md:gap-4 bg-white shrink-0 sticky top-0 z-40"
+      className="h-[60px] border-b border-[#EBEBEB] flex items-center px-4 md:px-7 gap-3 md:gap-4 bg-white shrink-0 sticky top-0 z-[50]"
       style={{ boxShadow: "0 1px 0 #F5F5F2" }}
     >
       {/* Breadcrumb — takes all available space */}
