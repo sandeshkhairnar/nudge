@@ -1,79 +1,78 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useWorkspaceStore } from "@/store/workspace-store";
 import { getVisibleProjects } from "@/lib/project-members";
 import { TaskBoard, Task } from "@/components/workspace/TaskBoard";
 import { Loader2 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 export default function BoardsPage() {
   const supabase = createClient();
   const workspace = useWorkspaceStore(s => s.workspace);
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [projects, setProjects] = useState<any[]>([]);
-  const [members, setMembers] = useState<any[]>([]);
-  const [resources, setResources] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (workspace?.id) {
-      loadData();
-    }
-  }, [workspace?.id]);
+  const { data, isLoading: loading, refetch } = useQuery({
+    queryKey: ["boards", workspace?.id],
+    queryFn: async () => {
+      if (!workspace?.id) return null;
 
-  const loadData = async (isBackgroundRefresh = false) => {
-    if (!workspace?.id) return;
-    if (!isBackgroundRefresh) setLoading(true);
+      const { projects: visibleProjects } = await getVisibleProjects(workspace.id);
+      const validProjects = visibleProjects || [];
 
-    const { projects: visibleProjects } = await getVisibleProjects(workspace.id);
-    const validProjects = visibleProjects || [];
-    setProjects(validProjects);
+      const { data: mems } = await supabase
+        .from("workspace_members")
+        .select("role, profiles(id, full_name, email, avatar_url)")
+        .eq("workspace_id", workspace.id);
 
-    const { data: mems } = await supabase
-      .from("workspace_members")
-      .select("role, profiles(id, full_name, email, avatar_url)")
-      .eq("workspace_id", workspace.id);
-    setMembers(mems || []);
+      const projectIds = validProjects.map((p: any) => p.id);
+      let taskRows: any[] = [];
+      let resRows: any[] = [];
 
-    const projectIds = validProjects.map((p: any) => p.id);
-    if (projectIds.length > 0) {
-      const { data: taskRows, error: taskError } = await supabase
-        .from("tasks")
-        .select("*, assignee:profiles!tasks_assignee_id_fkey(id, full_name, avatar_url, email), projects!tasks_project_id_fkey(id, name, color), attachments:task_attachments(*), task_resources(resources(*)), subtasks(*, assignee:profiles!subtasks_assignee_id_fkey(id, full_name, avatar_url, email), attachments:task_attachments(*), task_resources(resources(*)))")
-        .in("project_id", projectIds);
-      console.log("Boards Fetch Result:", { taskRows, taskError });
+      if (projectIds.length > 0) {
+        const { data: tr } = await supabase
+          .from("tasks")
+          .select("*, assignee:profiles!tasks_assignee_id_fkey(id, full_name, avatar_url, email), projects!tasks_project_id_fkey(id, name, color), attachments:task_attachments(*), task_resources(resources(*)), subtasks(*, assignee:profiles!subtasks_assignee_id_fkey(id, full_name, avatar_url, email), attachments:task_attachments(*), task_resources(resources(*)))")
+          .in("project_id", projectIds);
+        if (tr) taskRows = tr;
 
-      if (taskRows) {
-        const hydratedTasks = taskRows.map((t: any) => {
-          const wsMember = (mems || []).find((m: any) => m.profiles.id === t.assignee_id);
-          return {
-            ...t,
-            project: t.projects?.name || "Unknown",
-            projectColor: t.projects?.color || "#9CA3AF",
-            assignee: t.assignee?.full_name || t.assignee?.email || "Unassigned",
-            assignee_id: t.assignee_id,
-            assigneeColor: colorFromString(t.assignee_id || "unassigned"),
-            avatar_url: t.assignee?.avatar_url,
-            email: t.assignee?.email,
-            role: wsMember?.role || "Member",
-            tags: [],
-            stalled: t.stalled_days > 3,
-            dueDate: t.due_date,
-            status: t.status
-          };
-        });
-        setTasks(hydratedTasks as Task[]);
+        const { data: rr } = await supabase.from("resources").select("*").in("project_id", projectIds);
+        if (rr) resRows = rr;
       }
 
-      const { data: resRows } = await supabase.from("resources").select("*").in("project_id", projectIds);
-      setResources(resRows || []);
-    } else {
-      setTasks([]);
-      setResources([]);
-    }
-    if (!isBackgroundRefresh) setLoading(false);
-  };
+      const hydratedTasks = taskRows.map((t: any) => {
+        const wsMember = (mems || []).find((m: any) => m.profiles.id === t.assignee_id);
+        return {
+          ...t,
+          project: t.projects?.name || "Unknown",
+          projectColor: t.projects?.color || "#9CA3AF",
+          assignee: t.assignee?.full_name || t.assignee?.email || "Unassigned",
+          assignee_id: t.assignee_id,
+          assigneeColor: colorFromString(t.assignee_id || "unassigned"),
+          avatar_url: t.assignee?.avatar_url,
+          email: t.assignee?.email,
+          role: wsMember?.role || "Member",
+          tags: [],
+          stalled: t.stalled_days > 3,
+          dueDate: t.due_date,
+          status: t.status
+        };
+      });
+
+      return {
+        projects: validProjects,
+        members: mems || [],
+        tasks: hydratedTasks as Task[],
+        resources: resRows
+      };
+    },
+    enabled: !!workspace?.id,
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
+  });
+
+  const tasks = data?.tasks || [];
+  const projects = data?.projects || [];
+  const members = data?.members || [];
+  const resources = data?.resources || [];
 
   function colorFromString(s: string) {
     const palette = ["#36C5F0", "#2EB67D", "#ECB22E", "#E01E5A", "#A259FF", "#FF6B6B"];
@@ -103,7 +102,7 @@ export default function BoardsPage() {
           projects={projects}
           members={members}
           resources={resources}
-          onRefresh={() => loadData(true)}
+          onRefresh={() => refetch()}
         />
       </div>
     </div>

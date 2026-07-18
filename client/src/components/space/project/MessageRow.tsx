@@ -289,11 +289,7 @@ export default function MessageRow({
           <span
             className="text-[10px] text-gray-300 block text-right pr-1.5 select-none absolute right-0 top-1.5 leading-none"
           >
-            {new Date(m.created_at).toLocaleTimeString("en-US", {
-              hour: "2-digit",
-              minute: "2-digit",
-              hour12: false,
-            })}
+            {formatTime(m.created_at)}
           </span>
         ) : null}
       </div>

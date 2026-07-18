@@ -81,7 +81,7 @@ export default function ProjectSidebar({
             <div className="flex items-center gap-1.5 mt-1">
               <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
                 <div
-                  className="h-full rounded-full transition-all"
+                  className="h-full rounded-full transition-all duration-500"
                   style={{
                     width: `${project?.progress ?? 0}%`,
                     background: project?.color ?? "#4F46E5",

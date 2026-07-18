@@ -9,17 +9,16 @@ import { getCurrentUser } from "@/lib/auth";
 
 type TaskStatus = "todo" | "in_progress" | "review" | "done";
 
+import { CreateTaskSchema, type CreateTaskInput } from "@/lib/validations/task.schema";
+
 // ─── Create Task ─────────────────────────────────────────────
-export async function createTask(data: {
-  projectId: string;
-  title: string;
-  description?: string;
-  status?: TaskStatus;
-  type?: string;
-  assigneeId?: string;
-  dueDate?: string;
-  priority?: string;
-}) {
+export async function createTask(rawData: unknown) {
+  const parsed = CreateTaskSchema.safeParse(rawData);
+  if (!parsed.success) {
+    return { error: "Validation Error", details: parsed.error.flatten() };
+  }
+  const data = parsed.data;
+
   const supabase = await createClient();
   const user = await getCurrentUser();
   if (!user) return { error: "Not authenticated" };
@@ -30,11 +29,11 @@ export async function createTask(data: {
       project_id: data.projectId,
       title: data.title,
       description: data.description ?? null,
-      status: data.status ?? "todo",
-      type: data.type ?? "task",
+      status: data.status,
+      type: data.type,
       assignee_id: data.assigneeId ?? null,
       due_date: data.dueDate ?? null,
-      priority: data.priority ?? "medium",
+      priority: data.priority,
       created_by: user.id,
     })
     .select(`
@@ -44,6 +43,14 @@ export async function createTask(data: {
     .single();
 
   if (error) return { error: error.message };
+
+  const { data: allTasks } = await supabase.from("tasks").select("status").eq("project_id", data.projectId);
+  if (allTasks) {
+    const total = allTasks.length;
+    const done = allTasks.filter(t => t.status === "done").length;
+    const progress = total > 0 ? Math.round((done / total) * 100) : 0;
+    await supabase.from("projects").update({ progress }).eq("id", data.projectId);
+  }
 
   revalidatePath(`/space/${data.projectId}`);
   return { task };
@@ -200,6 +207,16 @@ export async function updateTask(
 
   if (error) return { error: error.message };
 
+  if (updates.status) {
+    const { data: allTasks } = await supabase.from("tasks").select("status").eq("project_id", projectId);
+    if (allTasks) {
+      const total = allTasks.length;
+      const done = allTasks.filter(t => t.status === "done").length;
+      const progress = total > 0 ? Math.round((done / total) * 100) : 0;
+      await supabase.from("projects").update({ progress }).eq("id", projectId);
+    }
+  }
+
   revalidatePath(`/space/${projectId}`);
   return { success: true };
 }
@@ -241,6 +258,14 @@ export async function deleteTask(taskId: string, projectId: string) {
     .eq("id", taskId);
 
   if (error) return { error: error.message };
+
+  const { data: allTasks } = await supabase.from("tasks").select("status").eq("project_id", projectId);
+  if (allTasks) {
+    const total = allTasks.length;
+    const done = allTasks.filter(t => t.status === "done").length;
+    const progress = total > 0 ? Math.round((done / total) * 100) : 0;
+    await supabase.from("projects").update({ progress }).eq("id", projectId);
+  }
 
   revalidatePath(`/space/${projectId}`);
   return { success: true };

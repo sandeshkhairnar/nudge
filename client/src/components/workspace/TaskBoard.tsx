@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect, Fragment } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { createClient } from "@/lib/supabase/client";
-import { Plus, Search, X, Loader2, AlertCircle, LayoutGrid, List, Paperclip, CheckSquare, Link2, Calendar, ArrowUp, ArrowRight, ArrowDown, CheckCircle2, Bug, Sparkles, Zap, Rocket, HelpCircle, FileText } from "lucide-react";
+import { Plus, Search, X, Loader2, AlertCircle, LayoutGrid, List, Paperclip, CheckSquare, Link2, Calendar, ArrowUp, ArrowRight, ArrowDown, CheckCircle2, Bug, Sparkles, Zap, Rocket, HelpCircle, FileText, GripVertical, Download } from "lucide-react";
 import { updateTask, createTask, createSubtask, updateSubtask, uploadTaskAttachment, createMagicTasksBulk } from "@/lib/tasks";
 import Avatar from "@/components/global/Avatar";
 import { TaskType, TASK_TYPE_CONFIG, TaskAttachment, Resource } from "@/types";
@@ -11,6 +12,9 @@ import TaskAttachmentUploader from "./TaskAttachmentUploader";
 import TaskResourceLinker from "./TaskResourceLinker";
 import { CustomSelect } from "@/components/ui/CustomSelect";
 import { strColor } from "@/lib/utils/color";
+import { useUpdateTaskStatus } from "@/hooks/mutations/useUpdateTaskStatus";
+import { useQueryClient } from "@tanstack/react-query";
+import { exportTasksToExcel } from "@/lib/exportToExcel";
 
 /* ═══════════════════════════
    TYPES
@@ -100,10 +104,15 @@ export function TaskBoard({
   onRefresh: () => void;
 }) {
   const supabase = createClient();
-  const [tasks, setTasks] = useState<Task[]>(initialTasks);
+  const queryClient = useQueryClient();
+  const { mutate: updateTaskStatus } = useUpdateTaskStatus(projectId || "");
+  
+  const [localTasks, setLocalTasks] = useState<Task[]>(initialTasks);
   const [viewMode, setViewMode] = useState<"board" | "list">("board");
   const [filter, setFilter] = useState("All projects");
   const [memberFilter, setMemberFilter] = useState("all");
+  useEffect(() => { setLocalTasks(initialTasks); }, [initialTasks]);
+
   const [search, setSearch] = useState("");
   const [openTask, setOpenTask] = useState<Task | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -157,13 +166,11 @@ export function TaskBoard({
     }
   };
 
-  useEffect(() => {
-    setTasks(initialTasks);
-  }, [initialTasks]);
+
 
   const parentTaskOptions = [
     { value: "", label: "Select Parent Task..." },
-    ...tasks.filter(t => !t.parent_task_id).map(t => ({ value: t.id, label: t.title }))
+    ...localTasks.filter(t => !t.parent_task_id).map(t => ({ value: t.id, label: t.title }))
   ];
 
   const projectOptions = [
@@ -199,7 +206,7 @@ export function TaskBoard({
 
   const statusOptions = COLUMNS.map(c => ({ value: c.id, label: c.label }));
 
-  const filtered = tasks.filter(t => {
+  const filtered = localTasks.filter(t => {
     const isTopLevel = !t.parent_task_id;
     const matchProject = filter === "All projects" || t.project === filter;
     const matchMember = memberFilter === "all" || t.assignee_id === memberFilter;
@@ -210,8 +217,9 @@ export function TaskBoard({
   const handleUpdateStatus = async (taskId: string, newStatus: Status) => {
     const result = await updateTask(taskId, { status: newStatus }, projectId || "workspace");
     if (!("error" in result)) {
-      setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
+      setLocalTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
       if (openTask?.id === taskId) setOpenTask(prev => prev ? { ...prev, status: newStatus } : null);
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       onRefresh();
     }
   };
@@ -219,7 +227,7 @@ export function TaskBoard({
   const handleUpdateType = async (taskId: string, newType: TaskType) => {
     const result = await updateTask(taskId, { type: newType }, projectId || "workspace");
     if (!("error" in result)) {
-      setTasks(prev => prev.map(t => t.id === taskId ? { ...t, type: newType } : t));
+      setLocalTasks(prev => prev.map(t => t.id === taskId ? { ...t, type: newType } : t));
       if (openTask?.id === taskId) setOpenTask(prev => prev ? { ...prev, type: newType } : null);
       onRefresh();
     }
@@ -228,7 +236,7 @@ export function TaskBoard({
   const handleUpdateDescription = async (taskId: string, newDesc: string) => {
     const result = await updateTask(taskId, { description: newDesc }, projectId || "workspace");
     if (!("error" in result)) {
-      setTasks(prev => prev.map(t => t.id === taskId ? { ...t, description: newDesc } : t));
+      setLocalTasks(prev => prev.map(t => t.id === taskId ? { ...t, description: newDesc } : t));
       if (openTask?.id === taskId) setOpenTask(prev => prev ? { ...prev, description: newDesc } : null);
       onRefresh(); // Might not need to refresh the whole board for a description change
     }
@@ -237,8 +245,9 @@ export function TaskBoard({
   const handleUpdateDueDate = async (taskId: string, newDueDate: string) => {
     const result = await updateTask(taskId, { due_date: newDueDate }, projectId || "workspace");
     if (!("error" in result)) {
-      setTasks(prev => prev.map(t => t.id === taskId ? { ...t, dueDate: newDueDate } : t));
+      setLocalTasks(prev => prev.map(t => t.id === taskId ? { ...t, dueDate: newDueDate } : t));
       if (openTask?.id === taskId) setOpenTask(prev => prev ? { ...prev, dueDate: newDueDate } : null);
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       onRefresh();
     }
   };
@@ -353,6 +362,32 @@ export function TaskBoard({
     setSubmitting(false);
   };
 
+  const handleDragEnd = async (result: DropResult) => {
+    if (!result.destination) return;
+    const { source, destination, draggableId } = result;
+    
+    if (source.droppableId === destination.droppableId && source.index === destination.index) return;
+    const newStatus = destination.droppableId as Status;
+
+    // We can optimistically update local state for instantaneous feedback (especially useful for Boards View)
+    setLocalTasks(prev => prev.map(t => t.id === draggableId ? { ...t, status: newStatus } : t));
+
+    if (projectId) {
+      // If we're in a project view, use the tanstack query mutation which handles cache updates and rollbacks automatically!
+      updateTaskStatus({ taskId: draggableId, status: newStatus });
+    } else {
+      // Legacy manual update for boards view
+      try {
+        await updateTask(draggableId, { status: newStatus }, "workspace");
+        queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+        onRefresh();
+      } catch (e) {
+        console.error("Failed to update status", e);
+        setLocalTasks(initialTasks); // Rollback
+      }
+    }
+  };
+
   return (
     <div className="flex flex-col h-full min-h-0 bg-gray-50/30">
       {/* Filters & Actions */}
@@ -414,6 +449,17 @@ export function TaskBoard({
           >
             <Plus size={15} /> New task
           </button>
+          {projectId && (
+            <button
+              onClick={() => {
+                const projectName = projects[0]?.name || "Project";
+                exportTasksToExcel(localTasks, projectName);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-gray-50 border border-gray-200 text-gray-700 rounded-lg text-[13px] font-semibold transition-colors shadow-sm cursor-pointer"
+            >
+              <Download size={15} /> Export
+            </button>
+          )}
           {!projectId && (
             <>
               <input type="file" ref={magicFileInputRef} onChange={handleMagicUpload} className="hidden" accept="image/*,application/pdf,text/plain" />
@@ -431,36 +477,61 @@ export function TaskBoard({
       {/* Main Content */}
       <div className="flex-1 min-h-0 min-w-0 relative p-4 sm:p-5 overflow-hidden">
         {viewMode === "board" ? (
-          <div className="flex gap-4 sm:gap-5 overflow-x-auto pb-4 h-full" style={{ scrollbarWidth: "thin" }}>
-            {COLUMNS.map(col => {
-              const colTasks = filtered.filter(t => t.status === col.id);
-              return (
-                <div key={col.id} className="flex flex-col w-[280px] flex-shrink-0">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <span className={`px-2.5 py-1 rounded-md text-[12px] font-semibold border ${col.bg} ${col.color} ${col.border}`}>
-                        {col.label}
-                      </span>
-                    </div>
-                    <span className="text-[12px] font-medium text-gray-400">
-                      {colTasks.length}
-                    </span>
-                  </div>
-                  <div className="flex-1 overflow-y-auto space-y-3 pr-2 pb-10" style={{ scrollbarWidth: "none" }}>
-                    {colTasks.map((t, i) => (
-                      <TaskCardInternal key={t.id} task={t} onOpen={setOpenTask} index={i} />
-                    ))}
-                    <button 
-                      onClick={() => { setAddStatus(col.id); setShowAddModal(true); }}
-                      className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-dashed border-gray-300 bg-white/50 hover:bg-white text-gray-500 hover:text-indigo-600 hover:border-indigo-300 transition-all cursor-pointer font-medium text-[13px] shadow-sm"
-                    >
-                      <Plus size={14} /> Add Task
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <div className="flex gap-4 sm:gap-5 overflow-x-auto pb-4 h-full" style={{ scrollbarWidth: "thin" }}>
+              {COLUMNS.map(col => {
+                const colTasks = filtered.filter(t => t.status === col.id);
+                return (
+                  <Droppable droppableId={col.id} key={col.id}>
+                    {(provided, snapshot) => (
+                      <div 
+                        ref={provided.innerRef}
+                        {...provided.droppableProps}
+                        className={`flex flex-col flex-1 min-w-[280px] rounded-xl transition-colors ${snapshot.isDraggingOver ? 'bg-indigo-50/50' : ''}`}
+                      >
+                        <div className="flex items-center justify-between mb-3 px-1">
+                          <div className="flex items-center gap-2">
+                            <span className={`px-2.5 py-1 rounded-md text-[12px] font-semibold border ${col.bg} ${col.color} ${col.border}`}>
+                              {col.label}
+                            </span>
+                          </div>
+                          <span className="text-[12px] font-medium text-gray-400">
+                            {colTasks.length}
+                          </span>
+                        </div>
+                        <div className="flex-1 overflow-y-auto space-y-3 pr-1 pb-10 min-h-[150px]" style={{ scrollbarWidth: "none" }}>
+                          {colTasks.map((t, i) => (
+                            <Draggable key={t.id} draggableId={t.id} index={i}>
+                              {(provided, snapshot) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                  style={{
+                                    ...provided.draggableProps.style,
+                                    opacity: snapshot.isDragging ? 0.9 : 1,
+                                  }}
+                                >
+                                  <TaskCardInternal task={t} onOpen={setOpenTask} index={i} />
+                                </div>
+                              )}
+                            </Draggable>
+                          ))}
+                          {provided.placeholder}
+                          <button 
+                            onClick={() => { setAddStatus(col.id); setShowAddModal(true); }}
+                            className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-dashed border-gray-300 bg-white/50 hover:bg-white text-gray-500 hover:text-indigo-600 hover:border-indigo-300 transition-all cursor-pointer font-medium text-[13px] shadow-sm mt-2"
+                          >
+                            <Plus size={14} /> Add Task
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </Droppable>
+                );
+              })}
+            </div>
+          </DragDropContext>
         ) : (
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm h-full flex flex-col">
             <div className="overflow-x-auto flex-1">
@@ -615,7 +686,7 @@ export function TaskBoard({
                       value={newParentTaskId}
                       onChange={val => {
                         setNewParentTaskId(val);
-                        const pt = tasks.find(t => t.id === val);
+                        const pt = localTasks.find(t => t.id === val);
                         if (pt) setNewProjectId(pt.project_id);
                       }}
                       options={parentTaskOptions}
@@ -1009,7 +1080,7 @@ export function TaskBoard({
                 <div className="flex items-center gap-2.5">
                   {openTask.parent_task_id ? (
                     <button 
-                      onClick={() => setOpenTask(tasks.find(t => t.id === openTask.parent_task_id) || null)}
+                      onClick={() => setOpenTask(localTasks.find(t => t.id === openTask.parent_task_id) || null)}
                       className="text-[12px] font-semibold text-indigo-600 flex items-center gap-1 hover:underline cursor-pointer border-0 bg-transparent"
                     >
                       ← Back to Parent

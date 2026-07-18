@@ -4,6 +4,7 @@ import "./globals.css";
 import { NotificationProvider } from "@/components/global/notification-provider";
 import { KeepAlive } from "@/components/global/KeepAlive";
 import { GlobalPresence } from "@/components/global/GlobalPresence";
+import { QueryProvider } from "@/components/global/QueryProvider";
 import { Toaster } from "sonner";
 
 const geistSans = Geist({
@@ -67,12 +68,14 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${plusJakarta.variable} antialiased`}
       >
         <PwaRegistrar />
-        <NotificationProvider>
-          {children}
-        </NotificationProvider>
-        <GlobalPresence />
-        <KeepAlive />
-        <Toaster position="top-right" richColors closeButton />
+        <QueryProvider>
+          <NotificationProvider>
+            {children}
+          </NotificationProvider>
+          <GlobalPresence />
+          <KeepAlive />
+          <Toaster position="top-right" richColors closeButton />
+        </QueryProvider>
       </body>
     </html>
   );

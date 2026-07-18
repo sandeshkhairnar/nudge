@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { createChannel } from "@/lib/channels";
 import { createTask, updateTask, deleteTask } from "@/lib/tasks";
@@ -133,32 +134,52 @@ export default function SpacePage() {
 
   useEffect(() => { threadEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [threadMessages]);
 
-  useEffect(() => {
-    const load = async () => {
+  const { data: cachedData, isLoading: isProjectLoading } = useQuery({
+    queryKey: ["project", projectId],
+    queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      const { data: prof } = await supabase.from("profiles").select("id,full_name,avatar_url").eq("id", user.id).single();
-      if (prof) setCurrentUser(prof);
-      const { data: proj } = await supabase.from("projects").select("*").eq("id", projectId).single();
-      if (proj) setProject(proj);
-      const { data: ch } = await supabase.from("channels").select("*").eq("project_id", projectId).order("created_at");
-      if (ch?.length) { setChannels(ch); setActiveChannel(ch[0]); }
-      const { data: ts, error: tsError } = await supabase.from("tasks")
-        .select("*,assignee:profiles!tasks_assignee_id_fkey(id,full_name,avatar_url,email),projects!tasks_project_id_fkey(id,name,color),attachments:task_attachments(*),task_resources(resources(*)),subtasks(*, assignee:profiles!subtasks_assignee_id_fkey(id, full_name, avatar_url, email), attachments:task_attachments(*), task_resources(resources(*)))")
-        .eq("project_id", projectId)
-        .order("created_at");
-      console.log("Tasks Fetch Result:", { ts, tsError });
-      if (ts) setTasks(ts as Task[]);
-      const { members } = await getProjectMembers(projectId);
-      if (members) setTeam(members as unknown as TeamMember[]);
-      const { data: rs } = await supabase.from("resources").select("*").eq("project_id", projectId).order("category");
-      if (rs) setResources(rs);
-      const { integrations: intgs } = await getProjectIntegrations(projectId);
-      if (intgs) setIntegrations(intgs);
+      if (!user) return null;
+      const [profRes, projRes, chRes, tsRes, memsRes, rsRes, intgsRes] = await Promise.all([
+        supabase.from("profiles").select("id,full_name,avatar_url").eq("id", user.id).single(),
+        supabase.from("projects").select("*").eq("id", projectId).single(),
+        supabase.from("channels").select("*").eq("project_id", projectId).order("created_at"),
+        supabase.from("tasks")
+          .select("*,assignee:profiles!tasks_assignee_id_fkey(id,full_name,avatar_url,email),projects!tasks_project_id_fkey(id,name,color),attachments:task_attachments(*),task_resources(resources(*)),subtasks(*, assignee:profiles!subtasks_assignee_id_fkey(id, full_name, avatar_url, email), attachments:task_attachments(*), task_resources(resources(*)))")
+          .eq("project_id", projectId)
+          .order("created_at"),
+        getProjectMembers(projectId),
+        supabase.from("resources").select("*").eq("project_id", projectId).order("category"),
+        getProjectIntegrations(projectId)
+      ]);
       await supabase.from("notifications").update({ read: true }).eq("recipient_id", user.id).eq("project_id", projectId).eq("read", false);
-    };
-    load();
-  }, [projectId]);
+      
+      return {
+        prof: profRes.data,
+        proj: projRes.data,
+        ch: chRes.data || [],
+        ts: tsRes.data || [],
+        members: memsRes.members || [],
+        rs: rsRes.data || [],
+        intgs: intgsRes.integrations || []
+      };
+    },
+    staleTime: 5 * 60 * 1000 // Cache for 5 mins
+  });
+
+  useEffect(() => {
+    if (cachedData) {
+      if (cachedData.prof) setCurrentUser(cachedData.prof);
+      if (cachedData.proj) setProject(cachedData.proj);
+      if (cachedData.ch.length) { 
+        setChannels(cachedData.ch); 
+        if (!activeChannel) setActiveChannel(cachedData.ch[0]); 
+      }
+      setTasks(cachedData.ts as Task[]);
+      setTeam(cachedData.members as unknown as TeamMember[]);
+      setResources(cachedData.rs);
+      setIntegrations(cachedData.intgs);
+    }
+  }, [cachedData]);
 
   const setActiveContext = useNotificationStore((s) => s.setActiveContext);
 
@@ -507,6 +528,8 @@ export default function SpacePage() {
       attachments: attachments.length ? attachments : undefined,
     };
     setMessages((prev) => [optimistic, ...prev]);
+    setTimeout(() => endRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+
     const { data, error } = await supabase.from("messages")
       .insert({ channel_id: activeChannel.id, user_id: currentUser.id, content: contentPayload, is_ai: false })
       .select("id,content,is_ai,created_at,edited_at,user_id,profiles!messages_user_id_fkey(id,full_name,avatar_url)")
@@ -556,6 +579,7 @@ export default function SpacePage() {
       parent_id: activeThreadId,
     };
     setThreadMessages((prev) => [...prev, optimistic]);
+    setTimeout(() => threadEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
     setThreadUploading(false);
     const { data, error } = await supabase.from("messages")
       .insert({ channel_id: activeChannel.id, user_id: currentUser.id, content: text, is_ai: false, parent_id: activeThreadId })

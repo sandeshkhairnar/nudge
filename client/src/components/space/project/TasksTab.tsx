@@ -30,12 +30,7 @@ export default function TasksTab({ tasks, project, team, projectId, resources, o
     type: t.type || "task",
     description: t.description || null,
     parent_task_id: t.parent_task_id || null,
-    subtasks: tasks.filter(child => child.parent_task_id === t.id).map(child => ({
-      id: child.id,
-      title: child.title,
-      status: child.status,
-      type: child.type || 'task'
-    })),
+    subtasks: t.subtasks || [],
     attachments: t.attachments || [],
     linked_resources: (t as any).task_resources?.map((tr: any) => tr.resources) || [],
     priority: ((t as Task & { priority?: string }).priority || "medium") as "high" | "medium" | "low",

@@ -10,6 +10,9 @@ import {
   User, Mail, Link, Globe, Plus, X,
 } from "lucide-react";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 
 export default function SettingsPage() {
   const supabase = createClient();
@@ -26,18 +29,43 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
+
+  const profileSchema = z.object({
+    fullName: z.string().min(1, "Name is required"),
+    email: z.string().email(),
+  });
+
+  type ProfileFormValues = z.infer<typeof profileSchema>;
+
+  const { register: registerProfile, handleSubmit: handleProfileSubmit, setValue: setProfileValue, watch: watchProfile, formState: { errors: profileErrors } } = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: { fullName: "", email: "" }
+  });
+
+  const currentFullName = watchProfile("fullName");
 
   // ── UI state ─────────────────────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState("Profile");
 
   // ── Workspace edit state ─────────────────────────────────────────────────
   const [editingWorkspace, setEditingWorkspace] = useState(workspace);
-  const [wsName, setWsName] = useState(workspace?.name ?? "");
-  const [wsSlug, setWsSlug] = useState(workspace?.slug ?? "");
   const [wsLogoUrl, setWsLogoUrl] = useState(workspace?.logo_url ?? "");
   const [wsSaving, setWsSaving] = useState(false);
+
+  const workspaceSchema = z.object({
+    name: z.string().min(1, "Workspace name is required").max(50),
+    slug: z.string().min(1, "Slug is required").regex(/^[a-z0-9-]+$/, "Slug must contain only lowercase letters, numbers, and hyphens"),
+  });
+
+  type WorkspaceFormValues = z.infer<typeof workspaceSchema>;
+
+  const { register: registerWorkspace, handleSubmit: handleWorkspaceSubmit, setValue: setWorkspaceValue, watch: watchWorkspace, formState: { errors: workspaceErrors } } = useForm<WorkspaceFormValues>({
+    resolver: zodResolver(workspaceSchema),
+    defaultValues: { name: "", slug: "" }
+  });
+
+  const currentWsName = watchWorkspace("name");
+  const currentWsSlug = watchWorkspace("slug");
 
   // ── Modals / forms ───────────────────────────────────────────────────────
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -64,11 +92,11 @@ export default function SettingsPage() {
   // ── Keep form fields in sync when user picks a different workspace ───────
   useEffect(() => {
     if (editingWorkspace) {
-      setWsName(editingWorkspace.name);
-      setWsSlug(editingWorkspace.slug ?? "");
+      setWorkspaceValue("name", editingWorkspace.name);
+      setWorkspaceValue("slug", editingWorkspace.slug ?? "");
       setWsLogoUrl(editingWorkspace.logo_url ?? "");
     }
-  }, [editingWorkspace]);
+  }, [editingWorkspace, setWorkspaceValue]);
 
   // ── Profile load ─────────────────────────────────────────────────────────
   useEffect(() => { loadProfile(); }, []);
@@ -81,8 +109,8 @@ export default function SettingsPage() {
         .from("profiles").select("*").eq("id", user.id).single();
       if (data) {
         setProfile(data);
-        setFullName(data.full_name ?? "");
-        setEmail(data.email ?? "");
+        setProfileValue("fullName", data.full_name ?? "");
+        setProfileValue("email", data.email ?? "");
       }
     }
     setLoading(false);
@@ -124,28 +152,28 @@ export default function SettingsPage() {
   };
 
   // ── Profile save ─────────────────────────────────────────────────────────
-  const handleSave = async () => {
+  const onProfileSave = async (data: ProfileFormValues) => {
     if (!profile) return;
     setSaving(true);
     const { error } = await supabase
-      .from("profiles").update({ full_name: fullName }).eq("id", profile.id);
+      .from("profiles").update({ full_name: data.fullName }).eq("id", profile.id);
     if (!error) { flash(); loadProfile(); }
     setSaving(false);
   };
 
   // ── Workspace save ───────────────────────────────────────────────────────
-  const handleSaveWorkspace = async () => {
+  const onWorkspaceSave = async (data: WorkspaceFormValues) => {
     if (!editingWorkspace) return;
     setWsSaving(true);
     const { error } = await supabase
       .from("workspaces")
-      .update({ name: wsName, slug: wsSlug, logo_url: wsLogoUrl })
+      .update({ name: data.name, slug: data.slug, logo_url: wsLogoUrl })
       .eq("id", editingWorkspace.id);
 
     if (!error) {
       flash();
       // Update both the list and active workspace in-store without reload
-      const updated = { ...editingWorkspace, name: wsName, slug: wsSlug, logo_url: wsLogoUrl };
+      const updated = { ...editingWorkspace, name: data.name, slug: data.slug, logo_url: wsLogoUrl };
       setEditingWorkspace(updated);
       setWorkspaces(workspaces.map((w) => w.id === updated.id ? updated : w));
       if (workspace?.id === updated.id) setWorkspace(updated);
@@ -346,7 +374,7 @@ export default function SettingsPage() {
 
                 <div className="flex items-center gap-5 mb-6">
                   <div className="relative group flex-shrink-0">
-                    <Avatar url={profile?.avatar_url} name={fullName} email={email} role="You" size={64} className="rounded-2xl shadow-sm" />
+                    <Avatar url={profile?.avatar_url} name={currentFullName} email={watchProfile("email")} role="You" size={64} className="rounded-2xl shadow-sm" />
                     <label className="absolute -bottom-2 -right-2 p-1.5 bg-white rounded-lg border border-gray-200 shadow-sm text-gray-500 hover:text-[#4F46E5] transition-all cursor-pointer group-hover:scale-105">
                       <Camera size={14} />
                       <input type="file" className="hidden" accept="image/*" onChange={handleAvatarUpload} />
@@ -358,41 +386,43 @@ export default function SettingsPage() {
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="space-y-1.5">
-                    <label className="text-[12px] font-semibold text-gray-700">Full Name</label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
-                      <input
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                        className="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-lg text-[13px] font-medium outline-none focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] transition-all shadow-sm"
-                      />
+                  <form id="profile-form" onSubmit={handleProfileSubmit(onProfileSave)} className="space-y-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[12px] font-semibold text-gray-700">Full Name</label>
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                        <input
+                          {...registerProfile("fullName")}
+                          className={`w-full pl-9 pr-3 py-2 bg-white border ${profileErrors.fullName ? "border-red-500" : "border-gray-200"} rounded-lg text-[13px] font-medium outline-none focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] transition-all shadow-sm`}
+                        />
+                      </div>
+                      {profileErrors.fullName && <p className="text-[11px] text-red-500">{profileErrors.fullName.message}</p>}
                     </div>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[12px] font-semibold text-gray-700">Email Address</label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
-                      <input value={email} disabled className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium outline-none opacity-70 cursor-not-allowed shadow-sm" />
+                    <div className="space-y-1.5">
+                      <label className="text-[12px] font-semibold text-gray-700">Email Address</label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                        <input {...registerProfile("email")} disabled className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium outline-none opacity-70 cursor-not-allowed shadow-sm" />
+                      </div>
+                      <p className="text-[11px] text-gray-400">Contact support to change your primary email.</p>
                     </div>
-                    <p className="text-[11px] text-gray-400">Contact support to change your primary email.</p>
-                  </div>
-                </div>
+                  </form>
 
                 <div className="mt-5 pt-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3">
                   <div className="flex items-center gap-2 w-full sm:w-auto">
                     <button
-                      onClick={handleSave}
-                      disabled={saving || fullName === profile?.full_name}
+                      type="submit"
+                      form="profile-form"
+                      disabled={saving || currentFullName === profile?.full_name}
                       className="flex-1 sm:flex-none px-4 py-1.5 bg-gray-900 text-white rounded-lg text-[13px] font-semibold border-0 cursor-pointer disabled:opacity-50 hover:bg-black transition-all flex items-center justify-center gap-1.5 shadow-sm"
                     >
                       {saving ? <Loader2 size={14} className="animate-spin" /> : null}
                       Save Changes
                     </button>
                     <button
-                      onClick={() => setFullName(profile?.full_name ?? "")}
-                      disabled={saving || fullName === profile?.full_name}
+                      type="button"
+                      onClick={() => setProfileValue("fullName", profile?.full_name ?? "")}
+                      disabled={saving || currentFullName === profile?.full_name}
                       className="flex-1 sm:flex-none px-4 py-1.5 bg-white text-gray-700 border border-gray-200 rounded-lg text-[13px] font-semibold cursor-pointer disabled:opacity-50 hover:bg-gray-50 transition-all shadow-sm"
                     >
                       Cancel
@@ -504,43 +534,44 @@ export default function SettingsPage() {
                 </div>
 
                 {/* Edit fields */}
-                <div className="space-y-3">
+                <form id="workspace-form" onSubmit={handleWorkspaceSubmit(onWorkspaceSave)} className="space-y-3">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div className="space-y-1.5">
                       <label className="text-[12px] font-semibold text-gray-700">Workspace Name</label>
                       <div className="relative">
                         <Building className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
                         <input
-                          value={wsName}
-                          onChange={(e) => setWsName(e.target.value)}
+                          {...registerWorkspace("name")}
                           placeholder="My Workspace"
-                          className="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-lg text-[13px] font-medium outline-none focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] transition-all shadow-sm"
+                          className={`w-full pl-9 pr-3 py-2 bg-white border ${workspaceErrors.name ? "border-red-500" : "border-gray-200"} rounded-lg text-[13px] font-medium outline-none focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] transition-all shadow-sm`}
                         />
                       </div>
+                      {workspaceErrors.name && <p className="text-[11px] text-red-500">{workspaceErrors.name.message}</p>}
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-[12px] font-semibold text-gray-700">Slug</label>
                       <div className="relative">
                         <Globe className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
                         <input
-                          value={wsSlug}
-                          onChange={(e) => setWsSlug(e.target.value)}
+                          {...registerWorkspace("slug")}
                           placeholder="my-workspace"
-                          className="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-lg text-[13px] font-medium outline-none focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] transition-all shadow-sm"
+                          className={`w-full pl-9 pr-3 py-2 bg-white border ${workspaceErrors.slug ? "border-red-500" : "border-gray-200"} rounded-lg text-[13px] font-medium outline-none focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] transition-all shadow-sm`}
                         />
                       </div>
+                      {workspaceErrors.slug && <p className="text-[11px] text-red-500">{workspaceErrors.slug.message}</p>}
                     </div>
                   </div>
-                </div>
+                </form>
 
                 {/* Save */}
                 <div className="mt-5 pt-4 border-t border-gray-100 flex flex-col sm:flex-row items-center gap-3">
                   <button
-                    onClick={handleSaveWorkspace}
+                    type="submit"
+                    form="workspace-form"
                     disabled={
                       wsSaving ||
-                      (wsName === editingWorkspace?.name &&
-                        wsSlug === editingWorkspace?.slug &&
+                      (currentWsName === editingWorkspace?.name &&
+                        currentWsSlug === editingWorkspace?.slug &&
                         wsLogoUrl === (editingWorkspace?.logo_url ?? ""))
                     }
                     className="w-full sm:w-auto px-4 py-1.5 bg-gray-900 text-white rounded-lg text-[13px] font-semibold border-0 cursor-pointer disabled:opacity-50 hover:bg-black transition-all flex items-center justify-center gap-1.5 shadow-sm"
