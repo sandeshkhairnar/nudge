@@ -5,63 +5,122 @@ from typing import Any, Dict
 from database.supabase_client import get_supabase
 from config import get_settings
 
-# Note: In a real implementation, we would import run_agent from agent.agent
-# But we'll use a placeholder for now to avoid circular imports during setup.
-
 logger = logging.getLogger(__name__)
+
+# Trigger keyword — agent only runs when the message contains this
+NUDGE_TRIGGER = "@nudge"
+
 
 def handle_new_message(payload: Dict[str, Any]):
     """
     Callback for new messages INSERT event.
+    Guards against:
+      - Empty / None record (Realtime can fire before the row is populated)
+      - Missing channel_id (would cause a 400 on the channels query)
+      - AI-generated messages (avoid infinite loops)
+      - Messages that don't mention @nudge (avoid triggering on every message)
     """
     from agent.agent import run_agent
     from database.supabase_client import get_supabase
-    
-    record = payload.get("record", {})
-    if record.get("is_ai"):
+
+    # ── 1. Log the raw payload for debugging ──────────────────────────────────
+    logger.info(f"Realtime INSERT received | raw payload keys: {list(payload.keys())}")
+    logger.debug(f"Realtime full payload: {payload}")
+
+    record = payload.get("record") or {}
+
+    # ── 2. Guard: empty record (can happen during Realtime warm-up) ───────────
+    if not record or not isinstance(record, dict):
+        logger.warning("Realtime: received INSERT event with empty/invalid record — skipping.")
         return
 
-    logger.info(f"New message detected: {record.get('id')}")
-    
-    # Fetch workspace/project context via channel
+    message_id  = record.get("id")
+    channel_id  = record.get("channel_id")
+    is_ai       = record.get("is_ai", False)
+    content     = record.get("content", "") or ""
+
+    logger.info(f"Realtime: message_id={message_id}  channel_id={channel_id}  is_ai={is_ai}")
+
+    # ── 3. Guard: skip AI messages (prevent infinite loop) ────────────────────
+    if is_ai:
+        logger.debug("Realtime: skipping AI message.")
+        return
+
+    # ── 4. Guard: must have a valid channel_id ───────────────────────────────
+    if not channel_id:
+        logger.warning(f"Realtime: message {message_id} has no channel_id — skipping.")
+        return
+
+    # ── 5. Guard: only trigger when @nudge is mentioned ──────────────────────
+    if NUDGE_TRIGGER.lower() not in content.lower():
+        logger.debug(f"Realtime: message {message_id} does not mention {NUDGE_TRIGGER} — skipping.")
+        return
+
+    logger.info(f"Realtime: @nudge mentioned in message {message_id} — triggering agent.")
+
+    # ── 6. Resolve workspace / project via channel ────────────────────────────
     supabase = get_supabase()
-    channel_res = supabase.table("channels").select("project_id, projects(workspace_id)").eq("id", record.get("channel_id")).single().execute()
-    
-    channel_data = channel_res.data or {}
-    project_id = channel_data.get("project_id")
-    workspace_id = channel_data.get("projects", {}).get("workspace_id")
+    try:
+        channel_res = (
+            supabase.table("channels")
+            .select("project_id, projects(workspace_id)")
+            .eq("id", channel_id)
+            .single()
+            .execute()
+        )
+        channel_data = channel_res.data or {}
+    except Exception as e:
+        logger.error(f"Realtime: failed to fetch channel {channel_id}: {e}")
+        return
+
+    project_id   = channel_data.get("project_id")
+    workspace_id = (channel_data.get("projects") or {}).get("workspace_id")
+
+    if not workspace_id:
+        logger.warning(f"Realtime: could not resolve workspace_id for channel {channel_id} — skipping.")
+        return
 
     event = {
         "event_type": "message",
         "workspace_id": workspace_id,
         "project_id": project_id,
         "payload": {
-            "message_id": record.get("id"),
-            "channel_id": record.get("channel_id"),
+            "message_id": message_id,
+            "channel_id": channel_id,
             "user_id": record.get("user_id"),
-            "content": record.get("content"),
-            "is_ai": False
+            "content": content,
+            "is_ai": False,
         },
-        "timestamp": record.get("created_at")
+        "timestamp": record.get("created_at"),
     }
-    
-    # Schedule the agent run using asyncio.create_task in the currently running loop
+
+    logger.info(f"Realtime: dispatching agent event | workspace={workspace_id}  project={project_id}")
+
+    # ── 7. Schedule agent as a background task ────────────────────────────────
     try:
         loop = asyncio.get_running_loop()
         loop.create_task(run_agent(event))
     except RuntimeError:
         asyncio.run(run_agent(event))
 
+
 def handle_task_update(payload: Dict[str, Any]):
     """
     Callback for tasks UPDATE event.
     """
-    record = payload.get("record", {})
-    old_record = payload.get("old_record", {})
-    
+    logger.debug(f"Realtime: task UPDATE payload keys: {list(payload.keys())}")
+
+    record     = payload.get("record") or {}
+    old_record = payload.get("old_record") or {}
+
+    if not record:
+        logger.warning("Realtime: task UPDATE received with empty record — skipping.")
+        return
+
     if record.get("status") == "done" and old_record.get("status") != "done":
-        logger.info(f"Task marked as done: {record.get('id')}")
-        # Logic to check milestones/completion could go here
+        logger.info(f"Realtime: task marked as done: {record.get('id')}")
+        # Milestone / completion logic can be added here
+
 
 async def setup_realtime_subscriptions():
     """
@@ -69,11 +128,9 @@ async def setup_realtime_subscriptions():
     """
     from database.supabase_client import get_async_supabase
     supabase = await get_async_supabase()
-    
-    # Define the channel
+
     channel = supabase.channel("nudge-changes")
-    
-    # Listen for new messages
+
     await channel.on_postgres_changes(
         event="INSERT",
         schema="public",
@@ -85,5 +142,5 @@ async def setup_realtime_subscriptions():
         table="tasks",
         callback=handle_task_update
     ).subscribe()
-    
+
     logger.info("Supabase Realtime subscriptions established.")
