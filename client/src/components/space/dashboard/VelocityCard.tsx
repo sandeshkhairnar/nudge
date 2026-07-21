@@ -25,9 +25,10 @@ export default function VelocityCard({ tasks }: VelocityCardProps) {
     const now = new Date();
 
     tasks.forEach(task => {
-      const createdDate = new Date(task.created_at || now);
-      const diffTime = Math.abs(now.getTime() - createdDate.getTime());
-      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      const targetDate = new Date(task.updated_at || task.created_at || now);
+      const targetDay = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
+      const nowDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const diffDays = Math.round((nowDay.getTime() - targetDay.getTime()) / (1000 * 60 * 60 * 24));
       
       let index = -1;
       if (timeframe === "daily") {
@@ -36,7 +37,7 @@ export default function VelocityCard({ tasks }: VelocityCardProps) {
         const diffWeeks = Math.floor(diffDays / 7);
         if (diffWeeks <= 5) index = 5 - diffWeeks;
       } else if (timeframe === "monthly") {
-        const diffMonths = (now.getFullYear() - createdDate.getFullYear()) * 12 + (now.getMonth() - createdDate.getMonth());
+        const diffMonths = (now.getFullYear() - targetDate.getFullYear()) * 12 + (now.getMonth() - targetDate.getMonth());
         if (diffMonths >= 0 && diffMonths <= 5) index = 5 - diffMonths;
       }
 

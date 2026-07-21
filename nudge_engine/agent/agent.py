@@ -1,6 +1,7 @@
 import logging
 import asyncio
 import json
+import re
 from typing import Any, Dict, List, Optional, AsyncGenerator
 
 from langchain_classic.agents import AgentExecutor, create_tool_calling_agent
@@ -14,10 +15,73 @@ from agent.memory import get_langchain_memory, save_langchain_memory
 from tools.task_tools import get_tasks, create_task, update_task_status
 from tools.nudge_tools import generate_nudge, flag_stalled
 from tools.notify_tools import slack_notify, email_notify
-from tools.message_tools import create_ai_message, analyze_message_context, create_system_message
+from tools.message_tools import create_ai_message, analyze_message_context, create_system_message, NUDGE_BOT_ID
 from tools.project_tools import list_projects, get_project_overview, get_health_score, get_workspace_analytics
+from database.supabase_client import get_supabase
 
 logger = logging.getLogger(__name__)
+
+FALLBACK_MESSAGE = (
+    "⚠️ **Nudge AI is temporarily unavailable.**\n\n"
+    "The AI service could not be reached right now — this may be due to a rate limit, "
+    "subscription issue, or a temporary outage. Please try again in a moment.\n\n"
+    "_Your message has been noted and the team has been tagged._"
+)
+
+def _extract_mentions(text: str) -> list[str]:
+    """Extract all @username or @UUID style mentions from a message."""
+    return re.findall(r'@([\w\-\.]+)', text or "")
+
+async def _post_fallback_message(event: Dict[str, Any], error: Exception) -> None:
+    """
+    When the LLM/API is unavailable, post a friendly error message directly
+    to the relevant channel via Supabase — no agent required.
+    Preserves any @mentions so tagged people are still notified.
+    """
+    try:
+        supabase = get_supabase()
+        payload = event.get("payload", {})
+        event_type = event.get("event_type", "")
+
+        # Determine the channel to post into
+        channel_id: str | None = None
+
+        if event_type == "message":
+            channel_id = payload.get("channel_id")
+        elif event_type in ("chat", "stall", "github", "mom_generation"):
+            project_id = event.get("project_id") or payload.get("project_id")
+            if project_id:
+                ch_res = (
+                    supabase.table("channels")
+                    .select("id")
+                    .eq("project_id", project_id)
+                    .order("created_at")
+                    .limit(1)
+                    .execute()
+                )
+                if ch_res.data:
+                    channel_id = ch_res.data[0]["id"]
+
+        if not channel_id:
+            logger.warning("_post_fallback_message: could not resolve a channel_id, skipping.")
+            return
+
+        # Build fallback text — re-tag any mentioned users
+        original_content = payload.get("content", payload.get("message", ""))
+        mentions = _extract_mentions(original_content)
+        mention_str = " ".join(f"@{m}" for m in mentions) if mentions else ""
+        full_text = f"{mention_str}\n{FALLBACK_MESSAGE}".strip()
+
+        supabase.table("messages").insert({
+            "channel_id": channel_id,
+            "content": full_text,
+            "is_ai": True,
+            "user_id": NUDGE_BOT_ID,
+        }).execute()
+
+        logger.info(f"Fallback message posted to channel {channel_id}")
+    except Exception as fallback_err:
+        logger.error(f"Failed to post fallback message: {fallback_err}")
 
 # List of all tools available to the agent
 TOOLS = [
@@ -167,7 +231,8 @@ async def run_agent(event: Dict[str, Any]) -> str:
         return result.get("output", "Agent completed without output.")
     except Exception as e:
         logger.error(f"Agent execution failed: {e}")
-        return f"Agent error: {str(e)}"
+        await _post_fallback_message(event, e)
+        return FALLBACK_MESSAGE
 
 async def run_agent_stream(event: Dict[str, Any]) -> AsyncGenerator[str, None]:
     """
@@ -203,13 +268,13 @@ async def run_agent_stream(event: Dict[str, Any]) -> AsyncGenerator[str, None]:
 
     # 5. Stream
     try:
-        async for event in agent_executor.astream_events(
+        async for stream_event in agent_executor.astream_events(
             {"input": input_text},
             version="v2"
         ):
-            kind = event["event"]
+            kind = stream_event["event"]
             if kind == "on_chat_model_stream":
-                content = event["data"]["chunk"].content
+                content = stream_event["data"]["chunk"].content
                 if content:
                     if isinstance(content, list):
                         content = "".join([c.get("text", "") if isinstance(c, dict) else str(c) for c in content])
@@ -220,4 +285,5 @@ async def run_agent_stream(event: Dict[str, Any]) -> AsyncGenerator[str, None]:
         
     except Exception as e:
         logger.error(f"Streaming agent failed: {e}")
-        yield f"Error: {str(e)}"
+        await _post_fallback_message(event, e)
+        yield FALLBACK_MESSAGE

@@ -3,6 +3,8 @@ main.py — Nudge Engine v4.0
 App factory: registers all routers, owns lifespan (scheduler + Supabase Realtime),
 configures CORS, and mounts the /health UI page.
 """
+import logging
+
 from fastapi import FastAPI, Request
 
 from contextlib import asynccontextmanager
@@ -13,6 +15,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 
 from config import get_settings
+from middleware.request_logger import RequestLoggerMiddleware
+
+# ── Logging bootstrap ────────────────────────────────────────────────────────
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s  %(levelname)-8s  %(name)s  %(message)s",
+    datefmt="%H:%M:%S",
+)
 
 # ── Router imports ────────────────────────────────────────────────────────────
 
@@ -79,6 +89,11 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    # ── Request / Response Logger ─────────────────────────────────────────────
+    # Prints every inbound request payload and outbound response to stdout.
+    # /health and /docs paths are skipped to reduce noise.
+    app.add_middleware(RequestLoggerMiddleware)
 
     # ── Routers ───────────────────────────────────────────────────────────────
     # /health is public (no ENGINE_SECRET required) — all others are protected
