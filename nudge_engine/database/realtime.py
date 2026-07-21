@@ -19,41 +19,58 @@ def handle_new_message(payload: Dict[str, Any]):
       - Missing channel_id (would cause a 400 on the channels query)
       - AI-generated messages (avoid infinite loops)
       - Messages that don't mention @nudge (avoid triggering on every message)
+
+    Supabase Realtime payload shape (supabase-py v2):
+      {
+        'data': {
+          'schema': 'public',
+          'table': 'messages',
+          'type': 'INSERT',
+          'record': { ...the new row... },
+          'old_record': {}
+        },
+        'ids': [...]
+      }
     """
     from agent.agent import run_agent
     from database.supabase_client import get_supabase
 
     # ── 1. Log the raw payload for debugging ──────────────────────────────────
-    logger.info(f"Realtime INSERT received | raw payload keys: {list(payload.keys())}")
-    logger.debug(f"Realtime full payload: {payload}")
+    logger.info(f"Realtime INSERT received | top-level keys: {list(payload.keys())}")
 
-    record = payload.get("record") or {}
+    # ── 2. Unwrap the nested 'data' envelope (supabase-py v2 shape) ───────────
+    # Fall back to top-level 'record' for older SDK versions.
+    inner = payload.get("data") or {}
+    if inner:
+        logger.info(f"Realtime INSERT inner keys: {list(inner.keys())}")
 
-    # ── 2. Guard: empty record (can happen during Realtime warm-up) ───────────
+    record = inner.get("record") or payload.get("record") or {}
+
+    # ── 3. Guard: empty record ────────────────────────────────────────────────
     if not record or not isinstance(record, dict):
-        logger.warning("Realtime: received INSERT event with empty/invalid record — skipping.")
+        logger.warning("Realtime: INSERT event has empty/invalid record — skipping.")
         return
 
-    message_id  = record.get("id")
-    channel_id  = record.get("channel_id")
-    is_ai       = record.get("is_ai", False)
-    content     = record.get("content", "") or ""
+    message_id = record.get("id")
+    channel_id = record.get("channel_id")
+    is_ai      = record.get("is_ai", False)
+    content    = record.get("content", "") or ""
 
     logger.info(f"Realtime: message_id={message_id}  channel_id={channel_id}  is_ai={is_ai}")
 
-    # ── 3. Guard: skip AI messages (prevent infinite loop) ────────────────────
+    # ── 4. Guard: skip AI messages ────────────────────────────────────────────
     if is_ai:
-        logger.debug("Realtime: skipping AI message.")
+        logger.debug("Realtime: skipping AI-generated message.")
         return
 
-    # ── 4. Guard: must have a valid channel_id ───────────────────────────────
+    # ── 5. Guard: must have a valid channel_id ────────────────────────────────
     if not channel_id:
         logger.warning(f"Realtime: message {message_id} has no channel_id — skipping.")
         return
 
-    # ── 5. Guard: only trigger when @nudge is mentioned ──────────────────────
+    # ── 6. Guard: only trigger on @nudge mentions ─────────────────────────────
     if NUDGE_TRIGGER.lower() not in content.lower():
-        logger.debug(f"Realtime: message {message_id} does not mention {NUDGE_TRIGGER} — skipping.")
+        logger.debug(f"Realtime: message {message_id} has no {NUDGE_TRIGGER} mention — skipping.")
         return
 
     logger.info(f"Realtime: @nudge mentioned in message {message_id} — triggering agent.")

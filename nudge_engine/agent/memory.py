@@ -5,6 +5,9 @@ from langchain_core.messages import BaseMessage, message_to_dict, messages_from_
 from services.redis_service import get_memory, set_memory
 from config import get_settings
 
+# Max chars to store per message — prevents GitHub payloads from bloating memory
+_MAX_MSG_CHARS = 600
+
 class RedisBackedMemory(ConversationBufferWindowMemory):
     """
     Custom LangChain memory that persists to Redis per workspace.
@@ -12,7 +15,6 @@ class RedisBackedMemory(ConversationBufferWindowMemory):
     workspace_id: str
 
     def load_memory_variables(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
-
         # Implementation depends on how we want to hook into LangChain's memory flow
         # In this simplistic version, we'll manually handle load/save in the agent loop.
         return super().load_memory_variables(inputs)
@@ -41,7 +43,22 @@ async def get_langchain_memory(workspace_id: str) -> ConversationBufferWindowMem
 async def save_langchain_memory(workspace_id: str, memory: ConversationBufferWindowMemory) -> None:
     """
     Save the LangChain memory history back to Redis.
+    Trims each stored message to _MAX_MSG_CHARS to prevent GitHub payloads
+    and other large blobs from bloating the context on future turns.
     """
+    settings = get_settings()
     messages = memory.chat_memory.messages
-    turns = [message_to_dict(m) for m in messages]
+
+    # Keep only the last k*2 messages (k turns = k human + k ai)
+    window = messages[-(settings.memory_window_k * 2):]
+
+    turns = []
+    for m in window:
+        d = message_to_dict(m)
+        # Truncate the content field if it is a plain string
+        content = d.get("data", {}).get("content", "")
+        if isinstance(content, str) and len(content) > _MAX_MSG_CHARS:
+            d["data"]["content"] = content[:_MAX_MSG_CHARS] + " … [truncated]"
+        turns.append(d)
+
     await set_memory(workspace_id, turns)
